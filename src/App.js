@@ -6,7 +6,7 @@ import './App.css';
 
 function App() {
   useEffect(() => {
-    axios.get(process.env.REACT_APP_SERVER_URL + '/health').then((response) => {
+    axios.get(process.env.REACT_APP_SERVER_URL + '/api/health').then((response) => {
       console.log(response);
     }, (error) => {
       console.log(error);
