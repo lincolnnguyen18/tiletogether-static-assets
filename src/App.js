@@ -1,66 +1,55 @@
-import React, { useEffect } from 'react';
-import logo from './logo.svg';
-import { Counter } from './features/counter/Counter';
-import axios from 'axios';
-import './App.css';
+import React, { Fragment, useEffect } from 'react';
+import { Dashboard } from './features/Dashboard/Dashboard';
+import { Menu } from './components/Menu/Menu';
+import { Modal } from './components/Modal/Modal';
+import { Route, Routes, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { getUser } from './features/User/userSlice';
+import { apiClient } from './app/apiClient';
 
-function App() {
+export function Redirect ({ to }) {
+  const navigate = useNavigate();
   useEffect(() => {
-    axios.get(process.env.REACT_APP_SERVER_URL + '/api/health').then((response) => {
+    navigate(to);
+  }, [to]);
+  return null;
+}
+
+function App () {
+  const dispatch = useDispatch();
+  const userSlice = useSelector((state) => state.user);
+  const user = userSlice.primitives.user;
+
+  useEffect(() => {
+    apiClient.get('/health').then((response) => {
       console.log(response);
     }, (error) => {
       console.log(error);
     });
   }, []);
 
+  useEffect(() => {
+    if (!user) {
+      dispatch(getUser());
+    }
+  }, [user]);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <Counter />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <span>
-          <span>Learn </span>
-          <a
-            className="App-link"
-            href="https://reactjs.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            React
-          </a>
-          <span>, </span>
-          <a
-            className="App-link"
-            href="https://redux.js.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Redux
-          </a>
-          <span>, </span>
-          <a
-            className="App-link"
-            href="https://redux-toolkit.js.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Redux Toolkit
-          </a>
-          ,<span> and </span>
-          <a
-            className="App-link"
-            href="https://react-redux.js.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            React Redux
-          </a>
-        </span>
-      </header>
-    </div>
+    <Fragment>
+      <Menu />
+      <Modal />
+      <Routes>
+        {['/', '/search', '/likes', '/your-files', '/shared-files', '/register', '/login'].map((path, index) => (
+          <Route
+            exact
+            path={path}
+            element={<Dashboard/>}
+            key={index}
+          />
+        ))}
+        <Route path="*" element={<Redirect to="/"/>}/>
+      </Routes>
+    </Fragment>
   );
 }
 
