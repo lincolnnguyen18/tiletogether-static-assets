@@ -4,6 +4,7 @@ import { apiClient } from '../../app/apiClient';
 
 const initialState = {
   primitives: {
+    // { username, email }
     user: null,
   },
 };

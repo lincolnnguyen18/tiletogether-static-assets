@@ -10,6 +10,7 @@ import { setModalPrimitives, setModalReactElements } from '../../../components/M
 import { SearchOptionsModalBody, SearchOptionsModalHeader } from '../Modals/SearchOptionsModal';
 import { getQueryParams, pages } from '../Dashboard';
 import { useEffect } from 'react';
+import _ from 'lodash';
 
 const middleSectionStyle = css`
   gap: var(--gap);
@@ -31,18 +32,14 @@ const pageIndicatorStyle = css`
 `;
 
 export function submitSearch (navigate, location, oldOptions, newOptions) {
+  console.log('submitSearch', oldOptions, newOptions);
   const searchOptions = Object.assign({}, oldOptions, newOptions);
-
-  if (!searchOptions.keywords) searchOptions.keywords = '';
-  if (!searchOptions.tiledimension) searchOptions.tiledimension = '';
-  if (!searchOptions.filetype) searchOptions.filetype = 'any';
-  if (!searchOptions.sortby) searchOptions.sortby = 'publishdate';
 
   const pathname = location.pathname === '/' ? '/search' : location.pathname;
   const newRoute = pathname + '?';
   const paramString = Object.keys(searchOptions)
     .filter(key => searchOptions[key] !== '')
-    .map((key) => `${key}=${searchOptions[key]}`)
+    .map((key) => `${_.snakeCase(key)}=${searchOptions[key]}`)
     .join('&');
   navigate(newRoute + paramString);
 }

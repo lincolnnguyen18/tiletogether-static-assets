@@ -87,43 +87,55 @@ const leftSideStyle = css`
   padding: 8px;
 `;
 
-export function File ({ imageUrl, title, subtext, liked }) {
+export function File ({ imageUrl, title, subtext, liked, type, isLoading = false }) {
   const likeButtonRef = useRef(null);
 
-  return (
-    <div css={fileStyle}>
-      <img src={imageUrl} css={imageStyle} />
-      <div css={fileInfoContainerStyle}>
-        <div css={fileInfoStyle}>
-          <div css={leftSideStyle}>
-            <Badge
-              size={48}
-              // iconSize={22}
-              color='white'
-              backgroundColor='var(--tileset-color)'
-            >
-              <span className='icon-tileset'></span>
-            </Badge>
-            <div css={fileInfoTextStyle}>
-              <Link to={`/tileset/${title}`}>
-                <h1>{title}</h1>
-              </Link>
-              <span>{subtext}</span>
+  let file;
+
+  if (!isLoading) {
+    file = (
+      <div css={fileStyle}>
+        <img src={imageUrl} css={imageStyle} />
+        <div css={fileInfoContainerStyle}>
+          <div css={fileInfoStyle}>
+            <div css={leftSideStyle}>
+              <Badge
+                size={48}
+                color='white'
+                backgroundColor={`var(--${type}-color)`}
+              >
+                <span className={`icon-${type}`}></span>
+              </Badge>
+              <div css={fileInfoTextStyle}>
+                <Link to={`/tileset/${title}`}>
+                  <h1>{title}</h1>
+                </Link>
+                <span>{subtext}</span>
+              </div>
             </div>
+            <IconButton
+              size={42}
+              style={likeButtonStyle}
+              refProp={likeButtonRef}
+              focusColor={null}
+            >
+              {liked
+                ? <span className='icon-like-filled' />
+                : <span className='icon-like-unfilled' />
+              }
+            </IconButton>
           </div>
-          <IconButton
-            size={42}
-            style={likeButtonStyle}
-            refProp={likeButtonRef}
-            focusColor={null}
-          >
-            {liked
-              ? <span className='icon-like-filled' />
-              : <span className='icon-like-unfilled' />
-            }
-          </IconButton>
         </div>
       </div>
-    </div>
-  );
+    );
+  } else {
+    file = (
+      <div css={fileStyle}>
+        <div css={css`padding: 8px; padding-bottom: 11px; width: 100%; height: 100%;`}>
+        </div>
+      </div>
+    );
+  }
+
+  return file;
 }

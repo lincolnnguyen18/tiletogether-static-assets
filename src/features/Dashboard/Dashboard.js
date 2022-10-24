@@ -12,6 +12,8 @@ import { Navbar } from './Navbar/Navbar';
 import { openAuthModal } from './Modals/AuthModal';
 import { RedirectPage } from '../../components/RedirectPage';
 import { Icon } from '../../components/Icon';
+import { getFiles, getMoreFiles } from '../File/fileSlice';
+import { Button, transparentButtonStyle } from '../../components/Button';
 
 const gridStyle = css`
   padding: 0 20px 8px 20px;
@@ -24,8 +26,50 @@ const dashboardStyle = css`
   width: 100%;
 `;
 
+const loadMoreContainerStyle = css`
+  display: flex;
+  justify-content: center;
+  padding: 20px 0;
+`;
+
+const loadMoreButtonStyle = css`
+  & {
+    text-decoration: none !important;
+    gap: 8px;
+  }
+  
+  &:hover {
+    .text {
+      text-decoration: underline;
+    }
+  }
+  
+  .icon-more {
+    font-size: 24px;
+  }
+`;
+
 export function getQueryParams (location) {
-  return Object.fromEntries(new URLSearchParams(location.search));
+  let params = Object.fromEntries(new URLSearchParams(location.search));
+  params = _.mapKeys(params, (__, key) => _.camelCase(key));
+  let mode;
+  switch (location.pathname) {
+    case '/likes':
+      mode = 'likes';
+      break;
+    case '/your-files':
+      mode = 'your_files';
+      break;
+    case '/shared-files':
+      mode = 'shared';
+      break;
+    default:
+      break;
+  }
+  if (mode) {
+    params.mode = mode;
+  }
+  return params;
 }
 
 function getCurrentPage (location, dispatch = null) {
@@ -53,7 +97,10 @@ export function Dashboard () {
   const queryParams = getQueryParams(location);
   const dispatch = useDispatch();
   const userSlice = useSelector((state) => state.user);
+  const fileSlice = useSelector((state) => state.file);
   const currentPage = useSelector((state) => state.dashboard.primitives.currentPage);
+  const files = fileSlice.files;
+  const pending = fileSlice.pending;
 
   useEffect(() => {
     dispatch(setDashboardPrimitives({ sidebarOpen: false }));
@@ -61,32 +108,69 @@ export function Dashboard () {
 
     try {
       const page = getCurrentPage(location, dispatch);
-      dispatch(setDashboardPrimitives({ currentPage: page }));
-      document.getElementById('root').scrollTo(0, 0);
+      dispatch(setDashboardPrimitives({
+        currentPage: page,
+        currentSearchKeywords: queryParams.keywords ?? '',
+      }));
 
-      dispatch(setDashboardPrimitives({ currentSearchKeywords: queryParams.keywords ?? '' }));
+      document.getElementById('root').scrollTo(0, 0);
     } catch (error) {
       navigate('/');
     }
+
+    dispatch(getFiles(getQueryParams(location, dispatch)));
   }, [location]);
+
+  useEffect(() => {
+    dispatch(getFiles(getQueryParams(location, dispatch)));
+  }, []);
 
   let content;
 
   if (userSlice.primitives.user || currentPage === 'home') {
-    content = (
-      <Grid itemWidth={400} gap={8} style={gridStyle}>
-        {_.times(56, (i) => (
-          <File
-            key={i}
-            imageUrl='/mock-data/file-image.png'
-            title='Basic Furniture'
-            subtext='Batu Blanka · 16px tiles'
-            liked={false}
-          >
-          </File>
-        ))}
-      </Grid>
-    );
+    if (files != null) {
+      content = (
+        <Fragment>
+          <Grid itemWidth={400} gap={8} style={gridStyle}>
+            {files.map((file, index) => (
+              <File
+                key={index}
+                imageUrl='/mock-data/file-image.png'
+                title={file.name}
+                subtext={file.authorUsername}
+                liked={userSlice.primitives.user && file.likes && file.likes.find(like => like.username === userSlice.primitives.user.username) != null}
+                id={file.id}
+                type={file.type}
+              />
+            ))
+            }
+          </Grid>
+          {fileSlice.lastFile != null && (
+            <div css={loadMoreContainerStyle}>
+              <Button
+                style={[transparentButtonStyle, loadMoreButtonStyle]}
+                onClick={() => {
+                  const payload = getQueryParams(location, dispatch);
+                  payload.continuation_token = JSON.stringify(fileSlice.lastFile);
+                  dispatch(getMoreFiles(payload));
+                }}
+              >
+                <span className='text'>{pending.includes('getMoreFiles') ? 'Loading...' : 'Load More'}</span>
+                <span className='icon-more' />
+              </Button>
+            </div>
+          )}
+        </Fragment>
+      );
+    } else {
+      content = (
+        <Grid itemWidth={400} gap={8} style={gridStyle}>
+          {_.times(10, (i) => (
+           <File key={i} isLoading={true} />
+          ))}
+        </Grid>
+      );
+    }
   } else {
     content = (
       <RedirectPage

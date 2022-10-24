@@ -2,7 +2,6 @@ import { createSlice } from '@reduxjs/toolkit';
 import _ from 'lodash';
 
 const initialState = {
-  files: [],
   primitives: {
     currentSearchKeywords: '',
     // currentPage; home, likes, your-files, shared-files

@@ -46,7 +46,7 @@ export function SearchOptionsModalBody () {
         type='text'
         autoFocus
         style={whiteInputStyle}
-        name='query'
+        name='keywords'
         defaultValue={dashboardSlice.primitives.currentSearchKeywords || ''}
       />
       <Textfield
@@ -54,20 +54,20 @@ export function SearchOptionsModalBody () {
         label='Tile dimension (width and height of a tile in pixels)'
         type='number'
         style={whiteInputStyle}
-        name='tiledimension'
-        defaultValue={searchOptions.tiledimension ? Number(searchOptions.tiledimension) : ''}
+        name='tileDimension'
+        defaultValue={searchOptions.tileDimension ? Number(searchOptions.tileDimension) : ''}
       />
       <SelectMenu
         label='File type'
-        items={{ Any: 'any', Tileset: 'tileset', Map: 'map' }}
-        name='filetype'
-        defaultValue={searchOptions.filetype}
+        items={{ Any: '', Tileset: 'tileset', Map: 'map' }}
+        name='type'
+        defaultValue={searchOptions.type}
       />
       <SelectMenu
         label='Sort by'
-        items={{ 'Publish date': 'publishdate', 'View count': 'view-count', Likes: 'likes' }}
-        name='sortby'
-        defaultValue={searchOptions.sortby}
+        items={{ 'Publish date': '', Likes: 'likes' }}
+        name='sortBy'
+        defaultValue={searchOptions.sortBy}
       />
       <Button style={blackButtonStyle}>
         <span>Apply</span>

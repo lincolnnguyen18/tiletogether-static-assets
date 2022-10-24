@@ -1,11 +1,11 @@
 @font-face {
   font-family: 'icomoon';
-  src:  url('https://i.icomoon.io/public/98011504ce/TileTogether/icomoon.eot?qvufgg');
-  src:  url('https://i.icomoon.io/public/98011504ce/TileTogether/icomoon.eot?qvufgg#iefix') format('embedded-opentype'),
-  url('https://i.icomoon.io/public/98011504ce/TileTogether/icomoon.woff2?qvufgg') format('woff2'),
-  url('https://i.icomoon.io/public/98011504ce/TileTogether/icomoon.ttf?qvufgg') format('truetype'),
-  url('https://i.icomoon.io/public/98011504ce/TileTogether/icomoon.woff?qvufgg') format('woff'),
-  url('https://i.icomoon.io/public/98011504ce/TileTogether/icomoon.svg?qvufgg#icomoon') format('svg');
+  src:  url('https://i.icomoon.io/public/98011504ce/TileTogether/icomoon.eot?14hysq');
+  src:  url('https://i.icomoon.io/public/98011504ce/TileTogether/icomoon.eot?14hysq#iefix') format('embedded-opentype'),
+  url('https://i.icomoon.io/public/98011504ce/TileTogether/icomoon.woff2?14hysq') format('woff2'),
+  url('https://i.icomoon.io/public/98011504ce/TileTogether/icomoon.ttf?14hysq') format('truetype'),
+  url('https://i.icomoon.io/public/98011504ce/TileTogether/icomoon.woff?14hysq') format('woff'),
+  url('https://i.icomoon.io/public/98011504ce/TileTogether/icomoon.svg?14hysq#icomoon') format('svg');
   font-weight: normal;
   font-style: normal;
   font-display: block;
@@ -26,6 +26,9 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+.icon-more:before {
+  content: "\e912";
+}
 .icon-avatar:before {
   content: "\e900";
 }

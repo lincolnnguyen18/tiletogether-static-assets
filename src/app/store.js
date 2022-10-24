@@ -3,6 +3,7 @@ import { dashboardReducer } from '../features/Dashboard/dashboardSlice';
 import { menuReducer } from '../components/Menu/menuSlice';
 import { modalReducer } from '../components/Modal/modalSlice';
 import { userReducer } from '../features/User/userSlice';
+import { fileReducer } from '../features/File/fileSlice';
 
 export const store = configureStore({
   reducer: {
@@ -10,6 +11,7 @@ export const store = configureStore({
     menu: menuReducer,
     modal: modalReducer,
     user: userReducer,
+    file: fileReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
