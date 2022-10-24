@@ -1,8 +1,20 @@
 import { configureStore } from '@reduxjs/toolkit';
-import counterReducer from '../features/counter/counterSlice';
+import { dashboardReducer } from '../features/Dashboard/dashboardSlice';
+import { menuReducer } from '../components/Menu/menuSlice';
+import { modalReducer } from '../components/Modal/modalSlice';
+import { userReducer } from '../features/User/userSlice';
+import { fileReducer } from '../features/File/fileSlice';
 
 export const store = configureStore({
   reducer: {
-    counter: counterReducer,
+    dashboard: dashboardReducer,
+    menu: menuReducer,
+    modal: modalReducer,
+    user: userReducer,
+    file: fileReducer,
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: false,
+    }),
 });

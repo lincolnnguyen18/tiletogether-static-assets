@@ -4,6 +4,7 @@ const cdk = require('aws-cdk-lib');
 const { TileTogetherStaticAssetsStack } = require('../lib/tile-together-static-assets-stack');
 
 const app = new cdk.App();
+// eslint-disable-next-line no-new
 new TileTogetherStaticAssetsStack(app, 'tiletogether-static-assets-stack', {
   /* If you don't specify 'env', this stack will be environment-agnostic.
    * Account/Region-dependent features and context lookups will not work,
