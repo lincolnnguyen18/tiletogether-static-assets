@@ -6,6 +6,9 @@ import { Route, Routes, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getUser } from './features/User/userSlice';
 import { apiClient } from './app/apiClient';
+import { FileViewer } from './features/FileViewer/FileViewer';
+import { TilesetEditor } from './features/TilesetEditor/TilesetEditor';
+import { MapEditor } from './features/MapEditor/MapEditor';
 
 export function Redirect ({ to }) {
   const navigate = useNavigate();
@@ -41,13 +44,27 @@ function App () {
       <Routes>
         {['/', '/search', '/likes', '/your-files', '/shared-files', '/register', '/login'].map((path, index) => (
           <Route
-            exact
-            path={path}
+            exact path={path}
             element={<Dashboard/>}
             key={index}
           />
         ))}
-        <Route path="*" element={<Redirect to="/"/>}/>
+        {['/tilesets/:id', '/maps/:id'].map((path, index) => (
+          <Route
+            exact path={path}
+            element={<FileViewer/>}
+            key={index}
+          />
+        ))}
+        <Route
+          exact path = '/tilesets/:id/edit'
+          element={<TilesetEditor/>}
+        />
+        <Route
+          exact path = '/maps/:id/edit'
+          element={<MapEditor/>}
+        />
+        {/* <Route path="*" element={<Redirect to="/"/>}/> */}
       </Routes>
     </Fragment>
   );

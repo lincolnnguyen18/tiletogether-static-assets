@@ -87,7 +87,7 @@ const leftSideStyle = css`
   padding: 8px;
 `;
 
-export function File ({ imageUrl, title, subtext, liked, type, isLoading = false }) {
+export function File ({ imageUrl, title, subtext, liked, type, id, isLoading = false }) {
   const likeButtonRef = useRef(null);
 
   let file;
@@ -107,7 +107,7 @@ export function File ({ imageUrl, title, subtext, liked, type, isLoading = false
                 <span className={`icon-${type}`}></span>
               </Badge>
               <div css={fileInfoTextStyle}>
-                <Link to={`/tileset/${title}`}>
+                <Link to={`/${type}s/${id}`}>
                   <h1>{title}</h1>
                 </Link>
                 <span>{subtext}</span>

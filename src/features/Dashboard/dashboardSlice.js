@@ -19,12 +19,9 @@ const dashboardSlice = createSlice({
     setDashboardPrimitives: (state, action) => {
       state.primitives = _.merge(state.primitives, action.payload);
     },
-    replaceDashboardPrimitives: (state, action) => {
-      _.assign(state.primitives, action.payload);
-    },
   },
 });
 
-export const { setDashboardPrimitives, replaceDashboardPrimitives } = dashboardSlice.actions;
+export const { setDashboardPrimitives } = dashboardSlice.actions;
 
 export const dashboardReducer = dashboardSlice.reducer;

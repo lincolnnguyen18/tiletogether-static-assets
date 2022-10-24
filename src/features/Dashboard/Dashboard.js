@@ -139,7 +139,7 @@ export function Dashboard () {
                 title={file.name}
                 subtext={file.authorUsername}
                 liked={userSlice.primitives.user && file.likes && file.likes.find(like => like.username === userSlice.primitives.user.username) != null}
-                id={file.id}
+                id={file._id}
                 type={file.type}
               />
             ))

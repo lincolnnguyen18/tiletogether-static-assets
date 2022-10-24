@@ -32,11 +32,16 @@ const pageIndicatorStyle = css`
 `;
 
 export function submitSearch (navigate, location, oldOptions, newOptions) {
-  console.log('submitSearch', oldOptions, newOptions);
   const searchOptions = Object.assign({}, oldOptions, newOptions);
 
-  const pathname = location.pathname === '/' ? '/search' : location.pathname;
-  const newRoute = pathname + '?';
+  const validPathNames = ['/', '/likes', '/your-files', '/shared-files'];
+  let newRoute;
+  if (!validPathNames.includes(location.pathname)) {
+    newRoute = '/search?';
+  } else {
+    newRoute = location.pathname + '?';
+  }
+
   const paramString = Object.keys(searchOptions)
     .filter(key => searchOptions[key] !== '')
     .map((key) => `${_.snakeCase(key)}=${searchOptions[key]}`)
