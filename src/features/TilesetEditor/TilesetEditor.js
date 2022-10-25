@@ -23,8 +23,8 @@ export function TilesetEditor () {
     <Fragment>
       <div css={tilesetEditorStyle}>
         <h1>Tileset Editor</h1>
-        <Link to='/'>
-          <Button>Go home</Button>
+        <Link to={`/tilesets/${id}`}>
+          <Button>Go back</Button>
         </Link>
       </div>
     </Fragment>

@@ -19,8 +19,8 @@ export function MapEditor () {
     <Fragment>
       <div css={mapEditorStyle}>
         <h1>Map Editor</h1>
-        <Link to='/'>
-          <Button>Go home</Button>
+        <Link to={`/maps/${id}`}>
+          <Button>Go back</Button>
         </Link>
       </div>
     </Fragment>

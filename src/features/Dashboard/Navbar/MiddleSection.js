@@ -34,7 +34,7 @@ const pageIndicatorStyle = css`
 export function submitSearch (navigate, location, oldOptions, newOptions) {
   const searchOptions = Object.assign({}, oldOptions, newOptions);
 
-  const validPathNames = ['/', '/likes', '/your-files', '/shared-files'];
+  const validPathNames = ['/likes', '/your-files', '/shared-files'];
   let newRoute;
   if (!validPathNames.includes(location.pathname)) {
     newRoute = '/search?';

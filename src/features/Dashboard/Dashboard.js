@@ -13,7 +13,7 @@ import { openAuthModal } from './Modals/AuthModal';
 import { RedirectPage } from '../../components/RedirectPage';
 import { Icon } from '../../components/Icon';
 import { getFiles, getMoreFiles } from '../File/fileSlice';
-import { Button, transparentButtonStyle } from '../../components/Button';
+import { Button, transparentButtonStyle, whiteButtonStyle } from '../../components/Button';
 
 const gridStyle = css`
   padding: 0 20px 8px 20px;
@@ -127,8 +127,10 @@ export function Dashboard () {
 
   let content;
 
+  // Only show non-home pages (likes, shared with, etc) if user is logged in
   if (userSlice.primitives.user || currentPage === 'home') {
-    if (files != null) {
+    // if files finished loading and there are files
+    if (files != null && files.length > 0) {
       content = (
         <Fragment>
           <Grid itemWidth={400} gap={8} style={gridStyle}>
@@ -162,6 +164,25 @@ export function Dashboard () {
           )}
         </Fragment>
       );
+    // if files finished loading and there are no files
+    } else if (files != null && files.length === 0) {
+      content = (
+        <RedirectPage
+          icon={(
+            <Icon size={64} iconSize={90}>
+              <span className={pages[currentPage].icon}></span>
+            </Icon>
+          )}
+          title='No files found'
+          message={pages[currentPage].noFilesFound}
+        >
+          <Button
+            style={whiteButtonStyle}
+            onClick={() => navigate('/')}
+          >Go back to home page</Button>
+        </RedirectPage>
+      );
+    // if files are still loading
     } else {
       content = (
         <Grid itemWidth={400} gap={8} style={gridStyle}>
@@ -181,7 +202,16 @@ export function Dashboard () {
         )}
         title={pages[currentPage].redirectTitle}
         message={pages[currentPage].redirectMessage}
-      />
+      >
+        <Button
+          style={whiteButtonStyle}
+          onClick={() => openAuthModal(dispatch, 'register')}
+        >Register</Button>
+        <Button
+          style={transparentButtonStyle}
+          onClick={() => openAuthModal(dispatch, 'login')}
+        >Log in</Button>
+      </RedirectPage>
     );
   }
 
@@ -200,6 +230,7 @@ export const pages = {
     title: 'Home',
     icon: 'icon-home',
     searchText: 'Search all files on TileTogether',
+    noFilesFound: 'No matching files found',
   },
   likes: {
     title: 'Your Likes',
@@ -207,6 +238,7 @@ export const pages = {
     searchText: 'Search files you liked',
     redirectTitle: 'View your liked files',
     redirectMessage: 'Log in to access files you liked',
+    noFilesFound: 'You have not liked any files yet',
   },
   'your-files': {
     title: 'Your files',
@@ -214,6 +246,7 @@ export const pages = {
     searchText: 'Search your files',
     redirectTitle: 'View your files',
     redirectMessage: 'Log in to access files you created',
+    noFilesFound: 'You have not created any files yet',
   },
   'shared-files': {
     title: 'Files shared with you',
@@ -221,5 +254,6 @@ export const pages = {
     searchText: 'Search files shared with you',
     redirectTitle: 'View your shared files',
     redirectMessage: 'Log in to access files other users have shared with you',
+    noFilesFound: 'No files have been shared with you yet',
   },
 };

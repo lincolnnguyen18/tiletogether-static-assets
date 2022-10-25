@@ -50,9 +50,16 @@ const fileInfoStyle = css`
 `;
 
 const fileInfoTextStyle = css`
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
+  display: inline-block;
+  
+  // limit to one line with ellipsis for text overflow
+  h1 {
+    white-space: nowrap;
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 10px;
+  }
 `;
 
 const likeButtonStyle = css`
@@ -108,7 +115,7 @@ export function File ({ imageUrl, title, subtext, liked, type, id, isLoading = f
               </Badge>
               <div css={fileInfoTextStyle}>
                 <Link to={`/${type}s/${id}`}>
-                  <h1>{title}</h1>
+                  <h1 title={title}>{title}</h1>
                 </Link>
                 <span>{subtext}</span>
               </div>
