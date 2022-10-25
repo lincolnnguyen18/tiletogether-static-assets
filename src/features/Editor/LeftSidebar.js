@@ -1,11 +1,11 @@
 /** @jsx jsx */
 import { css, jsx } from '@emotion/react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Fragment } from 'react';
+import { Fragment, useEffect } from 'react';
 import { LeftSidebarDrawer } from './LeftSidebarDrawer';
 import { setLeftSidebarPrimitives } from './LeftSidebarSlice';
 import { IconButton } from '../../components/IconButton';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { SelectMenu } from '../../components/SelectMenu';
 import { Button, whiteButtonStyle } from '../../components/Button';
 import { Icon } from '../../components/Icon';
@@ -32,19 +32,24 @@ const leftSidebarStyle = css`
   }
 `;
 
-export function LeftSidebar ({ type }) {
+export function LeftSidebar () {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const leftSidebarSlice = useSelector((state) => state.leftSidebar);
   const drawerOpen = leftSidebarSlice.primitives.drawerOpen;
   const drawerPage = leftSidebarSlice.primitives.drawerPage;
-  const { id } = useParams();
+  const fileSlice = useSelector((state) => state.file);
+  const file = fileSlice.file;
+
+  useEffect(() => {
+    dispatch(setLeftSidebarPrimitives({ drawerOpen: false }));
+  }, []);
 
   function openDrawer (page) {
     dispatch(setLeftSidebarPrimitives({ drawerOpen: true, drawerPage: page }));
   }
 
-  function closeDrawer () {
+  async function closeDrawer () {
     dispatch(setLeftSidebarPrimitives({ drawerOpen: false }));
   }
 
@@ -124,24 +129,33 @@ export function LeftSidebar ({ type }) {
     </Fragment>
   );
 
-  const settingsPage = (
+  let publishText;
+
+  if (file && file.publishedAt) {
+    const dateString = new Date(file.publishedAt).toLocaleDateString();
+    publishText = `This ${file.type} was published on ${dateString}`;
+  } else if (file) {
+    publishText = `This ${file.type} has not been published yet`;
+  }
+
+  const settingsPage = file && (
     <Fragment>
       <Textfield
-        placeholder={`Type a name for your ${type}`}
-        label={`${_.capitalize(type)} name`}
+        placeholder={`Type a name for your ${file.type}`}
+        label={`${_.capitalize(file.type)} name`}
         type='text'
         style={whiteInputStyle}
         name='name'
-        defaultValue={'My awesome file'}
+        defaultValue={file.name}
       />
       <Checkbox
         label='Grid lines'
         name='gridLines'
         defaultValue={true}
       />
-      <h4>This {type} was published on 10/10/2021</h4>
+      <h4>{publishText}</h4>
       <div css={css`display: flex; gap: 16px; justify-content: flex-start;`}>
-        <Button style={whiteButtonStyle}>Unpublish</Button>
+        <Button style={whiteButtonStyle}>{file.publishedAt ? 'Unpublish' : 'Publish'}</Button>
         <Button style={[whiteButtonStyle, css`background: red !important; color: white !important;`]}>Delete</Button>
       </div>
     </Fragment>
@@ -154,7 +168,7 @@ export function LeftSidebar ({ type }) {
       border-radius: 4px;`}></div>
   );
 
-  return (
+  return file && (
     <Fragment>
       <LeftSidebarDrawer
         open={drawerOpen}
@@ -174,22 +188,24 @@ export function LeftSidebar ({ type }) {
           </IconButton>
         </div>
         <div className='group'>
-          <IconButton onClick={() => openDrawer('download')} title={`Download ${type}`}>
+          <IconButton onClick={() => openDrawer('download')} title={`Download ${file.type}`}>
             <span className='icon-download'></span>
           </IconButton>
           <IconButton onClick={() => openDrawer('share')} title='Collaboration settings'>
             <span className='icon-share'></span>
           </IconButton>
-          <IconButton onClick={() => openDrawer('settings')} title={`${_.capitalize(type)} properties`}>
+          <IconButton onClick={() => openDrawer('settings')} title={`${_.capitalize(file.type)} properties`}>
             <span className='icon-settings'></span>
           </IconButton>
           {divider}
           <IconButton onClick={() => navigate('/your-files')} title='Go to your files'>
             <span className='icon-home'></span>
           </IconButton>
-          <IconButton onClick={() => navigate(`/${type}s/${id}`)} title={`View published ${type}`}>
-            <span className='icon-globe'></span>
-          </IconButton>
+          {file.publishedAt && (
+            <IconButton onClick={() => navigate(`/${file.type}s/${file.id}`)} title={`View published ${file.type}`}>
+              <span className='icon-globe'></span>
+            </IconButton>
+          )}
         </div>
       </div>
     </Fragment>
