@@ -2,7 +2,7 @@
 import { css, jsx } from '@emotion/react';
 import { IconButton } from './IconButton';
 import { Badge } from './Badge';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useRef } from 'react';
 
 const fileStyle = css`
@@ -50,9 +50,16 @@ const fileInfoStyle = css`
 `;
 
 const fileInfoTextStyle = css`
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
+  display: inline-block;
+  
+  // limit to one line with ellipsis for text overflow
+  h1 {
+    white-space: nowrap;
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 10px;
+  }
 `;
 
 const likeButtonStyle = css`
@@ -89,6 +96,16 @@ const leftSideStyle = css`
 
 export function File ({ imageUrl, title, subtext, liked, type, id, isLoading = false }) {
   const likeButtonRef = useRef(null);
+  const location = useLocation();
+  const path = location.pathname;
+
+  let link;
+
+  if (path === '/your-files') {
+    link = `/${type}s/${id}/edit`;
+  } else {
+    link = `/${type}s/${id}`;
+  }
 
   let file;
 
@@ -107,8 +124,8 @@ export function File ({ imageUrl, title, subtext, liked, type, id, isLoading = f
                 <span className={`icon-${type}`}></span>
               </Badge>
               <div css={fileInfoTextStyle}>
-                <Link to={`/${type}s/${id}`}>
-                  <h1>{title}</h1>
+                <Link to={link}>
+                  <h1 title={title}>{title}</h1>
                 </Link>
                 <span>{subtext}</span>
               </div>

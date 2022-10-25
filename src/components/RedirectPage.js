@@ -1,8 +1,5 @@
 /** @jsx jsx */
 import { css, jsx } from '@emotion/react';
-import { Button, transparentButtonStyle, whiteButtonStyle } from './Button';
-import { openAuthModal } from '../features/Dashboard/Modals/AuthModal';
-import { useDispatch } from 'react-redux';
 
 const redirectPageStyle = css`
   color: white;
@@ -28,9 +25,7 @@ const messageStyle = css`
   gap: 10px;
 `;
 
-export function RedirectPage ({ icon, title, message }) {
-  const dispatch = useDispatch();
-
+export function RedirectPage ({ icon, title, message, children }) {
   return (
     <div css={redirectPageStyle}>
       {icon}
@@ -39,14 +34,7 @@ export function RedirectPage ({ icon, title, message }) {
         <span>{message}</span>
       </div>
       <div css={buttonsStyle}>
-        <Button
-          style={whiteButtonStyle}
-          onClick={() => openAuthModal(dispatch, 'register')}
-        >Register</Button>
-        <Button
-          style={transparentButtonStyle}
-          onClick={() => openAuthModal(dispatch, 'login')}
-        >Log in</Button>
+        {children}
       </div>
     </div>
   );

@@ -7,6 +7,7 @@ const initialState = {
     // currentPage; home, likes, your-files, shared-files
     currentPage: 'home',
     sidebarOpen: false,
+    authorUsername: null,
   },
   // user; { username, email }
   user: null,

@@ -94,7 +94,6 @@ export function Modal ({ style, closeOnEscape = false }) {
               <IconButton
                 color='black'
                 focusColor='#d3d3d3'
-                style={css`padding: 2px 0 0 2px;`}
                 onClick={() => dispatch(setModalPrimitives({ open: false }))}
               >
                 <span className='icon-close' />

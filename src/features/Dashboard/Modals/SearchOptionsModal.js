@@ -65,7 +65,8 @@ export function SearchOptionsModalBody () {
       />
       <SelectMenu
         label='Sort by'
-        items={{ 'Publish date': '', Likes: 'likes' }}
+        // server will sort user's files and shared with files by date updated and all other files by date published
+        items={{ Date: '', Likes: 'likes' }}
         name='sortBy'
         defaultValue={searchOptions.sortBy}
       />
