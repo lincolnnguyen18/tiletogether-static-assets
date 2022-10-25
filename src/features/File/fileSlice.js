@@ -73,7 +73,7 @@ const fileSlice = createSlice({
         state.pending = state.pending.filter((item) => item !== 'getMoreFiles');
       })
       .addCase(getFile.pending, (state) => {
-        state.files = null;
+        state.file = null;
       })
       .addCase(getFile.fulfilled, (state, action) => {
         console.log(action.payload);
