@@ -14,6 +14,7 @@ import { RedirectPage } from '../../components/RedirectPage';
 import { Icon } from '../../components/Icon';
 import { getFiles, getMoreFiles } from '../File/fileSlice';
 import { Button, transparentButtonStyle, whiteButtonStyle } from '../../components/Button';
+import { timeAgo } from '../../utils/timeUtils';
 
 const gridStyle = css`
   padding: 0 20px 8px 20px;
@@ -69,6 +70,7 @@ export function getQueryParams (location) {
   if (mode) {
     params.mode = mode;
   }
+
   return params;
 }
 
@@ -139,7 +141,11 @@ export function Dashboard () {
                 key={index}
                 imageUrl='/mock-data/file-image.png'
                 title={file.name}
-                subtext={file.authorUsername}
+                // format file.updatedAt to be more readable
+                subtext={`${file.authorUsername} · ${
+                  currentPage === 'home'
+                  ? 'Published'
+                  : 'Updated'} ${timeAgo(new Date(file.updatedAt))} ago`}
                 liked={userSlice.primitives.user && file.likes && file.likes.find(like => like.username === userSlice.primitives.user.username) != null}
                 id={file._id}
                 type={file.type}
@@ -192,6 +198,7 @@ export function Dashboard () {
         </Grid>
       );
     }
+  // if user is not logged in
   } else {
     content = (
       <RedirectPage

@@ -42,6 +42,8 @@ export function submitSearch (navigate, location, oldOptions, newOptions) {
     newRoute = location.pathname + '?';
   }
 
+  // remove mode key from searchOptions since it is inferred from the pathname, mode is only added before the request is made (this is done in getQueryParams)
+  delete searchOptions.mode;
   const paramString = Object.keys(searchOptions)
     .filter(key => searchOptions[key] !== '')
     .map((key) => `${_.snakeCase(key)}=${searchOptions[key]}`)

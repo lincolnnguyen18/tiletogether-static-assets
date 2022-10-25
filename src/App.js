@@ -64,7 +64,7 @@ function App () {
           exact path = '/maps/:id/edit'
           element={<MapEditor/>}
         />
-        {/* <Route path="*" element={<Redirect to="/"/>}/> */}
+         <Route path="*" element={<Redirect to="/"/>}/>
       </Routes>
     </Fragment>
   );
