@@ -34,9 +34,11 @@ const pageIndicatorStyle = css`
 export function submitSearch (navigate, location, oldOptions, newOptions) {
   const searchOptions = Object.assign({}, oldOptions, newOptions);
 
-  const validPathNames = ['/likes', '/your-files', '/shared-files'];
+  const validPathNames = ['likes', 'your-files', 'shared-files', 'users'];
   let newRoute;
-  if (!validPathNames.includes(location.pathname)) {
+  // eslint-disable-next-line no-unused-vars
+  const path = location.pathname.split('/')[1];
+  if (!validPathNames.includes(path)) {
     newRoute = '/search?';
   } else {
     newRoute = location.pathname + '?';
@@ -58,15 +60,28 @@ export function MiddleSection () {
   const dashboardSlice = useSelector((state) => state.dashboard);
   const currentPage = useSelector((state) => state.dashboard.primitives.currentPage);
   const searchOptions = getQueryParams(location);
+  const authorUsername = dashboardSlice.primitives.authorUsername;
 
   let pageIndicator;
   if (currentPage !== 'home') {
-    const page = pages[currentPage];
+    let page = pages[currentPage];
+
+    if (currentPage === 'users') {
+      page = {
+        title: `${authorUsername}'s files`,
+        icon: 'icon-file',
+      };
+    }
+
     pageIndicator = (
       <button
         css={pageIndicatorStyle}
         onClick={() => {
-          navigate(`/${currentPage}`);
+          if (currentPage === 'users') {
+            navigate(`/users/${authorUsername}`);
+          } else {
+            navigate(`/${currentPage}`);
+          }
         }}
       >
         <span>{page.title}</span>
@@ -104,7 +119,7 @@ export function MiddleSection () {
     <div css={middleSectionStyle}>
       {pageIndicator}
       <Searchbar
-        placeholder={pages[currentPage].searchText}
+        placeholder={currentPage !== 'users' ? pages[currentPage].searchText : `Search ${authorUsername}'s files`}
         value={dashboardSlice.primitives.currentSearchKeywords}
         onChange={v => dispatch(setDashboardPrimitives({ currentSearchKeywords: v }))}
         onSubmit={v => submitSearch(navigate, location, searchOptions, { keywords: v })}

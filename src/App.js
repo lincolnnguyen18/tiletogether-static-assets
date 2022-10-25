@@ -42,7 +42,7 @@ function App () {
       <Menu />
       <Modal />
       <Routes>
-        {['/', '/search', '/likes', '/your-files', '/shared-files', '/register', '/login'].map((path, index) => (
+        {['/', '/search', '/likes', '/your-files', '/shared-files', '/register', '/login', '/users/:username'].map((path, index) => (
           <Route
             exact path={path}
             element={<Dashboard/>}
@@ -64,7 +64,7 @@ function App () {
           exact path = '/maps/:id/edit'
           element={<MapEditor/>}
         />
-         <Route path="*" element={<Redirect to="/"/>}/>
+        <Route path="*" element={<Redirect to="/"/>}/>
       </Routes>
     </Fragment>
   );

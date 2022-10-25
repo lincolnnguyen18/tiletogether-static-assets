@@ -75,7 +75,7 @@ export function NavSidebar ({ open, onClose }) {
   }
 
   useEffect(() => {
-    if (open) {
+    if (open && currentItemRef.current) {
       currentItemRef.current.focus();
     }
   }, [open]);
