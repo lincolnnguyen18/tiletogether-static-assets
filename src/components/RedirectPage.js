@@ -23,6 +23,8 @@ const messageStyle = css`
   flex-direction: column;
   align-items: center;
   gap: 10px;
+  max-width: 350px;
+  text-align: center; 
 `;
 
 export function RedirectPage ({ icon, title, message, children }) {

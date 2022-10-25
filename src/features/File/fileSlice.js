@@ -1,4 +1,4 @@
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice, isAnyOf } from '@reduxjs/toolkit';
 import { apiClient } from '../../app/apiClient';
 import { wait } from '../../utils/timeUtils';
 import _ from 'lodash';
@@ -9,6 +9,7 @@ const initialState = {
   lastFile: null,
   limit: 10,
   pending: [],
+  errors: [],
 };
 
 export const getFiles = createAsyncThunk(
@@ -38,12 +39,26 @@ export const getMoreFiles = createAsyncThunk(
   },
 );
 
-export const getFile = createAsyncThunk(
-  'common/getFile',
+export const getFileToView = createAsyncThunk(
+  'common/getFileToView',
   async ({ id }) => {
     try {
       await wait(500);
       const response = await apiClient.get(`/files/${id}`);
+      return response.data.file;
+    } catch (err) {
+      throw new Error(err.response.data.error);
+    }
+  },
+);
+
+export const getFileToEdit = createAsyncThunk(
+  'common/getFileToEdit',
+  async ({ id }) => {
+    try {
+      await wait(500);
+      const response = await apiClient.get(`/files/${id}/edit`);
+      console.log(response);
       return response.data.file;
     } catch (err) {
       throw new Error(err.response.data.error);
@@ -72,13 +87,18 @@ const fileSlice = createSlice({
         state.lastFile = action.payload[state.limit - 1];
         state.pending = state.pending.filter((item) => item !== 'getMoreFiles');
       })
-      .addCase(getFile.pending, (state) => {
-        state.file = null;
+      .addCase(getFileToEdit.rejected, (state, _) => {
+        state.errors.push('getFileToEdit');
       })
-      .addCase(getFile.fulfilled, (state, action) => {
-        console.log(action.payload);
-        state.file = action.payload;
-      });
+      .addMatcher(
+        isAnyOf(getFileToView.pending, getFileToEdit.pending), (state) => {
+          state.file = null;
+          state.errors = state.errors.filter((item) => item !== 'getFileToEdit');
+        })
+      .addMatcher(
+        isAnyOf(getFileToView.fulfilled, getFileToEdit.fulfilled), (state, action) => {
+          state.file = action.payload;
+        });
   },
 });
 

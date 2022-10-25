@@ -7,7 +7,7 @@ import { setLeftSidebarPrimitives } from './LeftSidebarSlice';
 import { IconButton } from '../../components/IconButton';
 import { useNavigate } from 'react-router-dom';
 import { SelectMenu } from '../../components/SelectMenu';
-import { Button, whiteButtonStyle } from '../../components/Button';
+import { Button, grayButtonStyle, redButtonStyle } from '../../components/Button';
 import { Icon } from '../../components/Icon';
 import { Textfield, whiteInputStyle } from '../../components/Textfield';
 import { Checkbox } from '../../components/Checkbox';
@@ -61,7 +61,7 @@ export function LeftSidebar () {
         name='type'
         defaultValue='tmj'
       />
-      <Button style={whiteButtonStyle}>Download</Button>
+      <Button style={grayButtonStyle}>Download</Button>
     </Fragment>
   );
 
@@ -92,7 +92,7 @@ export function LeftSidebar () {
       justify-content: space-between;
       align-items: center;
     }
-    
+
     .header {
       margin-bottom: 4px;
     }
@@ -149,14 +149,14 @@ export function LeftSidebar () {
         defaultValue={file.name}
       />
       <Checkbox
-        label='Grid lines'
+        label='View grid lines'
         name='gridLines'
         defaultValue={true}
       />
       <h4>{publishText}</h4>
-      <div css={css`display: flex; gap: 16px; justify-content: flex-start;`}>
-        <Button style={whiteButtonStyle}>{file.publishedAt ? 'Unpublish' : 'Publish'}</Button>
-        <Button style={[whiteButtonStyle, css`background: red !important; color: white !important;`]}>Delete</Button>
+      <div css={css`display: flex; gap: 24px; justify-content: flex-start;`}>
+        <Button style={grayButtonStyle}>{file.publishedAt ? 'Unpublish' : 'Publish'}</Button>
+        <Button style={redButtonStyle}>Delete</Button>
       </div>
     </Fragment>
   );

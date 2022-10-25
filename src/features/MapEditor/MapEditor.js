@@ -1,11 +1,12 @@
 /** @jsx jsx */
 import { css, jsx } from '@emotion/react';
-import { Fragment, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { LeftSidebar } from '../Editor/LeftSidebar';
-import { getFile } from '../File/fileSlice';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { FilenameIndicator } from '../Editor/FilenameIndicator';
+import { getFileToEdit } from '../File/fileSlice';
+import { NotFound } from '../Editor/NotFound';
 
 const mapEditorStyle = css`
 `;
@@ -13,18 +14,27 @@ const mapEditorStyle = css`
 export function MapEditor () {
   const { id } = useParams();
   const dispatch = useDispatch();
+  const fileSlice = useSelector((state) => state.file);
+  const error = fileSlice.errors.includes('getFileToEdit');
 
   useEffect(() => {
-    console.log(id);
-    dispatch(getFile({ id }));
+    dispatch(getFileToEdit({ id }));
   }, []);
 
-  return (
-    <Fragment>
+  let content;
+
+  if (!error) {
+    content = (
       <div css={mapEditorStyle}>
         <LeftSidebar />
         <FilenameIndicator />
       </div>
-    </Fragment>
-  );
+    );
+  } else {
+    content = (
+      <NotFound />
+    );
+  }
+
+  return content;
 }
