@@ -5,7 +5,7 @@ import { Fragment, useEffect } from 'react';
 import { LeftSidebarDrawer } from './LeftSidebarDrawer';
 import { setLeftSidebarPrimitives } from './LeftSidebarSlice';
 import { IconButton } from '../../components/IconButton';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { SelectMenu } from '../../components/SelectMenu';
 import { Button, grayButtonStyle, redButtonStyle } from '../../components/Button';
 import { Icon } from '../../components/Icon';
@@ -36,7 +36,6 @@ const leftSidebarStyle = css`
 
 export function LeftSidebar () {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const leftSidebarSlice = useSelector((state) => state.leftSidebar);
   const drawerOpen = leftSidebarSlice.primitives.drawerOpen;
   const drawerPage = leftSidebarSlice.primitives.drawerPage;
@@ -201,13 +200,17 @@ export function LeftSidebar () {
           </IconButton>
           {divider}
           {file.publishedAt && (
-            <IconButton onClick={() => navigate(`/${file.type}s/${file.id}`)} title={`View published ${file.type}`}>
-              <span className='icon-globe'></span>
-            </IconButton>
+            <Link to={`/${file.type}s/${file.id}`} title={`View published ${file.type}`} style={{ textDecoration: 'none' }}>
+              <IconButton>
+                <span className='icon-globe'></span>
+              </IconButton>
+            </Link>
           )}
-          <IconButton onClick={() => navigate('/your-files')} title='Go to your files'>
-            <span className='icon-logo'></span>
-          </IconButton>
+          <Link to='/your-files' title='Go to your files' style={{ textDecoration: 'none' }}>
+            <IconButton>
+              <span className='icon-logo'></span>
+            </IconButton>
+          </Link>
         </div>
       </div>
     </Fragment>
