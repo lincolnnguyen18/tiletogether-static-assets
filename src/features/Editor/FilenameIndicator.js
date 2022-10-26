@@ -12,13 +12,14 @@ const filenameIndicatorStyle = css`
     left: 50%;
     transform: translateX(-50%);
     user-select: none;
+    z-index: 1;
   `;
 
 export function FilenameIndicator () {
   const fileSlice = useSelector((state) => state.file);
   const file = fileSlice.file;
 
-  return file && (
+  return (
     <div css={filenameIndicatorStyle}>
       <span>{`Editing ${file.type} "${file.name}"`}</span>
     </div>

@@ -31,10 +31,6 @@ export const whiteButtonStyle = css`
   &:active {
     background: #f2f2f2;
   }
-
-  &:focus {
-    outline: 2px solid var(--outline-color);
-  }
 `;
 
 export const transparentButtonStyle = css`
@@ -47,6 +43,36 @@ export const transparentButtonStyle = css`
     text-decoration: underline;
   }
   
+  &:focus-visible {
+    outline: 2px solid var(--outline-color);
+  }
+`;
+
+export const grayButtonStyle = css`
+  & {
+    background: #5a5a5a;
+    color: white;
+  }
+
+  &:active {
+    background: #4a4a4a;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--outline-color);
+  }
+`;
+
+export const redButtonStyle = css`
+  & {
+    background: red;
+    color: white;
+  }
+
+  &:active {
+    background: #c80000;
+  }
+
   &:focus-visible {
     outline: 2px solid var(--outline-color);
   }

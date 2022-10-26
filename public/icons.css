@@ -1,11 +1,11 @@
 @font-face {
   font-family: 'icomoon';
-  src:  url('https://i.icomoon.io/public/98011504ce/TileTogether/icomoon.eot?iuxhji');
-  src:  url('https://i.icomoon.io/public/98011504ce/TileTogether/icomoon.eot?iuxhji#iefix') format('embedded-opentype'),
-  url('https://i.icomoon.io/public/98011504ce/TileTogether/icomoon.woff2?iuxhji') format('woff2'),
-  url('https://i.icomoon.io/public/98011504ce/TileTogether/icomoon.ttf?iuxhji') format('truetype'),
-  url('https://i.icomoon.io/public/98011504ce/TileTogether/icomoon.woff?iuxhji') format('woff'),
-  url('https://i.icomoon.io/public/98011504ce/TileTogether/icomoon.svg?iuxhji#icomoon') format('svg');
+  src:  url('https://i.icomoon.io/public/98011504ce/TileTogether/icomoon.eot?yw82np');
+  src:  url('https://i.icomoon.io/public/98011504ce/TileTogether/icomoon.eot?yw82np#iefix') format('embedded-opentype'),
+  url('https://i.icomoon.io/public/98011504ce/TileTogether/icomoon.woff2?yw82np') format('woff2'),
+  url('https://i.icomoon.io/public/98011504ce/TileTogether/icomoon.ttf?yw82np') format('truetype'),
+  url('https://i.icomoon.io/public/98011504ce/TileTogether/icomoon.woff?yw82np') format('woff'),
+  url('https://i.icomoon.io/public/98011504ce/TileTogether/icomoon.svg?yw82np#icomoon') format('svg');
   font-weight: normal;
   font-style: normal;
   font-display: block;
@@ -26,6 +26,24 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+.icon-dots:before {
+  content: "\e91d";
+}
+.icon-droplet:before {
+  content: "\e91e";
+}
+.icon-layers:before {
+  content: "\e91f";
+}
+.icon-paint-roller:before {
+  content: "\e920";
+}
+.icon-not-visible:before {
+  content: "\e91b";
+}
+.icon-visible:before {
+  content: "\e91c";
+}
 .icon-globe:before {
   content: "\e91a";
 }

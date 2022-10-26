@@ -2,8 +2,7 @@ const { Stack } = require('aws-cdk-lib');
 const { Bucket } = require('aws-cdk-lib/aws-s3');
 const { BucketDeployment, Source } = require('aws-cdk-lib/aws-s3-deployment');
 
-class TileTogetherStaticAssetsStack
-  extends Stack {
+class TileTogetherStaticAssetsStack extends Stack {
   constructor (scope, id, props) {
     super(scope, id, props);
 
