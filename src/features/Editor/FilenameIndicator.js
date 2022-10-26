@@ -18,7 +18,7 @@ export function FilenameIndicator () {
   const fileSlice = useSelector((state) => state.file);
   const file = fileSlice.file;
 
-  return file && (
+  return (
     <div css={filenameIndicatorStyle}>
       <span>{`Editing ${file.type} "${file.name}"`}</span>
     </div>

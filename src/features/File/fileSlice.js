@@ -58,7 +58,7 @@ export const getFileToEdit = createAsyncThunk(
     try {
       await wait(500);
       const response = await apiClient.get(`/files/${id}/edit`);
-      console.log(response);
+      console.log(response.data.file);
       return response.data.file;
     } catch (err) {
       throw new Error(err.response.data.error);

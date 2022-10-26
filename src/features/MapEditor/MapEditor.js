@@ -15,6 +15,7 @@ export function MapEditor () {
   const { id } = useParams();
   const dispatch = useDispatch();
   const fileSlice = useSelector((state) => state.file);
+  const file = fileSlice.file;
   const error = fileSlice.errors.includes('getFileToEdit');
 
   useEffect(() => {
@@ -24,7 +25,7 @@ export function MapEditor () {
   let content;
 
   if (!error) {
-    content = (
+    content = file && (
       <div css={mapEditorStyle}>
         <LeftSidebar />
         <FilenameIndicator />

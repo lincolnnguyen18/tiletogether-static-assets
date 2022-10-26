@@ -23,12 +23,14 @@ const leftSidebarStyle = css`
   align-items: center;
   justify-content: space-between;
   z-index: 3;
+  overflow-y: auto;
+  padding: 48px 0;
+  box-sizing: border-box;
   
   .group {
     display: flex;
     flex-direction: column;
     gap: 18px;
-    padding: 48px 0
   }
 `;
 
@@ -103,7 +105,7 @@ export function LeftSidebar () {
       <h4>Sharing URL</h4>
       <div css={copyLinkStyle}>
         <span className='link-container'>
-          https://www.figma.com/file/t4Kmfkh4QYEaB8iuXhTmFA/CSE-416?node-id=261%3A2628
+          https://www.tiletogether.com/files/t4Kmfkh4QYEaB8iuXhTmFA/edit
         </span>
         <Icon color='black'>
           <span className='icon-copy'></span>
@@ -131,14 +133,14 @@ export function LeftSidebar () {
 
   let publishText;
 
-  if (file && file.publishedAt) {
+  if (file.publishedAt) {
     const dateString = new Date(file.publishedAt).toLocaleDateString();
     publishText = `This ${file.type} was published on ${dateString}`;
   } else if (file) {
     publishText = `This ${file.type} has not been published yet`;
   }
 
-  const settingsPage = file && (
+  const settingsPage = (
     <Fragment>
       <Textfield
         placeholder={`Type a name for your ${file.type}`}
@@ -168,7 +170,7 @@ export function LeftSidebar () {
       border-radius: 4px;`}></div>
   );
 
-  return file && (
+  return (
     <Fragment>
       <LeftSidebarDrawer
         open={drawerOpen}
@@ -198,14 +200,14 @@ export function LeftSidebar () {
             <span className='icon-settings'></span>
           </IconButton>
           {divider}
-          <IconButton onClick={() => navigate('/your-files')} title='Go to your files'>
-            <span className='icon-home'></span>
-          </IconButton>
           {file.publishedAt && (
             <IconButton onClick={() => navigate(`/${file.type}s/${file.id}`)} title={`View published ${file.type}`}>
               <span className='icon-globe'></span>
             </IconButton>
           )}
+          <IconButton onClick={() => navigate('/your-files')} title='Go to your files'>
+            <span className='icon-logo'></span>
+          </IconButton>
         </div>
       </div>
     </Fragment>

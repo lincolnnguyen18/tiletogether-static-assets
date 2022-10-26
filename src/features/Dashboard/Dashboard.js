@@ -1,6 +1,5 @@
 /** @jsx jsx */
 import { css, jsx } from '@emotion/react';
-import { File } from '../../components/File';
 import { Grid } from '../../components/Grid';
 import _ from 'lodash';
 import { Fragment, useEffect } from 'react';
@@ -15,6 +14,7 @@ import { Icon } from '../../components/Icon';
 import { getFiles, getMoreFiles } from '../File/fileSlice';
 import { Button, transparentButtonStyle, whiteButtonStyle } from '../../components/Button';
 import { timeAgo } from '../../utils/timeUtils';
+import { File } from '../File/File';
 
 const gridStyle = css`
   padding: 0 20px 8px 20px;
@@ -294,7 +294,7 @@ export const pages = {
     title: 'Home',
     icon: 'icon-home',
     searchText: 'Search all files on TileTogether',
-    noFilesFound: 'No matching files found',
+    noFilesFound: 'No files found',
     noMatchesFound: 'No matching files found',
   },
   likes: {

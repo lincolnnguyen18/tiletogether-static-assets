@@ -7,6 +7,7 @@ import { LeftSidebar } from '../Editor/LeftSidebar';
 import { useParams } from 'react-router-dom';
 import { FilenameIndicator } from '../Editor/FilenameIndicator';
 import { NotFound } from '../Editor/NotFound';
+import { RightSidebar } from './RightSidebar';
 
 const tilesetEditorStyle = css`
 `;
@@ -15,6 +16,7 @@ export function TilesetEditor () {
   const { id } = useParams();
   const dispatch = useDispatch();
   const fileSlice = useSelector((state) => state.file);
+  const file = fileSlice.file;
   const error = fileSlice.errors.includes('getFileToEdit');
 
   useEffect(() => {
@@ -24,10 +26,11 @@ export function TilesetEditor () {
   let content;
 
   if (!error) {
-    content = (
+    content = file && (
       <div css={tilesetEditorStyle}>
         <LeftSidebar />
         <FilenameIndicator />
+        <RightSidebar />
       </div>
     );
   } else {
