@@ -9,4 +9,6 @@
 6. Run `npm run test` to run tests
 
 ## Other notes
-* The TileTogether Static Assets (React app) are deployed at http://tiletogether-static-assets-bucket.s3-website-us-east-1.amazonaws.com/
+* The TileTogether Static Assets (React app) are deployed at http://tiletogether-static-assets-bucket.s3-website-us-east-1.
+amazonaws.com/
+* Icon CSS View: https://codepen.io/lincolnnguyen18/pen/rNKVaOz
