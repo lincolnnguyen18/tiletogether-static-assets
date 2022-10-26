@@ -8,6 +8,7 @@ import { useParams } from 'react-router-dom';
 import { FilenameIndicator } from '../Editor/FilenameIndicator';
 import { NotFound } from '../Editor/NotFound';
 import { RightSidebar } from './RightSidebar';
+import { Canvas } from './Canvas';
 
 const tilesetEditorStyle = css`
 `;
@@ -31,6 +32,7 @@ export function TilesetEditor () {
         <LeftSidebar />
         <FilenameIndicator />
         <RightSidebar />
+        <Canvas />
       </div>
     );
   } else {

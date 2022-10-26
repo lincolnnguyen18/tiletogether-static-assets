@@ -14,6 +14,7 @@ const leftSidebarStyle = css`
   overflow-y: auto;
   padding: 16px 0;
   box-sizing: border-box;
+  z-index: 1;
 
   .header {
     display: flex;

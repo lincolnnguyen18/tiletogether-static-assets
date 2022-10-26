@@ -12,6 +12,7 @@ const filenameIndicatorStyle = css`
     left: 50%;
     transform: translateX(-50%);
     user-select: none;
+    z-index: 1;
   `;
 
 export function FilenameIndicator () {

@@ -22,7 +22,7 @@ const leftSidebarStyle = css`
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  z-index: 3;
+  z-index: 2;
   overflow-y: auto;
   padding: 48px 0;
   box-sizing: border-box;
