@@ -1,12 +1,12 @@
 /** @jsx jsx */
 import { css, jsx } from '@emotion/react';
-import { IconButton } from '../../../components/IconButton';
+import { IconButton } from '../../../components/inputs/IconButton';
 import { LogoButton } from './LogoButton';
 import { Sidebar } from '../../../components/Sidebar';
 import { Icon } from '../../../components/Icon';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useRef } from 'react';
-import { TabbableItems } from '../../../components/TabbableItems';
+import { TabbableItems } from '../../../components/inputs/TabbableItems';
 import { pages } from '../Dashboard';
 import { useSelector } from 'react-redux';
 

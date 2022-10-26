@@ -3,14 +3,14 @@ import { css, jsx } from '@emotion/react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Fragment, useEffect } from 'react';
 import { LeftSidebarDrawer } from './LeftSidebarDrawer';
-import { setLeftSidebarPrimitives } from './LeftSidebarSlice';
-import { IconButton } from '../../components/IconButton';
+import { setLeftSidebarPrimitives } from './leftSidebarSlice';
+import { IconButton } from '../../components/inputs/IconButton';
 import { Link } from 'react-router-dom';
-import { SelectMenu } from '../../components/SelectMenu';
-import { Button, grayButtonStyle, redButtonStyle } from '../../components/Button';
+import { SelectMenu } from '../../components/inputs/SelectMenu';
+import { Button, grayButtonStyle, redButtonStyle } from '../../components/inputs/Button';
 import { Icon } from '../../components/Icon';
-import { Textfield, whiteInputStyle } from '../../components/Textfield';
-import { Checkbox } from '../../components/Checkbox';
+import { Textfield, whiteInputStyle } from '../../components/inputs/Textfield';
+import { Checkbox } from '../../components/inputs/Checkbox';
 import _ from 'lodash';
 
 const leftSidebarStyle = css`

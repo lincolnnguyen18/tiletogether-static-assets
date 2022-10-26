@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import { Backdrop } from '../Backdrop';
 import { useDispatch, useSelector } from 'react-redux';
 import { setModalPrimitives } from './modalSlice';
-import { IconButton } from '../IconButton';
+import { IconButton } from '../inputs/IconButton';
 import { useEffect, useRef } from 'react';
 
 export const modalheaderStyle = css`

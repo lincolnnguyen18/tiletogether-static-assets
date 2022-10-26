@@ -2,9 +2,9 @@
 import { jsx } from '@emotion/react';
 import { Badge } from '../../../components/Badge';
 import { Icon } from '../../../components/Icon';
-import { Textfield, whiteInputStyle } from '../../../components/Textfield';
-import { SelectMenu } from '../../../components/SelectMenu';
-import { blackButtonStyle, Button } from '../../../components/Button';
+import { Textfield, whiteInputStyle } from '../../../components/inputs/Textfield';
+import { SelectMenu } from '../../../components/inputs/SelectMenu';
+import { blackButtonStyle, Button } from '../../../components/inputs/Button';
 import { submitSearch } from '../Navbar/MiddleSection';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';

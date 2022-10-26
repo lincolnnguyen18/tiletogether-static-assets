@@ -1,11 +1,11 @@
 /** @jsx jsx */
 import { jsx } from '@emotion/react';
-import { Textfield, whiteInputStyle } from '../../../components/Textfield';
+import { Textfield, whiteInputStyle } from '../../../components/inputs/Textfield';
 import { setModalPrimitives, setModalReactElements } from '../../../components/Modal/modalSlice';
 import { modalBodyStyle, modalheaderStyle } from '../../../components/Modal/Modal';
 import { Icon } from '../../../components/Icon';
 import { Badge } from '../../../components/Badge';
-import { blackButtonStyle, Button } from '../../../components/Button';
+import { blackButtonStyle, Button } from '../../../components/inputs/Button';
 
 export function openNewFileModal (dispatch, type) {
   dispatch(setModalReactElements({

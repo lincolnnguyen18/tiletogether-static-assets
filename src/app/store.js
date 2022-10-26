@@ -4,7 +4,7 @@ import { menuReducer } from '../components/Menu/menuSlice';
 import { modalReducer } from '../components/Modal/modalSlice';
 import { userReducer } from '../features/User/userSlice';
 import { fileReducer } from '../features/File/fileSlice';
-import { leftSidebarReducer } from '../features/Editor/LeftSidebarSlice';
+import { leftSidebarReducer } from '../features/Editor/leftSidebarSlice';
 
 export const store = configureStore({
   reducer: {

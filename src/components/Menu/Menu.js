@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { setMenu, setMenuChildren } from './menuSlice';
 import { Backdrop } from '../Backdrop';
-import { TabbableItems } from '../TabbableItems';
+import { TabbableItems } from '../inputs/TabbableItems';
 import { useEffect, useRef } from 'react';
 
 export const menuItemStyle = css`
