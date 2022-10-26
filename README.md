@@ -11,14 +11,4 @@
 ## Other notes
 * The TileTogether Static Assets (React app) are deployed at http://tiletogether-static-assets-bucket.s3-website-us-east-1.
 amazonaws.com/
-* User Interface Mock Up: [UI Model.docs](https://docs.google.com/document/d/1p7Q9N7rTGxm3SRamcXo2fOoIK2IbtGlLoEpZQFlZiRc/edit?usp=sharing)
-
-## Reference Documents
-| ![FE_COM.png](docs/FE_COM.png) |
-|:--:|
-| <b>Front Component Model</b>|
-
-| ![FE_MODEL.png](docs/FE_MODEL.png) |
-|:--:|
-| <b>Front End UML Model</b>|
 
