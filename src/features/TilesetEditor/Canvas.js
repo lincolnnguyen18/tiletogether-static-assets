@@ -40,7 +40,7 @@ export function Canvas () {
     );
   };
 
-  function handleWheel (e) {
+  async function handleWheel (e) {
     const dx = -e.evt.deltaX * 0.5;
     const dy = -e.evt.deltaY * 0.5;
 
@@ -52,9 +52,10 @@ export function Canvas () {
     // else zoom
     } else {
       const oldScale = stageZoom;
+
       const mousePointTo = {
-        x: (e.evt.clientX - e.target.x()) / oldScale,
-        y: (e.evt.clientY - e.target.y()) / oldScale,
+        x: (e.evt.clientX - stagePosition.x) / oldScale,
+        y: (e.evt.clientY - stagePosition.y) / oldScale,
       };
 
       const direction = -e.evt.deltaY;
