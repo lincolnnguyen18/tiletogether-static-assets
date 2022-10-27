@@ -72,10 +72,10 @@ export function FileDescriber ({ authorUserName, filename, views, publisDate, li
             }
           </IconButtonLabel>
           <IconButtonLabel size={42} refProp={downloadButtonRef} label='Download'>
-            <span className='icon-like-filled' />
+            <span className='icon-download' />
           </IconButtonLabel>
           <IconButtonLabel size={42} refProp={importButtonRef} label='Import Into Map'>
-            <span className='icon-like-filled' />
+            <span className='icon-file' />
           </IconButtonLabel>
         </div>
         <hr css={divider}/>
@@ -87,7 +87,7 @@ export function FileDescriber ({ authorUserName, filename, views, publisDate, li
           {`${type} &#x2022 ${dimension * dimension} pixel tiles`}
         </label>
         <IconButtonLabel size={42} refProp={userButtonRef} label={authorUserName}>
-          <span className='icon-like-filled' />
+          <span className='icon-avatar' />
         </IconButtonLabel>
         <hr css={divider}/>
       </div>
