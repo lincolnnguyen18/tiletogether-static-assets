@@ -2,17 +2,9 @@
 import { css, jsx } from '@emotion/react';
 import _ from 'lodash';
 import { useRef } from 'react';
-import { FlexRow } from './FlexRow';
-import { IconButtonLabel } from './IconButtonLabel';
-
-const fileDescriberStyle = css`
-  display: flex;
-  flex-direction: column;
-`;
-
-const divider = css`
-  border-top: 0.5px solid #bbb;
-`;
+import { FlexRow } from './Styles/FlexRow';
+import { IconButtonLabel } from './inputs/IconButtonLabel';
+import { FlexColumn } from './Styles/FlexColumn';
 
 const verticalSection = css`
   color: white;
@@ -54,7 +46,7 @@ export function FileDescriber ({ authorUserName, filename, views, publisDate, li
   const tags = tagStr.split(' ');
 
   return (
-    <div css={fileDescriberStyle}>
+    <FlexColumn>
       <h1 css={verticalSection}>{filename}</h1>
       <FlexRow>
         <label css={css`color: white;`}>
@@ -81,7 +73,7 @@ export function FileDescriber ({ authorUserName, filename, views, publisDate, li
           </IconButtonLabel>
         </FlexRow>
       </FlexRow>
-      <hr css={divider}/>
+      <hr color='gray'/>
       <p css={verticalSection}>{description}</p>
       <FlexRow style={verticalSection}>
         {tags.map(t => <a css={css`color: #4894F9; margin-right: 10px;`} href="badurl" key={_.uniqueId('filetag-')}>#{t}</a>)}
@@ -90,7 +82,7 @@ export function FileDescriber ({ authorUserName, filename, views, publisDate, li
       <IconButtonLabel size={42} refProp={userButtonRef} label={authorUserName} extraStyle={verticalSection}>
         <span className='icon-avatar' />
       </IconButtonLabel>
-      <hr css={divider}/>
-    </div>
+      <hr color='gray'/>
+    </FlexColumn>
   );
 }
