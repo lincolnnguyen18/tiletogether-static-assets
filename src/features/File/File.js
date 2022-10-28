@@ -1,7 +1,7 @@
 /** @jsx jsx */
 import { css, jsx } from '@emotion/react';
 import { Badge } from '../../components/Badge';
-import { IconButton } from '../../components/IconButton';
+import { IconButton } from '../../components/inputs/IconButton';
 import { Link, useLocation } from 'react-router-dom';
 import { useRef } from 'react';
 

@@ -1,16 +1,21 @@
 /** @jsx jsx */
 import { css, jsx } from '@emotion/react';
-import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { getFileToEdit } from '../File/fileSlice';
 import { LeftSidebar } from '../Editor/LeftSidebar';
-import { useParams } from 'react-router-dom';
 import { FilenameIndicator } from '../Editor/FilenameIndicator';
 import { NotFound } from '../Editor/NotFound';
 import { RightSidebar } from './RightSidebar';
-import { Canvas } from './Canvas';
+import { TilesetCanvas } from './TilesetCanvas';
+import { useEffect } from 'react';
+import { getFileToEdit } from '../File/fileSlice';
+import { useParams } from 'react-router-dom';
 
 const tilesetEditorStyle = css`
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
 `;
 
 export function TilesetEditor () {
@@ -22,7 +27,7 @@ export function TilesetEditor () {
 
   useEffect(() => {
     dispatch(getFileToEdit({ id }));
-  }, []);
+  }, [id]);
 
   let content;
 
@@ -32,7 +37,7 @@ export function TilesetEditor () {
         <LeftSidebar />
         <FilenameIndicator />
         <RightSidebar />
-        <Canvas />
+        <TilesetCanvas />
       </div>
     );
   } else {

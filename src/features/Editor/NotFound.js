@@ -1,7 +1,7 @@
 import React, { Fragment } from 'react';
 import { RedirectPage } from '../../components/RedirectPage';
 import { Icon } from '../../components/Icon';
-import { Button, whiteButtonStyle } from '../../components/Button';
+import { Button, whiteButtonStyle } from '../../components/inputs/Button';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../Dashboard/Navbar/Navbar';
 

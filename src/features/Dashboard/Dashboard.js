@@ -12,7 +12,7 @@ import { openAuthModal } from './Modals/AuthModal';
 import { RedirectPage } from '../../components/RedirectPage';
 import { Icon } from '../../components/Icon';
 import { getFiles, getMoreFiles } from '../File/fileSlice';
-import { Button, transparentButtonStyle, whiteButtonStyle } from '../../components/Button';
+import { Button, transparentButtonStyle, whiteButtonStyle } from '../../components/inputs/Button';
 import { timeAgo } from '../../utils/timeUtils';
 import { File } from '../File/File';
 
@@ -67,7 +67,6 @@ export function getQueryParams (location) {
       break;
     case 'users':
       authorUsername = location.pathname.split('/')[2];
-      console.log(authorUsername);
       break;
     default:
       break;
@@ -84,7 +83,6 @@ export function getQueryParams (location) {
 
 function getCurrentPage (location, dispatch = null) {
   let path = location.pathname;
-  console.log(path);
   if (path == null || path === '/search') path = '/';
 
   if (path.startsWith('/users')) {

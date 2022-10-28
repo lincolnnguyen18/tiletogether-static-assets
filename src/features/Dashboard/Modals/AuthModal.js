@@ -1,8 +1,8 @@
 /** @jsx jsx */
 import { css, jsx } from '@emotion/react';
 import { setModalPrimitives, setModalReactElements } from '../../../components/Modal/modalSlice';
-import { Textfield, whiteInputStyle } from '../../../components/Textfield';
-import { blackButtonStyle, Button } from '../../../components/Button';
+import { Textfield, whiteInputStyle } from '../../../components/inputs/Textfield';
+import { blackButtonStyle, Button } from '../../../components/inputs/Button';
 import { useDispatch } from 'react-redux';
 import { useState } from 'react';
 import { getUser, postUser } from '../../User/userSlice';

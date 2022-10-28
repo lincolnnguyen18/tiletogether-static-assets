@@ -1,6 +1,6 @@
 import { Searchbar } from './Searchbar';
 import { setDashboardPrimitives } from '../dashboardSlice';
-import { IconButton } from '../../../components/IconButton';
+import { IconButton } from '../../../components/inputs/IconButton';
 /** @jsx jsx */
 import { css, jsx } from '@emotion/react';
 import { Icon } from '../../../components/Icon';
