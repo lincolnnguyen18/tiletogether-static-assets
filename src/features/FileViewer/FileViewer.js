@@ -3,7 +3,7 @@ import { css, jsx } from '@emotion/react';
 import { Fragment, useEffect } from 'react';
 import { Navbar } from '../Dashboard/Navbar/Navbar';
 import { Link, useLocation, useParams } from 'react-router-dom';
-import { Button } from '../../components/Button';
+import { Button } from '../../components/inputs/Button';
 import { useDispatch, useSelector } from 'react-redux';
 import { getFileToView } from '../File/fileSlice';
 

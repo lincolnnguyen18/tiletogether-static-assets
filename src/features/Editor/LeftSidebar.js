@@ -3,14 +3,14 @@ import { css, jsx } from '@emotion/react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Fragment, useEffect } from 'react';
 import { LeftSidebarDrawer } from './LeftSidebarDrawer';
-import { setLeftSidebarPrimitives } from './LeftSidebarSlice';
-import { IconButton } from '../../components/IconButton';
-import { useNavigate } from 'react-router-dom';
-import { SelectMenu } from '../../components/SelectMenu';
-import { Button, grayButtonStyle, redButtonStyle } from '../../components/Button';
+import { setLeftSidebarPrimitives } from './leftSidebarSlice';
+import { IconButton } from '../../components/inputs/IconButton';
+import { Link } from 'react-router-dom';
+import { SelectMenu } from '../../components/inputs/SelectMenu';
+import { Button, grayButtonStyle, redButtonStyle } from '../../components/inputs/Button';
 import { Icon } from '../../components/Icon';
-import { Textfield, whiteInputStyle } from '../../components/Textfield';
-import { Checkbox } from '../../components/Checkbox';
+import { Textfield, whiteInputStyle } from '../../components/inputs/Textfield';
+import { Checkbox } from '../../components/inputs/Checkbox';
 import _ from 'lodash';
 
 const leftSidebarStyle = css`
@@ -36,7 +36,6 @@ const leftSidebarStyle = css`
 
 export function LeftSidebar () {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const leftSidebarSlice = useSelector((state) => state.leftSidebar);
   const drawerOpen = leftSidebarSlice.primitives.drawerOpen;
   const drawerPage = leftSidebarSlice.primitives.drawerPage;
@@ -201,13 +200,17 @@ export function LeftSidebar () {
           </IconButton>
           {divider}
           {file.publishedAt && (
-            <IconButton onClick={() => navigate(`/${file.type}s/${file.id}`)} title={`View published ${file.type}`}>
-              <span className='icon-globe'></span>
-            </IconButton>
+            <Link to={`/${file.type}s/${file.id}`} title={`View published ${file.type}`} style={{ textDecoration: 'none' }}>
+              <IconButton>
+                <span className='icon-globe'></span>
+              </IconButton>
+            </Link>
           )}
-          <IconButton onClick={() => navigate('/your-files')} title='Go to your files'>
-            <span className='icon-logo'></span>
-          </IconButton>
+          <Link to='/your-files' title='Go to your files' style={{ textDecoration: 'none' }}>
+            <IconButton>
+              <span className='icon-logo'></span>
+            </IconButton>
+          </Link>
         </div>
       </div>
     </Fragment>

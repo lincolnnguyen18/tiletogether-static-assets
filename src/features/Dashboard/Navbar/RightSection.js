@@ -1,6 +1,6 @@
 import { Fragment, useRef } from 'react';
-import { Button, transparentButtonStyle, whiteButtonStyle } from '../../../components/Button';
-import { IconButton } from '../../../components/IconButton';
+import { Button, transparentButtonStyle, whiteButtonStyle } from '../../../components/inputs/Button';
+import { IconButton } from '../../../components/inputs/IconButton';
 /** @jsx jsx */
 import { css, jsx } from '@emotion/react';
 import { useDispatch, useSelector } from 'react-redux';

@@ -2,8 +2,8 @@
 import { jsx, css } from '@emotion/react';
 import { useRef } from 'react';
 import { Icon } from '../../../components/Icon';
-import { inputStyle } from '../../../components/Textfield';
-import { IconButton } from '../../../components/IconButton';
+import { inputStyle } from '../../../components/inputs/Textfield';
+import { IconButton } from '../../../components/inputs/IconButton';
 
 const searchbarStyle = css`
   & {

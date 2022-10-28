@@ -3,7 +3,7 @@ import { css, jsx } from '@emotion/react';
 import { LogoButton } from './LogoButton';
 import { useDispatch, useSelector } from 'react-redux';
 import { Fragment } from 'react';
-import { IconButton } from '../../../components/IconButton';
+import { IconButton } from '../../../components/inputs/IconButton';
 import { NavSidebar } from './NavSidebar';
 import { setDashboardPrimitives } from '../dashboardSlice';
 import { RightSection } from './RightSection';
