@@ -5,7 +5,7 @@ import { Navbar } from '../Dashboard/Navbar/Navbar';
 import { useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getFileToView } from '../File/fileSlice';
-import { FileDescriber } from '../../components/FileDescriber';
+import { FileInfo } from './FileInfo';
 
 const fileViewerStyle = css`
   padding: 0 20px 8px 90px;
@@ -58,21 +58,23 @@ export function FileViewer () {
             <div css={canvasStyle}>
               <img src='/mock-data/file-image.png' css={imageStyle}/>
             </div>
-            <FileDescriber
+            <FileInfo
               authorUserName={file.authorUsername}
               filename={file.name}
-              views={1000}
-              publisDate={file.publishedAt}
-              likes={file.likeCount}
-              description='Indulgence announcing uncommonly met she continuing two unpleasing terminated. Now busy say down the shed eyes roof paid her. Of shameless collected suspicion existence in. Share walls stuff think but the arise guest. Course suffer to do he sussex it window advice. Yet matter enable misery end extent common men should. Her indulgence but assistance favourable cultivated everything collecting.'
-              tagStr={'misc sage lol'}
               type={file.type}
               dimension={file.tileDimension}
+              width={file.width}
+              height={file.height}
+              publishDate={file.publishedAt}
+              views={file.views}
+              likes={file.likeCount}
               liked={file.likes.some(l => l.username === username)}
+              description={file.description}
+              tagStr={file.tags}
             />
           </div>
           <div css={fileRecomStyle}>
-            <h1>Recommendation</h1>
+            <h1>You May Also Like</h1>
           </div>
         </div>
       )}
