@@ -31,8 +31,8 @@ export function TilesetCanvas () {
       canvas.current.height = img.height;
       const newVirtualScale = Math.max(
         Math.min(
-          Math.floor(window.innerWidth * 2 / 3 / img.width),
-          Math.floor(window.innerHeight * 2 / 3 / img.height),
+          Math.floor(window.innerWidth * 2 / 10 / img.width),
+          Math.floor(window.innerHeight * 2 / 10 / img.height),
         ),
         1,
       );
@@ -48,36 +48,45 @@ export function TilesetCanvas () {
   }
 
   function zoom (delta) {
-    console.log(delta);
+    // calculate current zoom point and use it to calculate the new scale
     const offset = { x: canvasWrapper.current.scrollLeft, y: canvasWrapper.current.scrollTop };
     const imageLoc = { x: primitives.cursor.pageX + offset.x, y: primitives.cursor.pageY + offset.y };
-    console.log(imageLoc);
     const zoomPoint = { x: imageLoc.x / primitives.scale, y: imageLoc.y / primitives.scale };
     let newScale = primitives.scale + delta * primitives.scaleFactor * primitives.scale;
     if (newScale < 1) newScale = 1;
     if (newScale > primitives.maxScale) newScale = primitives.maxScale;
     dispatch(setTilesetEditorPrimitives({ scale: newScale }));
+
+    // calculate new zoom point and use it to calculate the new scroll to keep the zoom point in the same place
     const zoomPointNew = { x: zoomPoint.x * newScale, y: zoomPoint.y * newScale };
     const newScroll = { x: zoomPointNew.x - primitives.cursor.pageX, y: zoomPointNew.y - primitives.cursor.pageY };
     transformContainer.current.style.transform = `scale(${newScale}, ${newScale})`;
     canvasWrapper.current.scrollTop = newScroll.y;
     canvasWrapper.current.scrollLeft = newScroll.x;
-    console.log(newScroll);
   }
 
   function handleKeydown (e) {
-    if (e.ctrlKey && e.key === '=') {
-      e.preventDefault();
-      zoom(5);
+    if (e.ctrlKey) {
+      if (e.key === '=') {
+        e.preventDefault();
+        zoom(5);
+      }
+      if (e.key === '-') {
+        e.preventDefault();
+        zoom(-5);
+      }
+      if (e.key === '0') {
+        e.preventDefault();
+        zoom(-100);
+      }
     }
-    if (e.ctrlKey && e.key === '-') {
-      e.preventDefault();
-      zoom(-5);
-    }
-    if (e.ctrlKey && e.key === '0') {
-      e.preventDefault();
-      zoom(-100);
-    }
+  }
+
+  function handleWheel (e) {
+    if (!e.ctrlKey) return;
+    e.preventDefault();
+    const delta = -1 * Math.min(Math.max(-1, e.deltaY), 1);
+    zoom(delta);
   }
 
   return (
@@ -85,7 +94,7 @@ export function TilesetCanvas () {
       id='canvas-wrapper'
       css={[canvasWrapperAndTransformContainerStyle, canvasWrapperStyle]}
       ref={canvasWrapper}
-      // onWheel={handleWheel}
+      onWheel={handleWheel}
     >
       <div id="transform-container" css={canvasWrapperAndTransformContainerStyle} ref={transformContainer}>
         <canvas

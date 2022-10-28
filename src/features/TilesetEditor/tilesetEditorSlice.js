@@ -5,7 +5,7 @@ const initialState = {
   primitives: {
     cursor: { pageX: window.innerWidth / 2, pageY: window.innerHeight / 2 },
     scale: 1,
-    maxScale: 10,
+    maxScale: 30,
     virtualScale: null,
     scaleFactor: 0.04,
   },
