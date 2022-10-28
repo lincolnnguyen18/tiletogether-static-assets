@@ -48,7 +48,7 @@ export function FileViewer () {
   useEffect(() => {
     dispatch(getFileToView({ id }));
   }, []);
-
+  console.log(file);
   return (
     <Fragment>
       <Navbar />
@@ -59,13 +59,13 @@ export function FileViewer () {
               <img src='/mock-data/file-image.png' css={imageStyle}/>
             </div>
             <FileDescriber
-              authorUserName={file.authorUserName}
+              authorUserName={file.authorUsername}
               filename={file.name}
               views={1000}
-              publisDate={file.createdAt}
+              publisDate={file.publishedAt}
               likes={file.likeCount}
-              description='Sample Description'
-              tags={file.tags}
+              description='Indulgence announcing uncommonly met she continuing two unpleasing terminated. Now busy say down the shed eyes roof paid her. Of shameless collected suspicion existence in. Share walls stuff think but the arise guest. Course suffer to do he sussex it window advice. Yet matter enable misery end extent common men should. Her indulgence but assistance favourable cultivated everything collecting.'
+              tagStr={'misc sage lol'}
               type={file.type}
               dimension={file.tileDimension}
               liked={file.likes.some(l => l.username === username)}

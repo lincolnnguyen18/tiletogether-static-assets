@@ -2,26 +2,25 @@
 import { css, jsx } from '@emotion/react';
 import _ from 'lodash';
 import { useRef } from 'react';
+import { FlexRow } from './FlexRow';
 import { IconButtonLabel } from './IconButtonLabel';
 
 const fileDescriberStyle = css`
-  padding: 0 20px 8px 90px;
   display: flex;
+  flex-direction: column;
 `;
 
 const divider = css`
-  border-top: 3px solid #bbb;
+  border-top: 0.5px solid #bbb;
 `;
 
-const icons = css`
-  display: inline;
-  float: right;
+const verticalSection = css`
+  color: white;
+  padding: 10px 0 0 0;
 `;
 
 const likeButtonStyle = css`
   color: white;
-  float: right;
-  margin-right: 16px;
   transition: color 0.1s ease-in-out;
   padding-top: 3px;
 
@@ -45,20 +44,23 @@ const likeButtonStyle = css`
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-export function FileDescriber ({ authorUserName, filename, views, publisDate, likes, description, tags, type, dimension, liked }) {
+export function FileDescriber ({ authorUserName, filename, views, publisDate, likes, description, tagStr, type, dimension, liked }) {
   const likeButtonRef = useRef(null);
   const downloadButtonRef = useRef(null);
   const importButtonRef = useRef(null);
   const userButtonRef = useRef(null);
 
+  const date = new Date(publisDate);
+  const tags = tagStr.split(' ');
+
   return (
     <div css={fileDescriberStyle}>
-      <h3>{filename}</h3>
-      <div>
-        <label htmlFor={_.uniqueId('fileviewdate-')}>
-          {`${views} views &#x2022 ${months[publisDate.getMonth()]} ${publisDate.getDate()}, ${publisDate.getFullYear()}`}
+      <h1 css={verticalSection}>{filename}</h1>
+      <FlexRow>
+        <label css={css`color: white;`}>
+          {`${views} views`} <span>&#x2022;</span> {`${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`}
         </label>
-        <div css={icons}>
+        <FlexRow style={css`margin-left: auto;`}>
           <IconButtonLabel
             size={42}
             style={likeButtonStyle}
@@ -77,20 +79,18 @@ export function FileDescriber ({ authorUserName, filename, views, publisDate, li
           <IconButtonLabel size={42} refProp={importButtonRef} label='Import Into Map'>
             <span className='icon-file' />
           </IconButtonLabel>
-        </div>
-        <hr css={divider}/>
-        <p>{description}</p>
-        <div style={{ display: 'inline' }}>
-            {tags.map(t => <a href="url" key={_.uniqueId('filetag-')}>{t}</a>)}
-        </div>
-        <label htmlFor={_.uniqueId('typesize-')}>
-          {`${type} &#x2022 ${dimension * dimension} pixel tiles`}
-        </label>
-        <IconButtonLabel size={42} refProp={userButtonRef} label={authorUserName}>
-          <span className='icon-avatar' />
-        </IconButtonLabel>
-        <hr css={divider}/>
-      </div>
+        </FlexRow>
+      </FlexRow>
+      <hr css={divider}/>
+      <p css={verticalSection}>{description}</p>
+      <FlexRow style={verticalSection}>
+        {tags.map(t => <a css={css`color: #4894F9; margin-right: 10px;`} href="badurl" key={_.uniqueId('filetag-')}>#{t}</a>)}
+      </FlexRow>
+      <label css={verticalSection}>{`${type}`} <span>&#x2022;</span> {`${dimension * dimension} pixel tiles`}</label>
+      <IconButtonLabel size={42} refProp={userButtonRef} label={authorUserName} extraStyle={verticalSection}>
+        <span className='icon-avatar' />
+      </IconButtonLabel>
+      <hr css={divider}/>
     </div>
   );
 }
