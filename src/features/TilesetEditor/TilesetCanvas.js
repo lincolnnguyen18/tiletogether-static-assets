@@ -36,7 +36,6 @@ export function TilesetCanvas () {
         ),
         1,
       );
-      // const newVirtualScale = 1;
       canvas.current.style.transform = `scale(${newVirtualScale})`;
       dispatch(setTilesetEditorPrimitives({ virtualScale: newVirtualScale }));
       ctx.drawImage(img, 0, 0);
@@ -45,6 +44,9 @@ export function TilesetCanvas () {
 
   function handleMousemove (e) {
     dispatch(setTilesetEditorPrimitives({ cursor: e }));
+    if (e.buttons === 1) {
+      colorPixel({ r: 255, g: 0, b: 0, a: 255 });
+    }
   }
 
   function zoom (delta) {
@@ -89,6 +91,27 @@ export function TilesetCanvas () {
     zoom(delta);
   }
 
+  function colorPixel (color) {
+    const bounding = canvas.current.getBoundingClientRect();
+    let x = (primitives.cursor.pageX - bounding.left) / primitives.scale / primitives.virtualScale;
+    let y = (primitives.cursor.pageY - bounding.top) / primitives.scale / primitives.virtualScale;
+    x = Math.floor(x);
+    y = Math.floor(y);
+
+    const ctx = canvas.current.getContext('2d');
+    const imageData = ctx.getImageData(x, y, 1, 1);
+    const data = imageData.data;
+    data[0] = color.r;
+    data[1] = color.g;
+    data[2] = color.b;
+    data[3] = color.a;
+    ctx.putImageData(imageData, x, y);
+  }
+
+  function handleMouseDown () {
+    colorPixel({ r: 255, g: 0, b: 0, a: 255 });
+  }
+
   return (
     <div
       id='canvas-wrapper'
@@ -96,11 +119,16 @@ export function TilesetCanvas () {
       ref={canvasWrapper}
       onWheel={handleWheel}
     >
-      <div id="transform-container" css={canvasWrapperAndTransformContainerStyle} ref={transformContainer}>
+      <div
+        id='transform-container'
+        css={canvasWrapperAndTransformContainerStyle}
+        ref={transformContainer}
+      >
         <canvas
           id='canvas'
           css={canvasStyle}
           ref={canvas}
+          onMouseDown={handleMouseDown}
         />
       </div>
     </div>
