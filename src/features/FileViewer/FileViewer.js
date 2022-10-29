@@ -6,6 +6,7 @@ import { useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getFileToView } from '../File/fileSlice';
 import { FileInfo } from './FileInfo';
+import { CommentSection } from './CommentSection';
 
 const fileViewerStyle = css`
   padding: 0 20px 8px 90px;
@@ -72,6 +73,9 @@ export function FileViewer () {
               description={file.description}
               tagStr={file.tags}
             />
+            <CommentSection authorUserName={file.authorUsername}
+            comments={file.comments}/>
+
           </div>
           <div css={fileRecomStyle}>
             <h1>You May Also Like</h1>
