@@ -2,7 +2,7 @@
 import { css, jsx } from '@emotion/react';
 import { FlexRow } from '../../components/Layouts/FlexRow';
 import { FlexColumn } from '../../components/Layouts/FlexColumn';
-import { timeAgo } from '../../utils/timeUtils';
+import { timeUtils } from '../../utils/timeUtils';
 import { useRef } from 'react';
 import { Button, IconButtonStyle, likeButtonStyle, whiteButtonStyle, blackButtonStyle } from '../../components/inputs/Button';
 
@@ -50,12 +50,12 @@ export function CommentSection ({ authorUserName, comments }) {
       <hr color='gray'/>
      <FlexColumn>
         {comments.map((c, i) =>
-        <FlexColumn css={{ color: 'white' }}key={i}>
+        <FlexColumn css={{ color: 'white' }} key={i}>
         <FlexRow>
           <span className='icon-avatar' css={{ fontSize: '42px' }}/>
           <div>
             <span css={{ marginRight: '10px' }}>{c.username}</span>
-            <span>{timeAgo(new Date(c.createdAt)) + ' ago'}</span>
+            <span>{timeUtils.timeAgo(new Date(c.createdAt)) + ' ago'}</span>
           </div>
           </FlexRow>
           <div>
