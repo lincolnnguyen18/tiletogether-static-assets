@@ -1,7 +1,7 @@
 /** @jsx jsx */
 import { css, jsx } from '@emotion/react';
 
-const flex = css`
+const flexStyle = css`
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -9,7 +9,7 @@ const flex = css`
 
 export function FlexRow ({ children, style, ...props }) {
   return (
-    <div css={[flex, style]} {...props}>
+    <div css={[flexStyle, style]} {...props}>
       {children}
     </div>
   );
