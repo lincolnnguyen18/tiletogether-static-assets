@@ -140,6 +140,7 @@ export function Dashboard () {
   const queryParams = getQueryParams(location);
   const dispatch = useDispatch();
   const userSlice = useSelector((state) => state.user);
+  const authenticating = userSlice.pending.includes('getUser');
   const fileSlice = useSelector((state) => state.file);
   const currentPage = useSelector((state) => state.dashboard.primitives.currentPage);
   const files = fileSlice.files;
@@ -172,7 +173,7 @@ export function Dashboard () {
   let content;
 
   // Only show non-home pages (likes, shared with, etc) if user is logged in
-  if (userSlice.primitives.user || currentPage === 'home' || currentPage === 'users') {
+  if (userSlice.primitives.user || authenticating || currentPage === 'home' || currentPage === 'users') {
     // if files finished loading and there are files
     if (files != null && files.length > 0) {
       content = (

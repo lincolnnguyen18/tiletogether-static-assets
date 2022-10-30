@@ -106,6 +106,7 @@ const fileSlice = createSlice({
       })
       .addMatcher(isAnyOf(getFileToEdit.pending, getFileToView.pending), (state, action) => {
         state.errors = [];
+        state.file = null;
         state.pending.push(getActionName(action));
       })
       .addMatcher(
