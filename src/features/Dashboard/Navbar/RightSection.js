@@ -12,17 +12,21 @@ import { logout } from '../../User/userSlice';
 import { useNavigate } from 'react-router-dom';
 import { openNewFileModal } from '../Modals/NewFileModal';
 
-const rightSectionStyle = css`
-  flex-shrink: 0;
-  gap: 16px;
-`;
-
 export function RightSection () {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const userSlice = useSelector((state) => state.user);
   const menuSlice = useSelector((state) => state.menu);
   const menu = menuSlice.menu;
+  const authenticating = userSlice.pending.includes('getUser');
+
+  const rightSectionStyle = css`
+  flex-shrink: 0;
+  gap: 16px;
+  visibility: ${authenticating ? 'hidden' : 'visible'};
+  width: 180px;
+  justify-content: flex-end;  
+`;
 
   const newFileButtons = [
     {

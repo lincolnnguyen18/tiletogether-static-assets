@@ -24,7 +24,30 @@ const leftSidebarStyle = css`
   }
 `;
 
+const colorSetStyle = css`
+  display: flex;
+  flex-wrap: wrap;
+`;
+
 export function RightSidebar () {
+  function getRandomColor () {
+    return `#${Math.floor(Math.random() * 16777215).toString(16)}`;
+  }
+
+  function color ({ color, key }) {
+    const colorStyle = css`
+      background: ${color};
+      width: 32px;
+      height: 32px;
+      border: 2px solid #aaa;
+      cursor: pointer;
+    `;
+
+    return (
+      <div css={colorStyle} key={key} />
+    );
+  }
+
   return (
     <div css={leftSidebarStyle}>
       <div className='header'>
@@ -32,6 +55,9 @@ export function RightSidebar () {
           <span className='icon-paint-roller'></span>
         </Icon>
         <span>Color set</span>
+      </div>
+      <div css={colorSetStyle}>
+        {[...Array(10)].map((_, index) => color({ color: getRandomColor(), key: index }))}
       </div>
       <div className='header'>
         <Icon color='white'>

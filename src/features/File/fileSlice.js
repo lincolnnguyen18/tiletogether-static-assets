@@ -3,6 +3,7 @@ import { apiClient } from '../../app/apiClient';
 import { getQueryParams } from '../Dashboard/Dashboard';
 import _ from 'lodash';
 import { notPresent } from '../../utils/equalityUtils';
+import { getActionName } from '../../utils/stringUtils';
 
 const initialState = {
   files: null,
@@ -89,25 +90,26 @@ const fileSlice = createSlice({
           state.primitives.page = 2;
         } else {
           state.files = state.files.concat(action.payload);
-          state.pending = state.pending.filter((item) => item !== 'getFiles');
           state.primitives.page += 1;
         }
-
         if (action.payload.length < state.primitives.limit) {
           state.primitives.noMoreFiles = true;
         }
       })
-      .addCase(getFileToEdit.rejected, (state, _) => {
-        state.errors.push('getFileToEdit');
+      .addMatcher(isAnyOf(getFiles.rejected, getFileToEdit.rejected, getFileToView.rejected), (state, action) => {
+        const actionName = getActionName(action);
+        state.errors.push(actionName);
+        state.pending = _.pull(state.pending, actionName);
       })
-      .addCase(getFileToView.rejected, (state, _) => {
-        state.errors.push('getFileToView');
+      .addMatcher(isAnyOf(getFiles.fulfilled, getFileToEdit.fulfilled, getFileToView.fulfilled), (state, action) => {
+        console.log(state.pending);
+        state.pending = _.pull(state.pending, getActionName(action));
+        console.log(state.pending);
       })
-      .addMatcher(
-        isAnyOf(getFileToView.pending, getFileToEdit.pending), (state) => {
-          state.file = null;
-          state.errors = [];
-        })
+      .addMatcher(isAnyOf(getFileToEdit.pending, getFileToView.pending), (state, action) => {
+        state.errors = [];
+        state.pending.push(getActionName(action));
+      })
       .addMatcher(
         isAnyOf(getFileToView.fulfilled, getFileToEdit.fulfilled), (state, action) => {
           state.file = action.payload;
