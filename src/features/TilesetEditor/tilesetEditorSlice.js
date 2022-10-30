@@ -2,13 +2,7 @@ import _ from 'lodash';
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
-  primitives: {
-    cursor: { pageX: window.innerWidth / 2, pageY: window.innerHeight / 2 },
-    scale: 1,
-    maxScale: 30,
-    virtualScale: null,
-    scaleFactor: 0.04,
-  },
+  primitives: {},
 };
 
 const tilesetEditorSlice = createSlice({
