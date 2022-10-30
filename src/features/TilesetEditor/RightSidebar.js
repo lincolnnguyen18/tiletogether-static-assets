@@ -3,6 +3,10 @@ import { css, jsx } from '@emotion/react';
 import { Icon } from '../../components/Icon';
 import { ColorSet } from './ColorSet';
 import _ from 'lodash';
+import { Divider } from '../MapEditor/RightSidebar';
+import { Layer } from '../Editor/Layer';
+import { useSelector } from 'react-redux';
+import { useEffect } from 'react';
 
 const rightSidebarStyle = css`
   background: #3F3F3F;
@@ -14,9 +18,8 @@ const rightSidebarStyle = css`
   flex-direction: column;
   color: white;
   overflow-y: auto;
-  padding: 16px 0;
+  padding-top: 16px;
   box-sizing: border-box;
-  gap: 16px;
   z-index: 1;
 
   .header {
@@ -32,25 +35,38 @@ const rightSidebarStyle = css`
     align-items: center;
     gap: 18px;  
   }
+
+  .layers {
+    padding-left: 10px;
+    height: 100%;
+    overflow: auto;
+  }
 `;
 
+function getRandomColor () {
+  return `#${Math.floor(Math.random() * 16777215).toString(16)}`;
+}
+
 export function RightSidebar () {
-  function getRandomColor () {
-    return `#${Math.floor(Math.random() * 16777215).toString(16)}`;
-  }
   const colors = _.range(0, 80).map(() => getRandomColor());
+  const fileSlice = useSelector((state) => state.file);
+  const file = fileSlice.file;
+  const rootLayer = file.rootLayer;
+
+  useEffect(() => {
+    console.log(rootLayer);
+  }, [file]);
 
   return (
     <div css={rightSidebarStyle}>
-      <div>
-        <div className='header'>
-          <Icon color='white'>
-            <span className='icon-paint-roller'></span>
-          </Icon>
-          <span>Color set</span>
-        </div>
-        <ColorSet colors={colors} />
+      <div className='header'>
+        <Icon color='white'>
+          <span className='icon-paint-roller'></span>
+        </Icon>
+        <span>Color set</span>
       </div>
+      <ColorSet colors={colors} />
+      <Divider />
       <div className={'current-color'}>
         <div className='header'>
           <Icon color='white'>
@@ -60,11 +76,15 @@ export function RightSidebar () {
         </div>
         <input type="color" />
       </div>
+      <Divider />
       <div className='header'>
         <Icon color='white'>
           <span className='icon-layers'></span>
         </Icon>
         <span>Layers</span>
+      </div>
+      <div className='layers'>
+        <Layer layer={rootLayer} />
       </div>
     </div>
   );

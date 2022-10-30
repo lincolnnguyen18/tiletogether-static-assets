@@ -1,6 +1,9 @@
 /** @jsx jsx */
 import { css, jsx } from '@emotion/react';
 import { Icon } from '../../components/Icon';
+import { Layer } from '../Editor/Layer';
+import { useSelector } from 'react-redux';
+import { useEffect } from 'react';
 
 const rightSidebarStyle = css`
   background: #3F3F3F;
@@ -12,9 +15,8 @@ const rightSidebarStyle = css`
   flex-direction: column;
   color: white;
   overflow-y: auto;
-  padding: 16px 0;
+  padding-top: 16px;
   box-sizing: border-box;
-  gap: 16px;
   z-index: 1;
 
   .header {
@@ -44,35 +46,60 @@ const rightSidebarStyle = css`
       height: 213px;
     }
   }
+  
+  .layers {
+    padding-left: 10px;
+    height: 100%;
+    overflow: auto;
+  }
 `;
 
+export function Divider () {
+  const dividerStyle = css`
+    width: 100%;
+    height: 12px;
+  `;
+
+  return <div css={dividerStyle} />;
+}
+
 export function RightSidebar () {
+  const fileSlice = useSelector((state) => state.file);
+  const file = fileSlice.file;
+  const rootLayer = file.rootLayer;
+
+  useEffect(() => {
+    console.log(rootLayer);
+  }, [file]);
+
   return (
     <div css={rightSidebarStyle}>
-      <div>
-        <div className='header'>
-          <Icon color='white'>
-            <span className='icon-paint-roller'></span>
-          </Icon>
-          <span>Tilesets</span>
-        </div>
+      <div className='header'>
+        <Icon color='white'>
+          <span className='icon-paint-roller'></span>
+        </Icon>
+        <span>Tilesets</span>
       </div>
-      <div>
-        <div className='header'>
-          <Icon color='white'>
-            <span className='icon-droplet'></span>
-          </Icon>
-          <span>Selected Tiles</span>
-        </div>
-        <div className='selected-tiles'>
-          <canvas></canvas>
-        </div>
+      <Divider />
+      <div className='header'>
+        <Icon color='white'>
+          <span className='icon-droplet'></span>
+        </Icon>
+        <span>Selected Tiles</span>
       </div>
+      <Divider />
+      <div className='selected-tiles'>
+        <canvas></canvas>
+      </div>
+      <Divider />
       <div className='header'>
         <Icon color='white'>
           <span className='icon-layers'></span>
         </Icon>
         <span>Layers</span>
+      </div>
+      <div className='layers'>
+        <Layer layer={rootLayer} />
       </div>
     </div>
   );
