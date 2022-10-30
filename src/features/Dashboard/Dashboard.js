@@ -109,6 +109,31 @@ function getCurrentPage (location, dispatch = null) {
   }
 }
 
+export function getSubtext (currentPage, file) {
+  let firstPart, secondPart;
+  if (currentPage === 'your-files') {
+    if (file.publishedAt != null) {
+      secondPart = 'Published';
+    } else {
+      secondPart = 'Not published';
+    }
+    firstPart = `Updated ${timeUtils.timeAgo(new Date(file.updatedAt))} ago`;
+    return `${firstPart} • ${secondPart}`;
+  } else {
+    firstPart = file.authorUsername;
+    secondPart = `Published ${timeUtils.timeAgo(new Date(file.publishedAt))} ago`;
+    return (
+      <Fragment>
+        <Link to={`/users/${file.authorUsername}`}>
+          {firstPart}
+        </Link>
+        {' • '}
+        {secondPart}
+      </Fragment>
+    );
+  }
+}
+
 export function Dashboard () {
   const location = useLocation();
   const navigate = useNavigate();
@@ -145,31 +170,6 @@ export function Dashboard () {
 
   let content;
 
-  function getSubtext (file) {
-    let firstPart, secondPart;
-    if (currentPage === 'your-files') {
-      if (file.publishedAt != null) {
-        secondPart = 'Published';
-      } else {
-        secondPart = 'Not published';
-      }
-      firstPart = `Updated ${timeUtils.timeAgo(new Date(file.updatedAt))} ago`;
-      return `${firstPart} • ${secondPart}`;
-    } else {
-      firstPart = file.authorUsername;
-      secondPart = `Published ${timeUtils.timeAgo(new Date(file.publishedAt))} ago`;
-      return (
-        <Fragment>
-          <Link to={`/users/${file.authorUsername}`}>
-            {firstPart}
-          </Link>
-          {' • '}
-          {secondPart}
-        </Fragment>
-      );
-    }
-  }
-
   // Only show non-home pages (likes, shared with, etc) if user is logged in
   if (userSlice.primitives.user || currentPage === 'home' || currentPage === 'users') {
     // if files finished loading and there are files
@@ -182,7 +182,7 @@ export function Dashboard () {
                 key={index}
                 imageUrl='/mock-data/file-image.png'
                 title={file.name}
-                subtext={getSubtext(file)}
+                subtext={getSubtext(currentPage, file)}
                 liked={userSlice.primitives.user && file.likes && file.likes.find(like => like.username === userSlice.primitives.user.username) != null}
                 id={file._id}
                 type={file.type}

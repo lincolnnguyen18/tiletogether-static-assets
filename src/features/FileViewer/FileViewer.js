@@ -2,15 +2,14 @@
 import { css, jsx } from '@emotion/react';
 import { Fragment, useEffect } from 'react';
 import { Navbar } from '../Dashboard/Navbar/Navbar';
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getFileToView } from '../File/fileSlice';
 import { FileInfo } from './FileInfo';
 import { Grid } from '../../components/Grid';
 import { Button, transparentButtonStyle } from '../../components/inputs/Button';
 import { File } from '../File/File';
-import { timeAgo } from '../../utils/timeUtils';
-import { loadMoreButtonStyle, loadMoreContainerStyle } from '../Dashboard/Dashboard';
+import { loadMoreButtonStyle, loadMoreContainerStyle, getSubtext } from '../Dashboard/Dashboard';
 import { getMoreRecommendation, getRecommendation } from './FileViewerSlice';
 import { CommentSection } from './CommentSection';
 
@@ -103,7 +102,7 @@ export function FileViewer () {
                   key={index}
                   imageUrl='/mock-data/file-image.png'
                   title={file.name}
-                  subtext={GetSubText(file)}
+                  subtext={getSubtext(username === file.authorUserName ? 'your-files' : 'other', file)}
                   liked={userSlice.primitives.user && file.likes && file.likes.find(like => like.username === userSlice.primitives.user.username) != null}
                   id={file._id}
                   type={file.type}
@@ -128,17 +127,3 @@ export function FileViewer () {
     </Fragment>
   );
 }
-
-const GetSubText = function (file) {
-  const firstPart = file.authorUsername;
-  const secondPart = `Published ${timeAgo(new Date(file.publishedAt))} ago`;
-  return (
-    <Fragment>
-      <Link to={`/users/${file.authorUsername}`}>
-        {firstPart}
-      </Link>
-      {' • '}
-      {secondPart}
-    </Fragment>
-  );
-};
