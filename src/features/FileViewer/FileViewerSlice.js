@@ -15,8 +15,7 @@ export const getRecommendation = createAsyncThunk(
   async (payload) => {
     try {
       await wait(500);
-      const params = _.mapKeys(payload, (__, key) => _.snakeCase(key));
-      const response = await apiClient.get(`/files/${payload.id}/recommend`, { params });
+      const response = await apiClient.get(`/files/${payload.id}/recommend`);
       return response.data.files;
     } catch (err) {
       throw new Error(err.response.data.error);
@@ -29,7 +28,8 @@ export const getMoreRecommendation = createAsyncThunk(
   async (payload) => {
     try {
       await wait(500);
-      const response = await apiClient.get(`/files/${payload.id}/recommend`, { params: payload });
+      const params = _.mapKeys(payload, (__, key) => _.snakeCase(key));
+      const response = await apiClient.get(`/files/${payload.id}/recommend`, { params });
       return response.data.files;
     } catch (err) {
       throw new Error(err.response.data.error);

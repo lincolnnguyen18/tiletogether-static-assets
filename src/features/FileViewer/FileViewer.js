@@ -33,12 +33,12 @@ const fileRecomStyle = css`
 const canvasStyle = css`
   width: 100%;
   aspect-ratio: 270 / 170;
-  background: white;
 `;
 
 const imageStyle = css`
   object-fit: contain;
   width: 100%;
+  image-rendering: pixelated;
 `;
 
 const gridStyle = css`
@@ -62,16 +62,13 @@ export function FileViewer () {
 
   useEffect(() => {
     dispatch(getFileToView({ id }));
-  }, [id]);
-
-  useEffect(() => {
-    dispatch(getRecommendation({ id, continuation_token: fileViewerSlice.lastFile }));
+    dispatch(getRecommendation({ id }));
   }, [id]);
 
   return (
     <Fragment>
       <Navbar />
-      {file && (
+      {file && file.likes && (
         <div css={fileViewerStyle}>
           <div css={filePanelStyle}>
             <div css={canvasStyle}>
@@ -91,9 +88,10 @@ export function FileViewer () {
               description={file.description}
               tagStr={file.tags}
             />
-            <CommentSection authorUserName={file.authorUsername}
-            comments={file.comments}/>
-
+            <CommentSection
+              authorUserName={file.authorUsername}
+              comments={file.comments}
+            />
           </div>
           <div css={fileRecomStyle}>
             <Grid itemWidth={400} gap={8} style={gridStyle}>
@@ -102,19 +100,20 @@ export function FileViewer () {
                   key={index}
                   imageUrl='/mock-data/file-image.png'
                   title={file.name}
-                  subtext={getSubtext(username === file.authorUserName ? 'your-files' : 'other', file)}
+                  subtext={getSubtext(username === file.username ? 'your-files' : 'file-viewer', file)}
                   liked={userSlice.primitives.user && file.likes && file.likes.find(like => like.username === userSlice.primitives.user.username) != null}
                   id={file._id}
                   type={file.type}
+                  maxNameWidth={260}
                 />
               ))
               }
             </Grid>
-            {fileSlice.lastFile != null && (
+            {fileViewerSlice.lastFile != null && (
               <div css={loadMoreContainerStyle}>
                 <Button
                   style={[transparentButtonStyle, loadMoreButtonStyle]}
-                  onClick={() => dispatch(getMoreRecommendation({ id, continuation_token: fileViewerSlice.lastFile }))}
+                  onClick={() => dispatch(getMoreRecommendation({ id, continuationToken: JSON.stringify(fileViewerSlice.lastFile) }))}
                 >
                   <span className='text'>{pending.includes('getMoreFiles') ? 'Loading...' : 'Load More'}</span>
                   <span className='icon-more' />

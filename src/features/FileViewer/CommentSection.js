@@ -50,26 +50,27 @@ export function CommentSection ({ authorUserName, comments }) {
       <hr color='gray'/>
      <FlexColumn>
         {comments.map((c, i) =>
-        <FlexColumn css={{ color: 'white' }} key={i}>
-        <FlexRow>
-          <span className='icon-avatar' css={{ fontSize: '42px' }}/>
-          <div>
-            <span css={{ marginRight: '10px' }}>{c.username}</span>
-            <span>{timeUtils.timeAgo(new Date(c.createdAt)) + ' ago'}</span>
-          </div>
-          </FlexRow>
-          <div>
-            {c.content}
-          </div>
+          <FlexColumn css={{ color: 'white' }} key={i}>
           <FlexRow>
-            <button css={[IconButtonStyle, likeButtonStyle, { marginLeft: '0px' }]} ref={likeButtonRef}>
-            <span>{10}</span>
-               <span className='icon-like-unfilled' css={{ fontSize: '42px' }}/>
-          </button>
-            <div css={{ fontWeight: 'bold' }}>Reply</div>
-          </FlexRow>
-          <div css={{ color: '#4894F9' }}>{'View 278 Replies'}</div>
-        </FlexColumn>)}
+            <span className='icon-avatar' css={{ fontSize: '42px' }}/>
+            <div>
+              <span css={{ marginRight: '10px' }}>{c.username}</span>
+              <span>{timeUtils.timeAgo(new Date(c.createdAt)) + ' ago'}</span>
+            </div>
+            </FlexRow>
+            <div>
+              {c.content}
+            </div>
+            <FlexRow>
+              <button css={[IconButtonStyle, likeButtonStyle, { marginLeft: '0px' }]} ref={likeButtonRef}>
+              <span>{10}</span>
+                 <span className='icon-like-unfilled' css={{ fontSize: '42px' }}/>
+            </button>
+              <div css={{ fontWeight: 'bold' }}>Reply</div>
+            </FlexRow>
+            <div css={{ color: '#4894F9' }}>{'View 278 Replies'}</div>
+          </FlexColumn>,
+        )}
       </FlexColumn>
     </FlexColumn>
   );
