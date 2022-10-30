@@ -6,6 +6,7 @@ import { userReducer } from '../features/User/userSlice';
 import { fileReducer } from '../features/File/fileSlice';
 import { leftSidebarReducer } from '../features/Editor/leftSidebarSlice';
 import { tilesetEditorReducer } from '../features/TilesetEditor/tilesetEditorSlice';
+import { fileViewerReducer } from '../features/FileViewer/FileViewerSlice';
 
 export const store = configureStore({
   reducer: {
@@ -16,6 +17,7 @@ export const store = configureStore({
     file: fileReducer,
     leftSidebar: leftSidebarReducer,
     tilesetEditor: tilesetEditorReducer,
+    fileViewer: fileViewerReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

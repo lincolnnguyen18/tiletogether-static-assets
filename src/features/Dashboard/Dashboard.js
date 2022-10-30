@@ -27,13 +27,13 @@ const dashboardStyle = css`
   width: 100%;
 `;
 
-const loadMoreContainerStyle = css`
+export const loadMoreContainerStyle = css`
   display: flex;
   justify-content: center;
   padding: 20px 0;
 `;
 
-const loadMoreButtonStyle = css`
+export const loadMoreButtonStyle = css`
   & {
     text-decoration: none !important;
     gap: 8px;
