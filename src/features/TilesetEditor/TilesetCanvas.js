@@ -47,6 +47,7 @@ export function TilesetCanvas () {
   }, [layers]);
 
   async function handleWheel (e) {
+    e.evt.preventDefault();
     const dx = -e.evt.deltaX;
     const dy = -e.evt.deltaY;
     const pos = stageRef.current.getPointerPosition();
@@ -102,6 +103,7 @@ export function TilesetCanvas () {
   }
 
   function handleMouseDown (e) {
+    e.evt.preventDefault();
     if (e.evt.button === 0) {
       if (!e.evt.shiftKey) {
         colorPixel();
@@ -112,6 +114,7 @@ export function TilesetCanvas () {
   }
 
   function handleMouseMove (e) {
+    e.evt.preventDefault();
     if (e.evt.buttons === 1) {
       if (!e.evt.shiftKey) {
         colorPixel();

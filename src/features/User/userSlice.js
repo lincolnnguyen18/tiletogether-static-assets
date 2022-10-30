@@ -59,7 +59,6 @@ const userSlice = createSlice({
     builder
       .addMatcher(isAnyOf(getUser.pending, postUser.pending, deleteUser.pending), (state, action) => {
         state.pending.push(getActionName(action));
-        console.log(state.pending);
       })
       .addMatcher(
         isAnyOf(getUser.rejected, postUser.rejected), (state, action) => {
@@ -73,7 +72,6 @@ const userSlice = createSlice({
           if (token != null) Cookies.set('token', token);
           state.primitives.user = { username, email };
           state.pending = _.pull(state.pending, getActionName(action));
-          console.log(state.pending);
         },
       );
   },

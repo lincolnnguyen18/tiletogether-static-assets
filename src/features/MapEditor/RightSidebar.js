@@ -1,8 +1,6 @@
 /** @jsx jsx */
 import { css, jsx } from '@emotion/react';
 import { Icon } from '../../components/Icon';
-import { ColorSet } from './ColorSet';
-import _ from 'lodash';
 
 const rightSidebarStyle = css`
   background: #3F3F3F;
@@ -25,21 +23,30 @@ const rightSidebarStyle = css`
     gap: 4px;
     align-items: center;
   }
-  
+
   .current-color {
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: 18px;  
+    gap: 18px;
+  }
+
+  .selected-tiles {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    padding: 0 8px;
+    
+    canvas {
+      background: #bfbfbf;
+      width: 100%;
+      height: 213px;
+    }
   }
 `;
 
 export function RightSidebar () {
-  function getRandomColor () {
-    return `#${Math.floor(Math.random() * 16777215).toString(16)}`;
-  }
-  const colors = _.range(0, 80).map(() => getRandomColor());
-
   return (
     <div css={rightSidebarStyle}>
       <div>
@@ -47,18 +54,19 @@ export function RightSidebar () {
           <Icon color='white'>
             <span className='icon-paint-roller'></span>
           </Icon>
-          <span>Color set</span>
+          <span>Tilesets</span>
         </div>
-        <ColorSet colors={colors} />
       </div>
-      <div className={'current-color'}>
+      <div>
         <div className='header'>
           <Icon color='white'>
             <span className='icon-droplet'></span>
           </Icon>
-          <span>Current color</span>
+          <span>Selected Tiles</span>
         </div>
-        <input type="color" />
+        <div className='selected-tiles'>
+          <canvas></canvas>
+        </div>
       </div>
       <div className='header'>
         <Icon color='white'>
