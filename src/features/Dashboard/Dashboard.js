@@ -11,7 +11,7 @@ import { Navbar } from './Navbar/Navbar';
 import { openAuthModal } from './Modals/AuthModal';
 import { RedirectPage } from '../../components/RedirectPage';
 import { Icon } from '../../components/Icon';
-import { getFiles, getMoreFiles } from '../File/fileSlice';
+import { getFiles } from '../File/fileSlice';
 import { Button, transparentButtonStyle, whiteButtonStyle } from '../../components/inputs/Button';
 import { timeUtils } from '../../utils/timeUtils';
 import { File } from '../File/File';
@@ -144,6 +144,7 @@ export function Dashboard () {
   const currentPage = useSelector((state) => state.dashboard.primitives.currentPage);
   const files = fileSlice.files;
   const pending = fileSlice.pending;
+  const noMoreFiles = fileSlice.primitives.noMoreFiles;
 
   useEffect(() => {
     dispatch(setDashboardPrimitives({ sidebarOpen: false }));
@@ -161,11 +162,11 @@ export function Dashboard () {
       navigate('/');
     }
 
-    dispatch(getFiles(getQueryParams(location, dispatch)));
+    dispatch(getFiles({ location }));
   }, [location]);
 
   useEffect(() => {
-    dispatch(getFiles(getQueryParams(location, dispatch)));
+    dispatch(getFiles({ location }));
   }, []);
 
   let content;
@@ -190,17 +191,13 @@ export function Dashboard () {
             ))
             }
           </Grid>
-          {fileSlice.lastFile != null && (
+          {!noMoreFiles && (
             <div css={loadMoreContainerStyle}>
               <Button
                 style={[transparentButtonStyle, loadMoreButtonStyle]}
-                onClick={() => {
-                  const payload = getQueryParams(location, dispatch);
-                  payload.continuation_token = JSON.stringify(fileSlice.lastFile);
-                  dispatch(getMoreFiles(payload));
-                }}
+                onClick={() => dispatch(getFiles({ location, loadMore: true }))}
               >
-                <span className='text'>{pending.includes('getMoreFiles') ? 'Loading...' : 'Load More'}</span>
+                <span className='text'>{pending.includes('getFiles') ? 'Loading...' : 'Load More'}</span>
                 <span className='icon-more' />
               </Button>
             </div>

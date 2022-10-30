@@ -81,7 +81,7 @@ const leftSideStyle = css`
   padding: 8px;
 `;
 
-export function File ({ imageUrl, title, subtext, liked, type, id, isLoading = false, maxNameWidth = 300 }) {
+export function File ({ imageUrl, title, subtext, liked, type, id, isLoading = false, maxNameWidth = 250 }) {
   const likeButtonRef = useRef(null);
   const location = useLocation();
   const path = location.pathname;

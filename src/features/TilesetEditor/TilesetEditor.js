@@ -32,7 +32,7 @@ export function TilesetEditor () {
   let content;
 
   if (!error) {
-    content = file && (
+    content = file && file.rootLayer && (
       <div css={tilesetEditorStyle}>
         <LeftSidebar />
         <FilenameIndicator />
