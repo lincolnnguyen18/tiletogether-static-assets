@@ -12,6 +12,7 @@ import { File } from '../File/File';
 import { timeAgo } from '../../utils/timeUtils';
 import { loadMoreButtonStyle, loadMoreContainerStyle } from '../Dashboard/Dashboard';
 import { getMoreRecommendation, getRecommendation } from './FileViewerSlice';
+import { CommentSection } from './CommentSection';
 
 const fileViewerStyle = css`
   padding: 0 20px 8px 90px;
@@ -91,6 +92,9 @@ export function FileViewer () {
               description={file.description}
               tagStr={file.tags}
             />
+            <CommentSection authorUserName={file.authorUsername}
+            comments={file.comments}/>
+
           </div>
           <div css={fileRecomStyle}>
             <Grid itemWidth={400} gap={8} style={gridStyle}>
