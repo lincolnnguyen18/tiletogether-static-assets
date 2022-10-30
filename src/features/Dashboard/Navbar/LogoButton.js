@@ -1,6 +1,6 @@
 /** @jsx jsx */
 import { css, jsx } from '@emotion/react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Icon } from '../../../components/Icon';
 
 const logoButtonStyle = css`
@@ -31,18 +31,14 @@ const logoButtonStyle = css`
 `;
 
 export function LogoButton () {
-  const navigate = useNavigate();
-
-  function onClick () {
-    navigate('/');
-  }
-
   return (
-    <button css={logoButtonStyle} onClick={onClick}>
-      <Icon>
-        <span className='icon-logo'></span>
-      </Icon>
-      <span className='text'>TileTogether</span>
-    </button>
+    <Link to='/' style={{ textDecoration: 'none' }}>
+      <button css={logoButtonStyle}>
+        <Icon>
+          <span className='icon-logo'></span>
+        </Icon>
+        <span className='text'>TileTogether</span>
+      </button>
+    </Link>
   );
 }

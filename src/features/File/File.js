@@ -49,19 +49,6 @@ const fileInfoStyle = css`
   align-items: center;
 `;
 
-const fileInfoTextStyle = css`
-  display: inline-block;
-  
-  // limit to one line with ellipsis for text overflow
-  h1 {
-    white-space: nowrap;
-    max-width: 300px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    margin-bottom: 10px;
-  }
-`;
-
 const likeButtonStyle = css`
   color: white;
   float: right;
@@ -94,10 +81,23 @@ const leftSideStyle = css`
   padding: 8px;
 `;
 
-export function File ({ imageUrl, title, subtext, liked, type, id, isLoading = false }) {
+export function File ({ imageUrl, title, subtext, liked, type, id, isLoading = false, maxNameWidth = 250 }) {
   const likeButtonRef = useRef(null);
   const location = useLocation();
   const path = location.pathname;
+
+  const fileInfoTextStyle = css`
+  display: inline-block;
+  
+  // limit to one line with ellipsis for text overflow
+  h1 {
+    white-space: nowrap;
+    max-width: ${maxNameWidth}px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 10px;
+  }
+`;
 
   let link;
 

@@ -11,7 +11,7 @@ import { Navbar } from './Navbar/Navbar';
 import { openAuthModal } from './Modals/AuthModal';
 import { RedirectPage } from '../../components/RedirectPage';
 import { Icon } from '../../components/Icon';
-import { getFiles, getMoreFiles } from '../File/fileSlice';
+import { getFiles } from '../File/fileSlice';
 import { Button, transparentButtonStyle, whiteButtonStyle } from '../../components/inputs/Button';
 import { timeUtils } from '../../utils/timeUtils';
 import { File } from '../File/File';
@@ -27,13 +27,13 @@ const dashboardStyle = css`
   width: 100%;
 `;
 
-const loadMoreContainerStyle = css`
+export const loadMoreContainerStyle = css`
   display: flex;
   justify-content: center;
   padding: 20px 0;
 `;
 
-const loadMoreButtonStyle = css`
+export const loadMoreButtonStyle = css`
   & {
     text-decoration: none !important;
     gap: 8px;
@@ -109,6 +109,31 @@ function getCurrentPage (location, dispatch = null) {
   }
 }
 
+export function getSubtext (currentPage, file) {
+  let firstPart, secondPart;
+  if (currentPage === 'your-files') {
+    if (file.publishedAt != null) {
+      secondPart = 'Published';
+    } else {
+      secondPart = 'Not published';
+    }
+    firstPart = `Updated ${timeUtils.timeAgo(new Date(file.updatedAt))} ago`;
+    return `${firstPart} • ${secondPart}`;
+  } else {
+    firstPart = file.authorUsername;
+    secondPart = `Published ${timeUtils.timeAgo(new Date(file.publishedAt))} ago`;
+    return (
+      <Fragment>
+        <Link to={`/users/${file.authorUsername}`}>
+          {firstPart}
+        </Link>
+        {' • '}
+        {secondPart}
+      </Fragment>
+    );
+  }
+}
+
 export function Dashboard () {
   const location = useLocation();
   const navigate = useNavigate();
@@ -119,6 +144,7 @@ export function Dashboard () {
   const currentPage = useSelector((state) => state.dashboard.primitives.currentPage);
   const files = fileSlice.files;
   const pending = fileSlice.pending;
+  const noMoreFiles = fileSlice.primitives.noMoreFiles;
 
   useEffect(() => {
     dispatch(setDashboardPrimitives({ sidebarOpen: false }));
@@ -136,39 +162,14 @@ export function Dashboard () {
       navigate('/');
     }
 
-    dispatch(getFiles(getQueryParams(location, dispatch)));
+    dispatch(getFiles({ location }));
   }, [location]);
 
   useEffect(() => {
-    dispatch(getFiles(getQueryParams(location, dispatch)));
+    dispatch(getFiles({ location }));
   }, []);
 
   let content;
-
-  function getSubtext (file) {
-    let firstPart, secondPart;
-    if (currentPage === 'your-files') {
-      if (file.publishedAt != null) {
-        secondPart = 'Published';
-      } else {
-        secondPart = 'Not published';
-      }
-      firstPart = `Updated ${timeUtils.timeAgo(new Date(file.updatedAt))} ago`;
-      return `${firstPart} • ${secondPart}`;
-    } else {
-      firstPart = file.authorUsername;
-      secondPart = `Published ${timeUtils.timeAgo(new Date(file.publishedAt))} ago`;
-      return (
-        <Fragment>
-          <Link to={`/users/${file.authorUsername}`}>
-            {firstPart}
-          </Link>
-          {' • '}
-          {secondPart}
-        </Fragment>
-      );
-    }
-  }
 
   // Only show non-home pages (likes, shared with, etc) if user is logged in
   if (userSlice.primitives.user || currentPage === 'home' || currentPage === 'users') {
@@ -182,7 +183,7 @@ export function Dashboard () {
                 key={index}
                 imageUrl='/mock-data/file-image.png'
                 title={file.name}
-                subtext={getSubtext(file)}
+                subtext={getSubtext(currentPage, file)}
                 liked={userSlice.primitives.user && file.likes && file.likes.find(like => like.username === userSlice.primitives.user.username) != null}
                 id={file._id}
                 type={file.type}
@@ -190,17 +191,13 @@ export function Dashboard () {
             ))
             }
           </Grid>
-          {fileSlice.lastFile != null && (
+          {!noMoreFiles && (
             <div css={loadMoreContainerStyle}>
               <Button
                 style={[transparentButtonStyle, loadMoreButtonStyle]}
-                onClick={() => {
-                  const payload = getQueryParams(location, dispatch);
-                  payload.continuation_token = JSON.stringify(fileSlice.lastFile);
-                  dispatch(getMoreFiles(payload));
-                }}
+                onClick={() => dispatch(getFiles({ location, loadMore: true }))}
               >
-                <span className='text'>{pending.includes('getMoreFiles') ? 'Loading...' : 'Load More'}</span>
+                <span className='text'>{pending.includes('getFiles') ? 'Loading...' : 'Load More'}</span>
                 <span className='icon-more' />
               </Button>
             </div>

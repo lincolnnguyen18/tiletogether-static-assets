@@ -18,12 +18,12 @@ export function NotFound () {
           </Icon>
         )}
         title='File not found'
-        message='The file you are trying to edit does not exist or you do not have permission to edit it.'
+        message='The file you are trying to view does not exist or you do not have permission to view it.'
       >
         <Button
           style={whiteButtonStyle}
-          onClick={() => navigate('/your-files')}
-        >Go back to your files</Button>
+          onClick={() => navigate('/')}
+        >Go back to home page</Button>
       </RedirectPage>
     </Fragment>
   );
