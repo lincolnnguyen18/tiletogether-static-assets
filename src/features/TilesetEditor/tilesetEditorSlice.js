@@ -6,7 +6,7 @@ const initialState = {
 };
 
 const tilesetEditorSlice = createSlice({
-  name: 'tilesetCanvas',
+  name: 'tilesetEditor',
   initialState,
   reducers: {
     setTilesetEditorPrimitives (state, action) {

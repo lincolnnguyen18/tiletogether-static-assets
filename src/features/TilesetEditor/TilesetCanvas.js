@@ -35,6 +35,8 @@ export function TilesetCanvas () {
   const stageRef = useRef(null);
   const file = fileSlice.file;
   const layers = file.rootLayer.layers;
+  const leftSidebarSlice = useSelector((state) => state.leftSidebar);
+  const showGrid = leftSidebarSlice.primitives.showGrid;
 
   const canvasStyle = css`
     & {
@@ -235,8 +237,10 @@ export function TilesetCanvas () {
       onContextMenu={handleContextMenu}
       ref={stageRef}
     >
-      <Layer imageSmoothingEnabled={false}>
+      <Layer imageSmoothingEnabled={false} opacity={showGrid ? 1 : 0}>
         <KonvaCheckerboardImage width={file.width} height={file.height} tileDimension={file.tileDimension} />
+      </Layer>
+      <Layer imageSmoothingEnabled={false}>
         <Image image={image} />
       </Layer>
     </Stage>

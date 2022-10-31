@@ -38,6 +38,7 @@ const leftSidebarStyle = css`
 export function LeftSidebar () {
   const dispatch = useDispatch();
   const leftSidebarSlice = useSelector((state) => state.leftSidebar);
+  const showGrid = leftSidebarSlice.primitives.showGrid;
   const drawerOpen = leftSidebarSlice.primitives.drawerOpen;
   const drawerPage = leftSidebarSlice.primitives.drawerPage;
   const fileSlice = useSelector((state) => state.file);
@@ -155,7 +156,8 @@ export function LeftSidebar () {
       <Checkbox
         label='View grid lines'
         name='gridLines'
-        defaultValue={true}
+        checked={showGrid}
+        onChange={(e) => dispatch(setLeftSidebarPrimitives({ showGrid: e.target.checked }))}
       />
       <h4>{publishText}</h4>
       <div css={css`display: flex; gap: 24px; justify-content: flex-start;`}>
