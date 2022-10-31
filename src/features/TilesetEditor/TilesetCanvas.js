@@ -5,6 +5,23 @@ import { useSelector } from 'react-redux';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Image, Layer, Stage } from 'react-konva';
 
+export function KonvaCheckerboardImage ({ width, height, tileDimension }) {
+  const canvas = document.createElement('canvas');
+  canvas.width = width * tileDimension;
+  canvas.height = height * tileDimension;
+  const ctx = canvas.getContext('2d');
+  for (let x = 0; x < width; x++) {
+    for (let y = 0; y < height; y++) {
+      ctx.fillStyle = (x + y) % 2 === 0 ? '#fff' : '#eee';
+      ctx.fillRect(x * tileDimension, y * tileDimension, tileDimension, tileDimension);
+    }
+  }
+  // use image to increase performance
+  const image = new window.Image();
+  image.src = canvas.toDataURL();
+  return <Image image={image} />;
+}
+
 export function TilesetCanvas () {
   const [canvasWidth, setCanvasWidth] = useState(window.innerWidth - 56 - 270);
   const [canvasHeight, setCanvasHeight] = useState(window.innerHeight);
@@ -16,7 +33,8 @@ export function TilesetCanvas () {
   const [panHover, setPanHover] = useState(false);
   const fileSlice = useSelector((state) => state.file);
   const stageRef = useRef(null);
-  const layers = fileSlice.file.rootLayer.layers;
+  const file = fileSlice.file;
+  const layers = file.rootLayer.layers;
 
   const canvasStyle = css`
     & {
@@ -218,6 +236,7 @@ export function TilesetCanvas () {
       ref={stageRef}
     >
       <Layer imageSmoothingEnabled={false}>
+        <KonvaCheckerboardImage width={file.width} height={file.height} tileDimension={file.tileDimension} />
         <Image image={image} />
       </Layer>
     </Stage>
