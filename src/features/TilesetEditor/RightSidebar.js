@@ -2,15 +2,14 @@
 import { css, jsx } from '@emotion/react';
 import { Icon } from '../../components/Icon';
 import { ColorSet } from './ColorSet';
-import _ from 'lodash';
 import { Divider } from '../MapEditor/RightSidebar';
 import { Layer } from '../Editor/Layer';
 import { useSelector } from 'react-redux';
 import { useEffect } from 'react';
 import { FlexRow } from '../../components/Layouts/FlexRow';
-import { IconButton } from '../../components/inputs/IconButton';
 import { Slider } from '../../components/inputs/Slider';
 import { Text } from '../../components/Text';
+import { IconButton } from '../../components/inputs/IconButton';
 
 const rightSidebarStyle = css`
   background: #3F3F3F;
@@ -47,12 +46,9 @@ const rightSidebarStyle = css`
   }
 `;
 
-function getRandomColor () {
-  return `#${Math.floor(Math.random() * 16777215).toString(16)}`;
-}
-
 export function RightSidebar () {
-  const colors = _.range(0, 80).map(() => getRandomColor());
+  const tilesetRightSidebarSlice = useSelector((state) => state.tilesetRightSidebar);
+  const colors = tilesetRightSidebarSlice.primitives.colors;
   const fileSlice = useSelector((state) => state.file);
   const file = fileSlice.file;
   const rootLayer = file.rootLayer;
@@ -61,7 +57,7 @@ export function RightSidebar () {
     console.log(rootLayer);
   }, [file]);
 
-  return (
+  return colors && (
     <div css={rightSidebarStyle}>
       <div className='header'>
         <Icon color='white'>

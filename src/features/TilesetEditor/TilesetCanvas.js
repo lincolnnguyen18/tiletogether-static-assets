@@ -1,9 +1,10 @@
 /** @jsx jsx */
-// eslint-disable-next-line no-unused-vars
 import { css, jsx } from '@emotion/react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Image, Layer, Stage } from 'react-konva';
+import { assignTilesetRightSidebarPrimitives } from './rightSidebarSlice';
+import { getImageColors } from '../../utils/canvasUtils';
 
 export function KonvaCheckerboardImage ({ width, height, tileDimension }) {
   const canvas = document.createElement('canvas');
@@ -25,7 +26,7 @@ export function KonvaCheckerboardImage ({ width, height, tileDimension }) {
 export function TilesetCanvas () {
   const [canvasWidth, setCanvasWidth] = useState(window.innerWidth - 56 - 270);
   const [canvasHeight, setCanvasHeight] = useState(window.innerHeight);
-  const [stagePosition, setStagePosition] = useState({ x: 0, y: 0 });
+  const [stagePosition, setStagePosition] = useState(null);
   const [stageZoom, setStageZoom] = useState(6);
   const [imageCanvas, setImageCanvas] = useState(null);
   const [image, setImage] = useState(null);
@@ -37,6 +38,7 @@ export function TilesetCanvas () {
   const layers = file.rootLayer.layers;
   const leftSidebarSlice = useSelector((state) => state.leftSidebar);
   const showGrid = leftSidebarSlice.primitives.showGrid;
+  const dispatch = useDispatch();
 
   const canvasStyle = css`
     & {
@@ -112,6 +114,22 @@ export function TilesetCanvas () {
     }
   }
 
+  // recalculate colors of pixels of image currently in view every time stage position changes
+  useEffect(() => {
+    if (imageCanvas) {
+      // crop image canvas to current view
+      const ctx = imageCanvas.getContext('2d');
+      const imageData = ctx.getImageData(
+        -stagePosition.x / stageZoom,
+        -stagePosition.y / stageZoom,
+        canvasWidth / stageZoom,
+        canvasHeight / stageZoom,
+      );
+      const colors = getImageColors(imageData);
+      dispatch(assignTilesetRightSidebarPrimitives({ colors }));
+    }
+  }, [stagePosition, image]);
+
   function getCursorImagePos () {
     const stagePos = { x: stagePosition.x / stageZoom, y: stagePosition.y / stageZoom };
     const pos = stageRef.current.getPointerPosition();
@@ -168,13 +186,6 @@ export function TilesetCanvas () {
     }
   }
 
-  function handleMouseUp (e) {
-    e.evt.preventDefault();
-    if (e.evt.button === 1 || (panHover && e.evt.button === 0)) {
-      setPanning(false);
-    }
-  }
-
   function handleContextMenu (e) {
     e.evt.preventDefault();
   }
@@ -210,18 +221,31 @@ export function TilesetCanvas () {
     setCanvasHeight(window.innerHeight);
   }, [resetStagePosition]);
 
+  const handleMouseUp = useCallback((e) => {
+    e.preventDefault();
+    if (e.button === 1 || (panHover && e.button === 0)) {
+      setPanning(false);
+    }
+  }, [panHover]);
+
   useEffect(() => {
     window.addEventListener('keydown', handleKeydown);
     window.addEventListener('keyup', handleKeyUp);
     window.addEventListener('resize', handleResize);
+    window.addEventListener('mouseup', handleMouseUp);
     return () => {
       window.removeEventListener('keydown', handleKeydown);
       window.removeEventListener('keyup', handleKeyUp);
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [handleKeydown, handleResize]);
+  }, [handleKeydown, handleResize, handleKeyUp, handleMouseUp]);
 
-  return (
+  useEffect(() => {
+    console.log(layers);
+  }, [layers]);
+
+  return stagePosition && (
     <Stage
       width={canvasWidth}
       height={canvasHeight}
@@ -233,7 +257,6 @@ export function TilesetCanvas () {
       onWheel={handleWheel}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
       onContextMenu={handleContextMenu}
       ref={stageRef}
     >
