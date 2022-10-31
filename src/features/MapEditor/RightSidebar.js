@@ -4,6 +4,9 @@ import { Icon } from '../../components/Icon';
 import { Layer } from '../Editor/Layer';
 import { useSelector } from 'react-redux';
 import { useEffect } from 'react';
+import { Text } from 'react-konva';
+import { FlexRow } from '../../components/Layouts/FlexRow';
+import { IconButton } from '../../components/inputs/IconButton';
 
 const rightSidebarStyle = css`
   background: #3F3F3F;
@@ -54,6 +57,30 @@ const rightSidebarStyle = css`
   }
 `;
 
+const tilesetsStyle = css`
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px 8px;
+  user-select: none;
+  height: 300px;
+  overflow-y: scroll;
+  
+  .tileset {
+    padding: 10px;
+    background: #2D2D2D;
+    border-radius: 7px;
+    cursor: pointer;
+    
+    &:hover {
+      background: #4D4D4D;
+    }
+    
+    &.selected {
+      background: #73809A;
+    }
+  }
+`;
+
 export function Divider () {
   const dividerStyle = css`
     width: 100%;
@@ -74,12 +101,32 @@ export function RightSidebar () {
 
   return (
     <div css={rightSidebarStyle}>
-      <div className='header'>
-        <Icon color='white'>
-          <span className='icon-paint-roller'></span>
-        </Icon>
-        <span>Tilesets</span>
-      </div>
+      <FlexRow justify={'space-between'}>
+        <FlexRow gap={4}>
+          <Icon color='white'>
+            <span className='icon-paint-roller'></span>
+          </Icon>
+          <span>Tilesets</span>
+        </FlexRow>
+        <FlexRow gap={7}>
+          <IconButton>
+            <span className='icon-plus'></span>
+          </IconButton>
+          <IconButton>
+            <span className='icon-trash'></span>
+          </IconButton>
+        </FlexRow>
+      </FlexRow>
+      <FlexRow style={tilesetsStyle}>
+        <div className={'tileset selected'}>
+          <Text>Bridges</Text>
+        </div>
+        {['Dirt', 'Grass', 'Hills', 'Mountains', 'Rivers', 'Roads', 'Rocks', 'Sand', 'Shallow Water', 'Snow', 'Trees', 'Water'].map((tilesetName, index) => (
+          <div className={'tileset'} key={index}>
+            <Text>{tilesetName}</Text>
+          </div>
+        ))}
+      </FlexRow>
       <Divider />
       <div className='header'>
         <Icon color='white'>

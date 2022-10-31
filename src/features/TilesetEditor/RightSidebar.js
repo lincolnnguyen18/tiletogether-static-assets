@@ -79,7 +79,7 @@ export function RightSidebar () {
 
   return colors && activeLayer && (
     <div css={rightSidebarStyle}>
-      <FlexRow gap={8}>
+      <FlexRow gap={8} justify="space-between">
         <FlexRow gap={4}>
           <Icon color='white'>
             <span className='icon-paint-roller'></span>
