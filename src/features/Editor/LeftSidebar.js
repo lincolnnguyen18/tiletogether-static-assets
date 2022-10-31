@@ -35,14 +35,12 @@ const leftSidebarStyle = css`
   }
 `;
 
-export function LeftSidebar () {
+export function LeftSidebar ({ file }) {
   const dispatch = useDispatch();
   const leftSidebarSlice = useSelector((state) => state.leftSidebar);
   const showGrid = leftSidebarSlice.primitives.showGrid;
   const drawerOpen = leftSidebarSlice.primitives.drawerOpen;
   const drawerPage = leftSidebarSlice.primitives.drawerPage;
-  const fileSlice = useSelector((state) => state.file);
-  const file = fileSlice.file;
 
   useEffect(() => {
     dispatch(setLeftSidebarPrimitives({ drawerOpen: false }));

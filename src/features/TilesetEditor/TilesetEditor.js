@@ -7,8 +7,8 @@ import { NotFound } from '../Editor/NotFound';
 import { RightSidebar } from './RightSidebar';
 import { TilesetCanvas } from './TilesetCanvas';
 import { useEffect } from 'react';
-import { getFileToEdit } from '../File/fileSlice';
 import { useParams } from 'react-router-dom';
+import { getFileToEdit } from './tilesetEditorSlice';
 
 const tilesetEditorStyle = css`
   margin: 0;
@@ -21,9 +21,9 @@ const tilesetEditorStyle = css`
 export function TilesetEditor () {
   const { id } = useParams();
   const dispatch = useDispatch();
-  const fileSlice = useSelector((state) => state.file);
-  const file = fileSlice.file;
-  const error = fileSlice.errors.includes('getFileToEdit');
+  const tilesetEditorSlice = useSelector((state) => state.tilesetEditor);
+  const file = tilesetEditorSlice.file;
+  const error = tilesetEditorSlice.errors.includes('getFileToEdit');
 
   useEffect(() => {
     dispatch(getFileToEdit({ id }));
@@ -34,8 +34,8 @@ export function TilesetEditor () {
   if (!error) {
     content = file && file.rootLayer && (
       <div css={tilesetEditorStyle}>
-        <LeftSidebar />
-        <FilenameIndicator />
+        <LeftSidebar file={file} />
+        <FilenameIndicator file={file} />
         <RightSidebar />
         <TilesetCanvas />
       </div>

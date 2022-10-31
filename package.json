@@ -6,6 +6,7 @@
     "@emotion/react": "^11.10.4",
     "@reduxjs/toolkit": "^1.8.5",
     "axios": "^1.1.2",
+    "bson-objectid": "^2.0.3",
     "js-cookie": "^3.0.1",
     "konva": "^8.3.13",
     "lodash": "^4.17.21",

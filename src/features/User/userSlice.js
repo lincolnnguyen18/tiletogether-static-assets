@@ -13,7 +13,7 @@ const initialState = {
 };
 
 export const getUser = createAsyncThunk(
-  'common/getUser',
+  'user/getUser',
   // payload; { email, password } or null if using token
   async (payload) => {
     try {
@@ -26,7 +26,7 @@ export const getUser = createAsyncThunk(
 );
 
 export const postUser = createAsyncThunk(
-  'common/postUser',
+  'user/postUser',
   async (payload) => {
     try {
       const response = await apiClient.post('/users', payload);
@@ -38,7 +38,7 @@ export const postUser = createAsyncThunk(
 );
 
 export const deleteUser = createAsyncThunk(
-  'common/deleteUser',
+  'user/deleteUser',
   async (payload) => {
     const response = await apiClient.delete('/users/deregister', { params: payload });
     return response.data;

@@ -5,12 +5,12 @@ import { ColorSet } from './ColorSet';
 import { Divider } from '../MapEditor/RightSidebar';
 import { Layer } from '../Editor/Layer';
 import { useDispatch, useSelector } from 'react-redux';
-import { useEffect } from 'react';
 import { FlexRow } from '../../components/Layouts/FlexRow';
 import { Slider } from '../../components/inputs/Slider';
 import { Text } from '../../components/Text';
 import { IconButton } from '../../components/inputs/IconButton';
 import { setTilesetRightSidebarPrimitives } from './rightSidebarSlice';
+import { addNewTilesetLayer, deleteActiveTilesetLayer, setActiveTilesetLayer } from './tilesetEditorSlice';
 
 const rightSidebarStyle = css`
   background: #3F3F3F;
@@ -41,7 +41,6 @@ const rightSidebarStyle = css`
   }
 
   .layers {
-    padding-left: 10px;
     height: 100%;
     overflow: auto;
   }
@@ -52,13 +51,22 @@ export function RightSidebar () {
   const tilesetRightSidebarSlice = useSelector((state) => state.tilesetRightSidebar);
   const colors = tilesetRightSidebarSlice.primitives.colors;
   const currentColor = tilesetRightSidebarSlice.primitives.currentColor;
-  const fileSlice = useSelector((state) => state.file);
-  const file = fileSlice.file;
+  const tilesetEditorSlice = useSelector((state) => state.tilesetEditor);
+  const file = tilesetEditorSlice.file;
   const rootLayer = file.rootLayer;
+  const activeLayer = tilesetEditorSlice.primitives.activeLayer;
 
-  useEffect(() => {
-    console.log(rootLayer);
-  }, [file]);
+  function handleAddNewLayer () {
+    dispatch(addNewTilesetLayer());
+  }
+
+  function handleSetActiveLayer (layer) {
+    dispatch(setActiveTilesetLayer({ layer }));
+  }
+
+  function handleDeleteLayer () {
+    dispatch(deleteActiveTilesetLayer());
+  }
 
   return colors && (
     <div css={rightSidebarStyle}>
@@ -92,10 +100,10 @@ export function RightSidebar () {
       </div>
       <FlexRow justify={'space-between'} gap={24} style={{ paddingRight: 12, paddingBottom: 6 }}>
         <FlexRow>
-          <IconButton>
+          <IconButton onClick={handleAddNewLayer}>
             <span className='icon-plus'></span>
           </IconButton>
-          <IconButton>
+          <IconButton onClick={handleDeleteLayer}>
             <span className='icon-trash'></span>
           </IconButton>
         </FlexRow>
@@ -105,7 +113,14 @@ export function RightSidebar () {
         </FlexRow>
       </FlexRow>
       <div className='layers'>
-        <Layer layer={rootLayer} />
+        {activeLayer && (
+          <Layer
+            layer={rootLayer}
+            activeLayerId={activeLayer._id}
+            setActiveLayer={handleSetActiveLayer}
+            rootLayer={rootLayer}
+          />
+        )}
       </div>
     </div>
   );

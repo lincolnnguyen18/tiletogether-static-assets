@@ -18,7 +18,7 @@ const initialState = {
 };
 
 export const getFiles = createAsyncThunk(
-  'common/getFiles',
+  'file/getFiles',
   async ({ location, loadMore, getRecommended }, { getState }) => {
     const fileSlice = getState().file;
     const { limit, page, noMoreFiles } = fileSlice.primitives;
@@ -47,22 +47,10 @@ export const getFiles = createAsyncThunk(
 );
 
 export const getFileToView = createAsyncThunk(
-  'common/getFileToView',
+  'file/getFileToView',
   async ({ id }) => {
     try {
       const response = await apiClient.get(`/files/${id}`);
-      return response.data.file;
-    } catch (err) {
-      throw new Error(err.response.data.error);
-    }
-  },
-);
-
-export const getFileToEdit = createAsyncThunk(
-  'common/getFileToEdit',
-  async ({ id }) => {
-    try {
-      const response = await apiClient.get(`/files/${id}/edit`);
       return response.data.file;
     } catch (err) {
       throw new Error(err.response.data.error);
@@ -96,21 +84,21 @@ const fileSlice = createSlice({
           state.primitives.noMoreFiles = true;
         }
       })
-      .addMatcher(isAnyOf(getFiles.rejected, getFileToEdit.rejected, getFileToView.rejected), (state, action) => {
+      .addMatcher(isAnyOf(getFiles.rejected, getFileToView.rejected), (state, action) => {
         const actionName = getActionName(action);
         state.errors.push(actionName);
         state.pending = _.pull(state.pending, actionName);
       })
-      .addMatcher(isAnyOf(getFiles.fulfilled, getFileToEdit.fulfilled, getFileToView.fulfilled), (state, action) => {
+      .addMatcher(isAnyOf(getFiles.fulfilled, getFileToView.fulfilled), (state, action) => {
         state.pending = _.pull(state.pending, getActionName(action));
       })
-      .addMatcher(isAnyOf(getFileToEdit.pending, getFileToView.pending), (state, action) => {
+      .addMatcher(isAnyOf(getFileToView.pending), (state, action) => {
         state.errors = [];
         state.file = null;
         state.pending.push(getActionName(action));
       })
       .addMatcher(
-        isAnyOf(getFileToView.fulfilled, getFileToEdit.fulfilled), (state, action) => {
+        isAnyOf(getFileToView.fulfilled), (state, action) => {
           state.file = action.payload;
         });
   },

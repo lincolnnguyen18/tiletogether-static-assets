@@ -8,6 +8,7 @@ import { leftSidebarReducer } from '../features/Editor/leftSidebarSlice';
 import { tilesetEditorReducer } from '../features/TilesetEditor/tilesetEditorSlice';
 import { fileViewerReducer } from '../features/FileViewer/FileViewerSlice';
 import { tilesetRightSidebarReducer } from '../features/TilesetEditor/rightSidebarSlice';
+import { mapEditorReducer } from '../features/MapEditor/mapEditorSlice';
 
 export const store = configureStore({
   reducer: {
@@ -18,6 +19,7 @@ export const store = configureStore({
     file: fileReducer,
     leftSidebar: leftSidebarReducer,
     tilesetEditor: tilesetEditorReducer,
+    mapEditor: mapEditorReducer,
     tilesetRightSidebar: tilesetRightSidebarReducer,
     fileViewer: fileViewerReducer,
   },

@@ -2,19 +2,18 @@
 import { css, jsx } from '@emotion/react';
 import { useState } from 'react';
 
-const layerStyle = css`
-  user-select: none;
-  display: flex;
-  flex-direction: column;
-`;
-
-export function Layer ({ layer }) {
+export function Layer ({ layer, level = 0, activeLayerId, setActiveLayer = null, rootLayer = null }) {
   const [expanded, setExpanded] = useState(true);
+
+  const layerStyle = css`
+    user-select: none;
+    display: flex;
+    flex-direction: column;
+  `;
 
   const subLayerStyle = css`
     display: ${expanded ? 'flex' : 'none'};
     flex-direction: column;
-    padding-left: 20px;
   `;
 
   function LayerName () {
@@ -26,20 +25,26 @@ export function Layer ({ layer }) {
     }
 
     const layerNameStyle = css`
-      cursor: ${layer.layers.length > 0 ? 'pointer' : 'default'};
       height: 20px;
       padding: 5px 0;
       display: flex;
       align-items: center;
+      padding-left: ${level * 20}px;
+      background: ${activeLayerId === layer._id ? '#4F4F4F' : 'transparent'};
       
       &:hover {
         background: #4f4f4f;
       }
     `;
 
+    function handleClick () {
+      setExpanded(!expanded);
+      if (setActiveLayer && layer !== rootLayer) setActiveLayer(layer);
+    }
+
     return (
       <span
-        onClick={() => setExpanded(!expanded)}
+        onClick={handleClick}
         css={layerNameStyle}
       >
         {text}
@@ -53,7 +58,13 @@ export function Layer ({ layer }) {
       {expanded && layer.layers.length > 0 && (
         <div css={subLayerStyle}>
           {layer.layers.map((layer, index) => (
-            <Layer key={index} layer={layer}>
+            <Layer
+              key={index}
+              layer={layer}
+              level={level + 1}
+              activeLayerId={activeLayerId}
+              setActiveLayer={setActiveLayer}
+            >
               {layer.name}
             </Layer>
           ))}

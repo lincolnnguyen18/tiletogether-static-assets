@@ -64,8 +64,8 @@ export function Divider () {
 }
 
 export function RightSidebar () {
-  const fileSlice = useSelector((state) => state.file);
-  const file = fileSlice.file;
+  const mapEditorSlice = useSelector((state) => state.mapEditor);
+  const file = mapEditorSlice.file;
   const rootLayer = file.rootLayer;
 
   useEffect(() => {

@@ -9,8 +9,8 @@ function Color ({ color }) {
   const colorStyle = css`
     background: ${color};
     border: 1px solid #aaa;
-    width: 21px;
-    height: 21px;
+    width: 20px;
+    height: 20px;
     cursor: pointer;
   `;
 
@@ -26,8 +26,10 @@ export function ColorSet ({ colors }) {
   const colorSetStyle = css`
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
     width: 100%;
+    height: 200px;
+    overflow-y: scroll;
   `;
 
   const colorWrapStyle = css`

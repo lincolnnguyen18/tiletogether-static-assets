@@ -4,7 +4,7 @@ import { createSlice } from '@reduxjs/toolkit';
 const initialState = {
   primitives: {
     colors: [],
-    currentColor: '#000000',
+    currentColor: '#ff0000',
   },
 };
 

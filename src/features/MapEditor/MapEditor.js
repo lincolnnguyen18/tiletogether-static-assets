@@ -5,9 +5,9 @@ import { useParams } from 'react-router-dom';
 import { LeftSidebar } from '../Editor/LeftSidebar';
 import { useDispatch, useSelector } from 'react-redux';
 import { FilenameIndicator } from '../Editor/FilenameIndicator';
-import { getFileToEdit } from '../File/fileSlice';
 import { NotFound } from '../Editor/NotFound';
 import { RightSidebar } from './RightSidebar';
+import { getFileToEdit } from './mapEditorSlice';
 
 const mapEditorStyle = css`
 `;
@@ -15,9 +15,9 @@ const mapEditorStyle = css`
 export function MapEditor () {
   const { id } = useParams();
   const dispatch = useDispatch();
-  const fileSlice = useSelector((state) => state.file);
-  const file = fileSlice.file;
-  const error = fileSlice.errors.includes('getFileToEdit');
+  const mapEditorSlice = useSelector((state) => state.mapEditor);
+  const file = mapEditorSlice.file;
+  const error = mapEditorSlice.errors.includes('getFileToEdit');
 
   useEffect(() => {
     dispatch(getFileToEdit({ id }));
@@ -28,8 +28,8 @@ export function MapEditor () {
   if (!error) {
     content = file && file.rootLayer && (
       <div css={mapEditorStyle}>
-        <LeftSidebar />
-        <FilenameIndicator />
+        <LeftSidebar file={file} />
+        <FilenameIndicator file={file} />
         <RightSidebar />
       </div>
     );
