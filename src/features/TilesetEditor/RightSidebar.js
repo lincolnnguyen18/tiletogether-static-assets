@@ -7,6 +7,10 @@ import { Divider } from '../MapEditor/RightSidebar';
 import { Layer } from '../Editor/Layer';
 import { useSelector } from 'react-redux';
 import { useEffect } from 'react';
+import { FlexRow } from '../../components/Layouts/FlexRow';
+import { IconButton } from '../../components/inputs/IconButton';
+import { Slider } from '../../components/inputs/Slider';
+import { Text } from '../../components/Text';
 
 const rightSidebarStyle = css`
   background: #3F3F3F;
@@ -83,6 +87,20 @@ export function RightSidebar () {
         </Icon>
         <span>Layers</span>
       </div>
+      <FlexRow justify={'space-between'} gap={24} style={{ paddingRight: 12, paddingBottom: 6 }}>
+        <FlexRow>
+          <IconButton>
+            <span className='icon-plus'></span>
+          </IconButton>
+          <IconButton>
+            <span className='icon-trash'></span>
+          </IconButton>
+        </FlexRow>
+        <FlexRow gap={8}>
+          <Slider />
+          <Text>100%</Text>
+        </FlexRow>
+      </FlexRow>
       <div className='layers'>
         <Layer layer={rootLayer} />
       </div>

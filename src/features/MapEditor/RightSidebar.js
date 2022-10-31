@@ -57,7 +57,7 @@ const rightSidebarStyle = css`
 export function Divider () {
   const dividerStyle = css`
     width: 100%;
-    height: 12px;
+    height: 18px;
   `;
 
   return <div css={dividerStyle} />;
