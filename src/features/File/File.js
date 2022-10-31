@@ -3,7 +3,8 @@ import { css, jsx } from '@emotion/react';
 import { Badge } from '../../components/Badge';
 import { IconButton } from '../../components/inputs/IconButton';
 import { Link, useLocation } from 'react-router-dom';
-import { useRef } from 'react';
+import { useRef, Fragment } from 'react';
+import { timeUtils } from '../../utils/timeUtils';
 
 const fileStyle = css`
   width: 100%;
@@ -80,6 +81,31 @@ const leftSideStyle = css`
   align-items: center;
   padding: 8px;
 `;
+
+export function getSubtext (currentPage, file) {
+  let firstPart, secondPart;
+  if (currentPage === 'your-files') {
+    if (file.publishedAt != null) {
+      secondPart = 'Published';
+    } else {
+      secondPart = 'Not published';
+    }
+    firstPart = `Updated ${timeUtils.timeAgo(new Date(file.updatedAt))} ago`;
+    return `${firstPart} • ${secondPart}`;
+  } else {
+    firstPart = file.authorUsername;
+    secondPart = `Published ${timeUtils.timeAgo(new Date(file.publishedAt))} ago`;
+    return (
+      <Fragment>
+        <Link to={`/users/${file.authorUsername}`}>
+          {firstPart}
+        </Link>
+        {' • '}
+        {secondPart}
+      </Fragment>
+    );
+  }
+}
 
 export function File ({ imageUrl, title, subtext, liked, type, id, isLoading = false, maxNameWidth = 250 }) {
   const likeButtonRef = useRef(null);

@@ -7,8 +7,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { getFiles, getFileToView } from '../File/fileSlice';
 import { FileInfo } from './FileInfo';
 import { CommentSection } from './CommentSection';
-import { File } from '../File/File';
-import { getSubtext, loadMoreButtonStyle } from '../Dashboard/Dashboard';
+import { File, getSubtext } from '../File/File';
+import { loadMoreButtonStyle } from '../Dashboard/Dashboard';
 import { Button, transparentButtonStyle } from '../../components/inputs/Button';
 import { NotFound } from './NotFound';
 

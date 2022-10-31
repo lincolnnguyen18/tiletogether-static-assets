@@ -3,7 +3,7 @@ import { css, jsx } from '@emotion/react';
 import { Grid } from '../../components/Grid';
 import _ from 'lodash';
 import { Fragment, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { setDashboardPrimitives } from './dashboardSlice';
 import { setModalPrimitives } from '../../components/Modal/modalSlice';
@@ -13,8 +13,7 @@ import { RedirectPage } from '../../components/RedirectPage';
 import { Icon } from '../../components/Icon';
 import { getFiles } from '../File/fileSlice';
 import { Button, transparentButtonStyle, whiteButtonStyle } from '../../components/inputs/Button';
-import { timeUtils } from '../../utils/timeUtils';
-import { File } from '../File/File';
+import { File, getSubtext } from '../File/File';
 
 const gridStyle = css`
   padding: 0 20px 8px 20px;
@@ -106,31 +105,6 @@ function getCurrentPage (location, dispatch = null) {
       return path.slice(1);
     default:
       throw new Error('Invalid dashboard path', path);
-  }
-}
-
-export function getSubtext (currentPage, file) {
-  let firstPart, secondPart;
-  if (currentPage === 'your-files') {
-    if (file.publishedAt != null) {
-      secondPart = 'Published';
-    } else {
-      secondPart = 'Not published';
-    }
-    firstPart = `Updated ${timeUtils.timeAgo(new Date(file.updatedAt))} ago`;
-    return `${firstPart} • ${secondPart}`;
-  } else {
-    firstPart = file.authorUsername;
-    secondPart = `Published ${timeUtils.timeAgo(new Date(file.publishedAt))} ago`;
-    return (
-      <Fragment>
-        <Link to={`/users/${file.authorUsername}`}>
-          {firstPart}
-        </Link>
-        {' • '}
-        {secondPart}
-      </Fragment>
-    );
   }
 }
 
