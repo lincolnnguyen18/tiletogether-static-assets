@@ -12,10 +12,9 @@ import { Icon } from '../../components/Icon';
 import { Textfield, whiteInputStyle } from '../../components/inputs/Textfield';
 import { Checkbox } from '../../components/inputs/Checkbox';
 import _ from 'lodash';
-import { defaultFlexColumnStyle, FlexColumn } from '../../components/Layouts/FlexColumn';
-import { FlexRow } from '../../components/Layouts/FlexRow';
+import { defaultFlexColumnStyle, FlexColumn } from '../../components/layout/FlexColumn';
+import { FlexRow } from '../../components/layout/FlexRow';
 import { wait } from '../../utils/timeUtils';
-import { asyncDeleteFile, asyncPatchFile, clearFileErrors, clearFileStatus, selectDashboardErrors, selectDashboardStatuses } from '../File/fileSlice';
 
 const leftSidebarStyle = css`
   background: #3F3F3F;
@@ -38,17 +37,16 @@ const leftSidebarStyle = css`
   }
 `;
 
-export function LeftSidebar () {
+export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile, clearFileErrors, clearFileStatus, selectFileErrors, selectFileStatuses, setActiveTool }) {
   const dispatch = useDispatch();
   const leftSidebarSlice = useSelector((state) => state.leftSidebar);
+  const showGrid = leftSidebarSlice.primitives.showGrid;
   const drawerOpen = leftSidebarSlice.primitives.drawerOpen;
   const drawerPage = leftSidebarSlice.primitives.drawerPage;
-  const fileSlice = useSelector((state) => state.file);
-  const statuses = useSelector(selectDashboardStatuses);
-  const errors = useSelector(selectDashboardErrors);
-  const navigate = useNavigate();
-  const file = fileSlice.file;
 
+  const statuses = useSelector(selectFileStatuses);
+  const errors = useSelector(selectFileErrors);
+  const navigate = useNavigate();
   const patchingPending = statuses.patchFile === 'pending';
 
   useEffect(() => {
@@ -181,7 +179,7 @@ export function LeftSidebar () {
     const dateString = new Date(file.publishedAt).toLocaleDateString();
     publishText = `This ${file.type} was published on ${dateString}`;
   } else if (file) {
-    publishText = `This ${file.type} has not been published yet`;
+    publishText = `This ${file.type} is not published`;
   }
 
   const settingsPage = (
@@ -201,7 +199,8 @@ export function LeftSidebar () {
       <Checkbox
         label='View grid lines'
         name='gridLines'
-        defaultValue={true}
+        checked={showGrid}
+        onChange={(e) => dispatch(setLeftSidebarPrimitives({ showGrid: e.target.checked }))}
       />
       <h4>{publishText}</h4>
       <FlexRow gap={24}>
@@ -221,8 +220,8 @@ export function LeftSidebar () {
           style={redButtonStyle}
           disabled={patchingPending}
           onClick={() => {
-            // use html5 confirm alert to confirm delete
-            const confirmed = window.confirm('Are you sure you want to delete this file?');
+            // use confirm alert to confirm delete
+            const confirmed = window.confirm(`Are you sure you want to delete this ${file.type}?`);
             if (confirmed) {
               dispatch(asyncDeleteFile({ id: file.id }));
             }
@@ -304,6 +303,7 @@ export function LeftSidebar () {
         name='username'
         defaultValue=''
         error={errors.sharedWith}
+        autoFocus
       />
       <Button
         style={grayButtonStyle}
@@ -339,11 +339,14 @@ export function LeftSidebar () {
       </LeftSidebarDrawer>
       <div css={leftSidebarStyle}>
         <div className='group'>
-          <IconButton>
+          <IconButton active={activeTool === 'draw' && !drawerOpen} onClick={() => setActiveTool('draw')}>
             <span className='icon-pencil'></span>
           </IconButton>
-          <IconButton>
+          <IconButton active={activeTool === 'erase' && !drawerOpen} onClick={() => setActiveTool('erase')}>
             <span className='icon-eraser'></span>
+          </IconButton>
+          <IconButton active={activeTool === 'select' && !drawerOpen} onClick={() => setActiveTool('select')}>
+            <span className='icon-cursor'></span>
           </IconButton>
         </div>
         <div className='group'>

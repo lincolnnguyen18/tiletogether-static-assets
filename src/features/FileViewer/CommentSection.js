@@ -1,7 +1,7 @@
 /** @jsx jsx */
 import { jsx } from '@emotion/react';
-import { FlexRow } from '../../components/Layouts/FlexRow';
-import { FlexColumn } from '../../components/Layouts/FlexColumn';
+import { FlexRow } from '../../components/layout/FlexRow';
+import { FlexColumn } from '../../components/layout/FlexColumn';
 import { useRef } from 'react';
 import { IconButtonStyle, likeButtonStyle } from '../../components/inputs/Button';
 import { useSelector } from 'react-redux';

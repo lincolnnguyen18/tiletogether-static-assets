@@ -58,7 +58,10 @@ export function RightSection () {
       <button
         css={menuItemStyle}
         autoFocus
-        onClick={() => dispatch(logout({ navigate }))}
+        onClick={() => {
+          dispatch(logout({ navigate }));
+          navigate('/');
+        }}
       >
         <Icon color='black'>
           <span className='icon-logout' />

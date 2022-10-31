@@ -6,6 +6,7 @@
     "@emotion/react": "^11.10.4",
     "@reduxjs/toolkit": "^1.8.5",
     "axios": "^1.1.2",
+    "bson-objectid": "^2.0.3",
     "js-cookie": "^3.0.1",
     "konva": "^8.3.13",
     "lodash": "^4.17.21",
@@ -14,7 +15,8 @@
     "react-konva": "^18.2.3",
     "react-redux": "^8.0.4",
     "react-router-dom": "^6.4.2",
-    "react-scripts": "5.0.1"
+    "react-scripts": "5.0.1",
+    "socket.io-client": "^4.5.3"
   },
   "scripts": {
     "start": "react-scripts start",

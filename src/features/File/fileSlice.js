@@ -1,4 +1,4 @@
-import { createAsyncThunk, createSlice, isAnyOf, isFulfilled, isPending, isRejected } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice, isFulfilled, isPending, isRejected } from '@reduxjs/toolkit';
 import { apiClient } from '../../app/apiClient';
 import { getQueryParams } from '../Dashboard/Dashboard';
 import _ from 'lodash';
@@ -46,34 +46,6 @@ export const asyncGetFileToView = createAsyncThunk(
   'file/getFileToView',
   async ({ id }) => {
     const response = await apiClient.get(`/files/${id}`);
-    return response.data.file;
-  },
-);
-
-export const asyncGetFileToEdit = createAsyncThunk(
-  'file/getFileToEdit',
-  async ({ id }) => {
-    const response = await apiClient.get(`/files/${id}/edit`);
-    return response.data.file;
-  },
-);
-
-export const asyncPatchFile = createAsyncThunk(
-  'file/patchFile',
-  async ({ id, updates }, { rejectWithValue }) => {
-    try {
-      const response = await apiClient.patch(`/files/${id}`, updates);
-      return response.data.file;
-    } catch (err) {
-      return rejectWithValue(err.response.data.error);
-    }
-  },
-);
-
-export const asyncDeleteFile = createAsyncThunk(
-  'file/deleteFile',
-  async ({ id }) => {
-    const response = await apiClient.delete(`/files/${id}`);
     return response.data.file;
   },
 );
@@ -148,15 +120,14 @@ const fileSlice = createSlice({
           state.primitives.noMoreFiles = true;
         }
       })
-      .addCase(asyncPatchFile.fulfilled, (state, action) => {
-        const fieldsToUpdate = Object.keys(action.meta.arg.updates);
-        const pickedFile = _.pick(action.payload, fieldsToUpdate);
-        _.merge(state.file, pickedFile);
-        // replace the sharedWith field
-        state.file.sharedWith = action.payload.sharedWith;
-      })
       .addCase(asyncPostComment.fulfilled, (state, action) => {
         state.file = action.payload.data.file;
+      })
+      .addCase(asyncGetFileToView.fulfilled, (state, action) => {
+        state.file = action.payload;
+      })
+      .addCase(asyncGetFileToView.pending, (state) => {
+        state.file = null;
       })
       .addMatcher(isPending, (state, action) => {
         state.errors = {};
@@ -169,19 +140,13 @@ const fileSlice = createSlice({
       .addMatcher(isRejected, (state, action) => {
         state.statuses[getActionName(action)] = 'rejected';
         state.errors = action.payload;
-      })
-      .addMatcher(isAnyOf(asyncGetFileToView.fulfilled, asyncGetFileToEdit.fulfilled), (state, action) => {
-        state.file = action.payload;
-      })
-      .addMatcher(isAnyOf(asyncGetFileToView.pending, asyncGetFileToEdit.pending), (state) => {
-        state.file = null;
       });
   },
 });
 
 export const { setFileLike, clearFileErrors, clearFileStatus } = fileSlice.actions;
 
-export const selectDashboardStatuses = state => state.file.statuses;
-export const selectDashboardErrors = state => state.file.errors;
+export const selectFileStatuses = state => state.file.statuses;
+export const selectFileErrors = state => state.file.errors;
 
 export const fileReducer = fileSlice.reducer;

@@ -53,7 +53,7 @@ export function AuthModalBody ({ type }) {
     if (res.type === asyncGetUser.rejected.type) {
       setErrors({ login: 'Invalid email or password' });
     } else {
-      navigate('/');
+      dispatch(setModalPrimitives({ open: false }));
     }
   }
 
