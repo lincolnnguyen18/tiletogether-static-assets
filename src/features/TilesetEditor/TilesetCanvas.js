@@ -28,7 +28,7 @@ export function TilesetCanvas () {
     }
     
     canvas:active {
-      cursor: grabbing;
+      cursor: ${panning ? 'grabbing' : 'default'};
     }
   `;
 
