@@ -5,13 +5,6 @@ import { useSelector } from 'react-redux';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Image, Layer, Stage } from 'react-konva';
 
-const canvasStyle = css`
-  image-rendering: pixelated;
-  position: absolute;
-  left: 54px;
-  top: 0;
-`;
-
 export function TilesetCanvas () {
   const [canvasWidth, setCanvasWidth] = useState(window.innerWidth - 56 - 270);
   const [canvasHeight, setCanvasHeight] = useState(window.innerHeight);
@@ -19,9 +12,25 @@ export function TilesetCanvas () {
   const [stageZoom, setStageZoom] = useState(6);
   const [imageCanvas, setImageCanvas] = useState(null);
   const [image, setImage] = useState(null);
+  const [panning, setPanning] = useState(false);
+  const [panHover, setPanHover] = useState(false);
   const fileSlice = useSelector((state) => state.file);
   const stageRef = useRef(null);
   const layers = fileSlice.file.rootLayer.layers;
+
+  const canvasStyle = css`
+    & {
+      image-rendering: pixelated;
+      position: absolute;
+      left: 54px;
+      top: 0;
+      cursor: ${panHover ? 'grab' : 'default'};
+    }
+    
+    canvas:active {
+      cursor: grabbing;
+    }
+  `;
 
   useEffect(() => {
     const url = '/mock-data/file-image.png';
@@ -54,10 +63,18 @@ export function TilesetCanvas () {
 
     // if ctrl not pressed, pan
     if (!e.evt.ctrlKey) {
-      setStagePosition({
-        x: stagePosition.x + dx,
-        y: stagePosition.y + dy,
-      });
+      // if shift pressed, pan horizontally
+      if (e.evt.shiftKey) {
+        setStagePosition({
+          x: stagePosition.x + dy,
+          y: stagePosition.y,
+        });
+      } else {
+        setStagePosition({
+          x: stagePosition.x + dx,
+          y: stagePosition.y + dy,
+        });
+      }
     // else zoom
     } else {
       const cursorPos = {
@@ -104,7 +121,9 @@ export function TilesetCanvas () {
 
   function handleMouseDown (e) {
     e.evt.preventDefault();
-    if (e.evt.button === 0) {
+    if (e.evt.button === 1 || (panHover && e.evt.button === 0)) {
+      setPanning(true);
+    } else if (e.evt.button === 0) {
       if (!e.evt.shiftKey) {
         colorPixel();
       } else {
@@ -115,12 +134,24 @@ export function TilesetCanvas () {
 
   function handleMouseMove (e) {
     e.evt.preventDefault();
-    if (e.evt.buttons === 1) {
+    if (panning) {
+      setStagePosition({
+        x: stagePosition.x + e.evt.movementX,
+        y: stagePosition.y + e.evt.movementY,
+      });
+    } else if (e.evt.buttons === 1) {
       if (!e.evt.shiftKey) {
         colorPixel();
       } else {
         erasePixel();
       }
+    }
+  }
+
+  function handleMouseUp (e) {
+    e.evt.preventDefault();
+    if (e.evt.button === 1 || (panHover && e.evt.button === 0)) {
+      setPanning(false);
     }
   }
 
@@ -137,7 +168,18 @@ export function TilesetCanvas () {
     if (e.ctrlKey && e.key === '0') {
       resetStagePosition();
     }
+    // if space then pan hover
+    if (e.key === ' ') {
+      setPanHover(true);
+    }
   }, [resetStagePosition]);
+
+  const handleKeyUp = useCallback((e) => {
+    // if space then stop pan
+    if (e.key === ' ') {
+      setPanHover(false);
+    }
+  });
 
   const handleResize = useCallback(() => {
     setCanvasWidth(window.innerWidth - 56 - 270);
@@ -146,9 +188,11 @@ export function TilesetCanvas () {
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeydown);
+    window.addEventListener('keyup', handleKeyUp);
     window.addEventListener('resize', handleResize);
     return () => {
       window.removeEventListener('keydown', handleKeydown);
+      window.removeEventListener('keyup', handleKeyUp);
       window.removeEventListener('resize', handleResize);
     };
   }, [handleKeydown, handleResize]);
@@ -165,6 +209,7 @@ export function TilesetCanvas () {
       onWheel={handleWheel}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
       ref={stageRef}
     >
       <Layer imageSmoothingEnabled={false}>
