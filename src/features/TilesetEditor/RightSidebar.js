@@ -10,7 +10,7 @@ import { Slider } from '../../components/inputs/Slider';
 import { Text } from '../../components/Text';
 import { IconButton } from '../../components/inputs/IconButton';
 import { setTilesetRightSidebarPrimitives } from './rightSidebarSlice';
-import { addNewTilesetLayer, deleteActiveTilesetLayer, setActiveTilesetLayer } from './tilesetEditorSlice';
+import { addNewTilesetLayer, changeActiveLayerOpacity, deleteActiveTilesetLayer, setActiveTilesetLayer, setTilesetEditorPrimitives } from './tilesetEditorSlice';
 
 const rightSidebarStyle = css`
   background: #3F3F3F;
@@ -55,6 +55,7 @@ export function RightSidebar () {
   const file = tilesetEditorSlice.file;
   const rootLayer = file.rootLayer;
   const activeLayer = tilesetEditorSlice.primitives.activeLayer;
+  const layerOpacities = tilesetEditorSlice.layerOpacities;
 
   function handleAddNewLayer () {
     dispatch(addNewTilesetLayer());
@@ -68,14 +69,27 @@ export function RightSidebar () {
     dispatch(deleteActiveTilesetLayer());
   }
 
-  return colors && (
+  function handleSliderChange (e) {
+    dispatch(changeActiveLayerOpacity({ opacity: e.target.value }));
+  }
+
+  function handleRefreshColors () {
+    dispatch(setTilesetEditorPrimitives({ calculateColors: true }));
+  }
+
+  return colors && activeLayer && (
     <div css={rightSidebarStyle}>
-      <div className='header'>
-        <Icon color='white'>
-          <span className='icon-paint-roller'></span>
-        </Icon>
-        <span>Color set</span>
-      </div>
+      <FlexRow gap={8}>
+        <FlexRow gap={4}>
+          <Icon color='white'>
+            <span className='icon-paint-roller'></span>
+          </Icon>
+          <span>Color set</span>
+        </FlexRow>
+        <IconButton onClick={handleRefreshColors}>
+          <span className={'icon-refresh'}/>
+        </IconButton>
+      </FlexRow>
       <ColorSet colors={colors} />
       <Divider />
       <div className={'current-color'}>
@@ -108,8 +122,8 @@ export function RightSidebar () {
           </IconButton>
         </FlexRow>
         <FlexRow gap={8}>
-          <Slider defaultValue={100} />
-          <Text>100%</Text>
+          <Slider value={layerOpacities[activeLayer._id] * 100} onChange={handleSliderChange} />
+          <Text>{Math.round(layerOpacities[activeLayer._id] * 100)}%</Text>
         </FlexRow>
       </FlexRow>
       <div className='layers'>

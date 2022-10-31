@@ -8,10 +8,13 @@ const initialState = {
   file: null,
   layerImages: {},
   layerCanvases: {},
+  layerOpacities: {},
   primitives: {
     activeCanvas: null,
     activeCanvasCtx: null,
     activeLayer: null,
+    colors: [],
+    calculateColors: false,
   },
   errors: [],
   pending: [],
@@ -51,6 +54,7 @@ const tilesetEditorSlice = createSlice({
           layers: [],
         };
         state.file.rootLayer.layers.push(newLayer);
+        state.layerOpacities[newLayer._id] = newLayer.opacity;
 
         const img = new window.Image();
         const canvas = document.createElement('canvas');
@@ -80,7 +84,6 @@ const tilesetEditorSlice = createSlice({
       // traverse layers recursively in a depth-first manner
       // if the layer is found, filter it from the layers array
       function deepFind (layers, layerId) {
-        console.log('deepFind', layers, layerId);
         for (let i = 0; i < layers.length; i++) {
           if (layers[i]._id === layerId) {
             layers.splice(i, 1);
@@ -100,6 +103,15 @@ const tilesetEditorSlice = createSlice({
     setTilesetEditorLayerCanvas (state, action) {
       const { layerId, canvas } = action.payload;
       state.layerCanvases[layerId] = canvas;
+    },
+    setTilesetLayerOpacity (state, action) {
+      const { layerId, opacity } = action.payload;
+      state.layerOpacities[layerId] = opacity;
+    },
+    changeActiveLayerOpacity (state, action) {
+      let { opacity } = action.payload;
+      opacity /= 100;
+      state.layerOpacities[state.primitives.activeLayer._id] = opacity;
     },
   },
   extraReducers (builder) {
@@ -131,6 +143,8 @@ export const {
   deleteActiveTilesetLayer,
   addNewTilesetLayer,
   setActiveTilesetLayer,
+  changeActiveLayerOpacity,
+  setTilesetLayerOpacity,
 } = tilesetEditorSlice.actions;
 
 export const tilesetEditorReducer = tilesetEditorSlice.reducer;

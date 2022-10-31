@@ -5,8 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Image, Layer, Stage } from 'react-konva';
 import { assignTilesetRightSidebarPrimitives } from './rightSidebarSlice';
 import { getImageColors, getRandomColor } from '../../utils/canvasUtils';
-import { setTilesetEditorLayerCanvas, setTilesetEditorLayerImage, setTilesetEditorPrimitives } from './tilesetEditorSlice';
-import { wait } from '../../utils/timeUtils';
+import { setTilesetEditorLayerCanvas, setTilesetEditorLayerImage, setTilesetEditorPrimitives, setTilesetLayerOpacity } from './tilesetEditorSlice';
 
 export function KonvaCheckerboardImage ({ width, height, tileDimension }) {
   const canvas = document.createElement('canvas');
@@ -32,7 +31,6 @@ export function TilesetCanvas () {
   const [stageZoom, setStageZoom] = useState(6);
   const [panning, setPanning] = useState(false);
   const [panHover, setPanHover] = useState(false);
-  const [lastColorCalculation, setLastColorCalculation] = useState(new Date() - 3000);
   const tilesetEditorSlice = useSelector((state) => state.tilesetEditor);
   const file = tilesetEditorSlice.file;
   const stageRef = useRef(null);
@@ -42,7 +40,8 @@ export function TilesetCanvas () {
   const tilesetRightSidebarSlice = useSelector((state) => state.tilesetRightSidebar);
   const currentColor = tilesetRightSidebarSlice.primitives.currentColor;
   const layerImages = tilesetEditorSlice.layerImages;
-  const { activeCanvas, activeLayer, activeCanvasCtx } = tilesetEditorSlice.primitives;
+  const layerOpacities = tilesetEditorSlice.layerOpacities;
+  const { activeCanvas, activeLayer, activeCanvasCtx, calculateColors, colors } = tilesetEditorSlice.primitives;
   const dispatch = useDispatch();
 
   const canvasStyle = css`
@@ -60,6 +59,23 @@ export function TilesetCanvas () {
   `;
 
   useEffect(() => {
+    if (calculateColors) {
+      dispatch(setTilesetEditorPrimitives({ calculateColors: false }));
+      if (activeCanvasCtx && stagePosition) {
+        // crop image canvas to current view
+        const imageData = activeCanvasCtx.getImageData(
+          -stagePosition.x / stageZoom,
+          -stagePosition.y / stageZoom,
+          canvasWidth / stageZoom,
+          canvasHeight / stageZoom,
+        );
+        const colors = getImageColors(imageData);
+        dispatch(assignTilesetRightSidebarPrimitives({ colors }));
+      }
+    }
+  }, [calculateColors]);
+
+  useEffect(() => {
     setStagePosition({
       x: canvasWidth / 2 - file.width * file.tileDimension * stageZoom / 2,
       y: canvasHeight / 2 - file.height * file.tileDimension * stageZoom / 2,
@@ -69,6 +85,8 @@ export function TilesetCanvas () {
       const url = layer.tilesetLayerUrl;
       const img = new window.Image();
       const canvas = document.createElement('canvas');
+
+      dispatch(setTilesetLayerOpacity({ layerId: layer._id, opacity: layer.opacity }));
 
       if (url != null) {
         img.src = url;
@@ -81,9 +99,10 @@ export function TilesetCanvas () {
           ctx.drawImage(img, 0, 0);
 
           dispatch(setTilesetEditorLayerCanvas({ layerId: layer._id, canvas }));
-
-          if (activeCanvas == null) await wait(100);
           dispatch(setTilesetEditorPrimitives({ activeCanvas: canvas, activeLayer: layer, activeCanvasCtx: ctx }));
+          if (colors.length === 0) {
+            dispatch(setTilesetEditorPrimitives({ calculateColors: true }));
+          }
         };
       } else {
         // create blank image of size file.width * file.tileDimension and file.height * file.tileDimension
@@ -96,11 +115,9 @@ export function TilesetCanvas () {
         // set image to canvas
         img.src = canvas.toDataURL();
         dispatch(setTilesetEditorLayerImage({ layerId: layer._id, image: img }));
-
         dispatch(setTilesetEditorLayerCanvas({ layerId: layer._id, canvas }));
 
         img.onload = async () => {
-          if (activeCanvas == null) await wait(100);
           dispatch(setTilesetEditorPrimitives({ activeCanvas: canvas, activeLayer: layer, activeCanvasCtx: ctx }));
         };
       }
@@ -143,22 +160,6 @@ export function TilesetCanvas () {
       });
     }
   }
-
-  // recalculate colors of pixels of image currently in view every time stage position changes
-  useEffect(() => {
-    if (activeCanvasCtx && stagePosition && lastColorCalculation < new Date() - 1000) {
-      // crop image canvas to current view
-      const imageData = activeCanvasCtx.getImageData(
-        -stagePosition.x / stageZoom,
-        -stagePosition.y / stageZoom,
-        canvasWidth / stageZoom,
-        canvasHeight / stageZoom,
-      );
-      const colors = getImageColors(imageData);
-      dispatch(assignTilesetRightSidebarPrimitives({ colors }));
-      setLastColorCalculation(new Date());
-    }
-  }, [stagePosition, activeCanvas]);
 
   function getCursorImagePos () {
     const stagePos = { x: stagePosition.x / stageZoom, y: stagePosition.y / stageZoom };
@@ -295,7 +296,7 @@ export function TilesetCanvas () {
       </Layer>
       <Layer imageSmoothingEnabled={false}>
         {layers.map((layer, i) => (
-          <Image image={layerImages[layer._id]} key={i} />
+          <Image image={layerImages[layer._id]} key={i} opacity={layerOpacities[layer._id]} />
         ))}
       </Layer>
     </Stage>
