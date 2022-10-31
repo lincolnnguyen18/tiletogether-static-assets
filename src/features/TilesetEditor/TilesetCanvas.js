@@ -38,6 +38,8 @@ export function TilesetCanvas () {
   const layers = file.rootLayer.layers;
   const leftSidebarSlice = useSelector((state) => state.leftSidebar);
   const showGrid = leftSidebarSlice.primitives.showGrid;
+  const tilesetRightSidebarSlice = useSelector((state) => state.tilesetRightSidebar);
+  const currentColor = tilesetRightSidebarSlice.primitives.currentColor;
   const dispatch = useDispatch();
 
   const canvasStyle = css`
@@ -141,7 +143,7 @@ export function TilesetCanvas () {
   function colorPixel () {
     const ctx = imageCanvas.getContext('2d');
     const pos = getCursorImagePos();
-    ctx.fillStyle = 'red';
+    ctx.fillStyle = currentColor;
     ctx.fillRect(pos.x, pos.y, 1, 1);
     const newImg = new window.Image();
     newImg.src = imageCanvas.toDataURL();

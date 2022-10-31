@@ -1,7 +1,11 @@
 /** @jsx jsx */
 import { css, jsx } from '@emotion/react';
+import { useDispatch } from 'react-redux';
+import { setTilesetRightSidebarPrimitives } from './rightSidebarSlice';
 
 function Color ({ color }) {
+  const dispatch = useDispatch();
+
   const colorStyle = css`
     background: ${color};
     border: 1px solid #aaa;
@@ -11,7 +15,10 @@ function Color ({ color }) {
   `;
 
   return (
-    <div css={colorStyle} />
+    <div
+      css={colorStyle}
+      onClick={() => dispatch(setTilesetRightSidebarPrimitives({ currentColor: color }))}
+    />
   );
 }
 

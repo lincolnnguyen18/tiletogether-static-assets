@@ -4,12 +4,13 @@ import { Icon } from '../../components/Icon';
 import { ColorSet } from './ColorSet';
 import { Divider } from '../MapEditor/RightSidebar';
 import { Layer } from '../Editor/Layer';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useEffect } from 'react';
 import { FlexRow } from '../../components/Layouts/FlexRow';
 import { Slider } from '../../components/inputs/Slider';
 import { Text } from '../../components/Text';
 import { IconButton } from '../../components/inputs/IconButton';
+import { setTilesetRightSidebarPrimitives } from './rightSidebarSlice';
 
 const rightSidebarStyle = css`
   background: #3F3F3F;
@@ -47,8 +48,10 @@ const rightSidebarStyle = css`
 `;
 
 export function RightSidebar () {
+  const dispatch = useDispatch();
   const tilesetRightSidebarSlice = useSelector((state) => state.tilesetRightSidebar);
   const colors = tilesetRightSidebarSlice.primitives.colors;
+  const currentColor = tilesetRightSidebarSlice.primitives.currentColor;
   const fileSlice = useSelector((state) => state.file);
   const file = fileSlice.file;
   const rootLayer = file.rootLayer;
@@ -74,7 +77,11 @@ export function RightSidebar () {
           </Icon>
           <span>Current color</span>
         </div>
-        <input type="color" />
+        <input
+          type='color'
+          value={currentColor}
+          onChange={(e) => dispatch(setTilesetRightSidebarPrimitives({ currentColor: e.target.value }))}
+        />
       </div>
       <Divider />
       <div className='header'>
@@ -93,7 +100,7 @@ export function RightSidebar () {
           </IconButton>
         </FlexRow>
         <FlexRow gap={8}>
-          <Slider />
+          <Slider defaultValue={100} />
           <Text>100%</Text>
         </FlexRow>
       </FlexRow>

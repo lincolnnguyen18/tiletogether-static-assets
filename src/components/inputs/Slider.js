@@ -19,13 +19,13 @@ const sliderStyle = css`
   }
 `;
 
-export function Slider ({ min = 0, max = 100, value = 50, ...props }) {
+export function Slider ({ min = 0, max = 100, ...props }) {
   return (
     <input
       type='range'
       min={min}
       max={max}
-      value={value} {...props}
+      {...props}
       css={sliderStyle}
     />
   );
