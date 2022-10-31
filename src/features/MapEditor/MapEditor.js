@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { FilenameIndicator } from '../Editor/FilenameIndicator';
 import { getFileToEdit } from '../File/fileSlice';
 import { NotFound } from '../Editor/NotFound';
+import { RightSidebar } from './RightSidebar';
 
 const mapEditorStyle = css`
 `;
@@ -25,10 +26,11 @@ export function MapEditor () {
   let content;
 
   if (!error) {
-    content = file && (
+    content = file && file.rootLayer && (
       <div css={mapEditorStyle}>
         <LeftSidebar />
         <FilenameIndicator />
+        <RightSidebar />
       </div>
     );
   } else {

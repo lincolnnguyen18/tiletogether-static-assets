@@ -26,7 +26,6 @@ const leftSideStyle = css`
   width: 100%;
   padding-bottom: 20px;
   height: fit-content;
-  padding-bottom: 20px;
 `;
 
 const rightSideStyle = css`
@@ -34,7 +33,7 @@ const rightSideStyle = css`
   width: 425px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 8px;
   height: fit-content;
   padding-bottom: 20px;
   
