@@ -32,6 +32,7 @@ export function TilesetCanvas () {
   const [image, setImage] = useState(null);
   const [panning, setPanning] = useState(false);
   const [panHover, setPanHover] = useState(false);
+  const [lastColorCalculation, setLastColorCalculation] = useState(new Date());
   const fileSlice = useSelector((state) => state.file);
   const stageRef = useRef(null);
   const file = fileSlice.file;
@@ -118,7 +119,7 @@ export function TilesetCanvas () {
 
   // recalculate colors of pixels of image currently in view every time stage position changes
   useEffect(() => {
-    if (imageCanvas) {
+    if (imageCanvas && lastColorCalculation < new Date() - 1000) {
       // crop image canvas to current view
       const ctx = imageCanvas.getContext('2d');
       const imageData = ctx.getImageData(
@@ -129,6 +130,7 @@ export function TilesetCanvas () {
       );
       const colors = getImageColors(imageData);
       dispatch(assignTilesetRightSidebarPrimitives({ colors }));
+      setLastColorCalculation(new Date());
     }
   }, [stagePosition, image]);
 
