@@ -12,6 +12,7 @@ import { Icon } from '../../components/Icon';
 import { Textfield, whiteInputStyle } from '../../components/inputs/Textfield';
 import { Checkbox } from '../../components/inputs/Checkbox';
 import _ from 'lodash';
+import { FlexColumn } from '../../components/Layouts/FlexColumn';
 
 const leftSidebarStyle = css`
   background: #3F3F3F;
@@ -101,19 +102,21 @@ export function LeftSidebar () {
 
   const sharePage = (
     <Fragment>
-      <h4>Sharing URL</h4>
-      <div css={copyLinkStyle}>
+      <FlexColumn gap={4}>
+        <span>Sharing URL</span>
+        <div css={copyLinkStyle}>
         <span className='link-container'>
           https://www.tiletogether.com/files/t4Kmfkh4QYEaB8iuXhTmFA/edit
         </span>
-        <Icon color='black'>
-          <span className='icon-copy'></span>
-        </Icon>
-      </div>
+          <Icon color='black'>
+            <span className='icon-copy'></span>
+          </Icon>
+        </div>
+      </FlexColumn>
       <span>Users added to the list below can view and edit this file using the URL above.</span>
       <div css={sharedWithStyle}>
         <div className='header'>
-          <h4>Shared with</h4>
+          <h4>Currently shared with</h4>
           <IconButton>
             <span className='icon-plus'></span>
           </IconButton>

@@ -1,12 +1,13 @@
 /** @jsx jsx */
 import { css, jsx } from '@emotion/react';
 
-const flexStyle = css`
-  display: flex;
-  flex-direction: column;
-`;
+export function FlexColumn ({ children, gap = 0, style, ...props }) {
+  const flexStyle = css`
+    display: flex;
+    flex-direction: column;
+    gap: ${gap}px;
+  `;
 
-export function FlexColumn ({ children, style, ...props }) {
   return (
     <div css={[flexStyle, style]} {...props}>
       {children}
