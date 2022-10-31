@@ -155,6 +155,10 @@ export function TilesetCanvas () {
     }
   }
 
+  function handleContextMenu (e) {
+    e.evt.preventDefault();
+  }
+
   const resetStagePosition = useCallback(() => {
     setStageZoom(6);
     setStagePosition({
@@ -210,6 +214,7 @@ export function TilesetCanvas () {
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
+      onContextMenu={handleContextMenu}
       ref={stageRef}
     >
       <Layer imageSmoothingEnabled={false}>
