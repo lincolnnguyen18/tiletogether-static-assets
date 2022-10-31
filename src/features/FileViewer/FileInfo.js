@@ -5,6 +5,7 @@ import { useRef } from 'react';
 import { FlexRow } from '../../components/Layouts/FlexRow';
 import { FlexColumn } from '../../components/Layouts/FlexColumn';
 import { IconButtonStyle, likeButtonStyle } from '../../components/inputs/Button';
+import { Link } from 'react-router-dom';
 
 const verticalSectionStyle = css`
   color: white;
@@ -50,11 +51,17 @@ export function FileInfo ({ authorUserName, filename, description, type, dimensi
       </FlexRow>
       <hr color='gray'/>
       <p css={verticalSectionStyle}>{description}</p>
-      <FlexRow style={verticalSectionStyle}>
-        {tags.map(t => <a css={{ color: '#4894F9', marginRight: '10px' }} href="badurl" key={_.uniqueId('filetag-')}>#{t}</a>)}
+      <FlexRow style={verticalSectionStyle} gap={'10px'}>
+        {tags.map(t => (
+          <Link
+            key={_.uniqueId('filetag-')}
+            to={`/search?keywords=${t}`}
+            style={{ color: '#4894f9', textDecoration: 'none' }}
+          >#{t}</Link>
+        ))}
       </FlexRow>
       <label css={verticalSectionStyle}>
-        {`${type}`} <span>&#x2022;</span> {`${dimension * dimension} pixel tiles`} {isMap && <span>&#x2022;</span>} { isMap && `${width} X ${height} map`}
+        {`${type}`} <span>&#x2022;</span> {`${dimension} pixel tiles`} {isMap && <span>&#x2022;</span>} { isMap && `${width} x ${height} map`}
       </label>
       <FlexRow>
         <button css={[IconButtonStyle, { marginLeft: '0px' }]} ref={userButtonRef}>
