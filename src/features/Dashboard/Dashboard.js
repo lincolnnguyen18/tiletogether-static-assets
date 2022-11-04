@@ -142,7 +142,7 @@ export function Dashboard () {
 
   useEffect(() => {
     dispatch(getFiles({ location }));
-  }, []);
+  }, [userSlice.primitives.user]);
 
   let content;
 
