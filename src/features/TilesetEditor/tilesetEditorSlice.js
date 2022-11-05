@@ -255,7 +255,7 @@ const tilesetEditorSlice = createSlice({
   extraReducers (builder) {
     builder
       .addCase(getFileToEdit.fulfilled, (state, action) => {
-        const imageUrls = _.range(0, 30).map((i) => `mock-layer-images/${i}.png`);
+        const imageUrls = _.range(0, 30).map((i) => `/mock-layer-images/${i}.png`);
 
         const file = action.payload;
         // use cloneDeepWith to set all layers selected and expanded to false

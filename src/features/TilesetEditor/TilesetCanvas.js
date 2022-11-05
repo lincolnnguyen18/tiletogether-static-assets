@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { selectPrimitives } from './tilesetEditorSlice';
 import { Layer, Rect, Stage } from 'react-konva';
+import { trimPng } from '../../utils/canvasUtils';
 
 const virtualCanvasesStyle = css`
   position: absolute;
@@ -18,6 +19,7 @@ const virtualCanvasesStyle = css`
   transform-origin: top right;
   image-rendering: pixelated;
   gap: 24px;
+  z-index: 100;
 `;
 
 export function TilesetCanvas () {
@@ -44,6 +46,30 @@ export function TilesetCanvas () {
     traverse(file.rootLayer);
 
     console.log(layerIdToImageUrl);
+
+    async function loadImages () {
+      await Promise.all(Object.keys(layerIdToImageUrl).map(async (layerId) => {
+        const imageUrl = layerIdToImageUrl[layerId];
+        const image = new Image();
+        image.src = imageUrl;
+        await image.decode();
+        layerIdToImageUrl[layerId] = image;
+      }));
+      // console.log(layerIdToImageUrl);
+
+      const virtualCanvases = document.getElementById('virtual-canvases');
+      const newLayerImages = {};
+      Object.keys(layerIdToImageUrl).forEach((layerId) => {
+        if (document.getElementById(layerId)) return;
+        const canvas = trimPng(layerIdToImageUrl[layerId]);
+        canvas.id = layerId;
+        virtualCanvases.appendChild(canvas);
+        newLayerImages[layerId] = canvas;
+      });
+      setLayerImages(newLayerImages);
+    }
+
+    loadImages();
   }, []);
 
   const handleStageMouseWheel = (e) => {
