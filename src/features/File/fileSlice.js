@@ -70,13 +70,37 @@ export const getFileToEdit = createAsyncThunk(
   },
 );
 
+export const likeFile = async ({ id, liked }) => {
+  try {
+    return apiClient.post(`/files/${id}/like`, { liked });
+  } catch (err) {
+    throw new Error(err.response.data.error);
+  }
+};
+
+export const postComment = async ({ fileId, content }) => {
+  try {
+    return apiClient.post(`/files/${fileId}/comment`, { content });
+  } catch (err) {
+    throw new Error(JSON.stringify(err.response.data.error));
+  }
+};
+
 const fileSlice = createSlice({
   name: 'file',
   initialState,
   reducers: {
-    localAddComment: (state, action) => {
-      // add payload to beginning of comments array
-      state.file.comments.unshift(action.payload);
+    localEditFiles: (state, action) => {
+      // edit file
+      for (let i = 0; i < state.files.length; i++) {
+        if (state.files[i]._id === action.payload._id) {
+          state.files[i] = action.payload;
+        }
+      }
+    },
+    localEditFile: (state, action) => {
+      // edit file
+      state.file = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -114,13 +138,12 @@ const fileSlice = createSlice({
         state.file = null;
         state.pending.push(getActionName(action));
       })
-      .addMatcher(
-        isAnyOf(getFileToView.fulfilled, getFileToEdit.fulfilled), (state, action) => {
-          state.file = action.payload;
-        });
+      .addMatcher(isAnyOf(getFileToView.fulfilled, getFileToEdit.fulfilled), (state, action) => {
+        state.file = action.payload;
+      });
   },
 });
 
-export const { localAddComment } = fileSlice.actions;
+export const { localEditFile, localEditFiles } = fileSlice.actions;
 
 export const fileReducer = fileSlice.reducer;

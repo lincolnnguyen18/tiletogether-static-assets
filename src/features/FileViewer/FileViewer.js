@@ -85,6 +85,7 @@ export function FileViewer () {
             <div css={leftSideStyle}>
               <img src='/mock-data/file-image.png' css={canvasStyle} />
               <FileInfo
+                fileId={id}
                 authorUserName={file.authorUsername}
                 filename={file.name}
                 type={file.type}

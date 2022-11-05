@@ -6,6 +6,8 @@ import { FlexRow } from '../../components/Layouts/FlexRow';
 import { FlexColumn } from '../../components/Layouts/FlexColumn';
 import { IconButtonStyle, likeButtonStyle } from '../../components/inputs/Button';
 import { Link } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { likeFile, localEditFiles, localEditFile } from '../File/fileSlice';
 
 const verticalSectionStyle = css`
   color: white;
@@ -14,7 +16,8 @@ const verticalSectionStyle = css`
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-export function FileInfo ({ authorUserName, filename, description, type, dimension, width, height, publishDate, views, likes, liked, tagStr }) {
+export function FileInfo ({ fileId, authorUserName, filename, description, type, dimension, width, height, publishDate, views, likes, liked, tagStr }) {
+  const dispatch = useDispatch();
   const likeButtonRef = useRef(null);
   const downloadButtonRef = useRef(null);
   const importButtonRef = useRef(null);
@@ -24,6 +27,17 @@ export function FileInfo ({ authorUserName, filename, description, type, dimensi
   const tags = tagStr.split(' ');
   const isMap = type === 'map';
 
+  const handleLikeSubmit = async () => {
+    const res = await likeFile({
+      id: fileId,
+      liked: !liked,
+    });
+    if (res.status === 200) {
+      dispatch(localEditFiles(res.data.file));
+      dispatch(localEditFile(res.data.file));
+    }
+  };
+
   return (
     <FlexColumn>
       <h1 css={verticalSectionStyle}>{filename}</h1>
@@ -32,7 +46,7 @@ export function FileInfo ({ authorUserName, filename, description, type, dimensi
           {`${views} views`} <span>&#x2022;</span> {`${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`}
         </label>
         <FlexRow style={{ marginLeft: 'auto' }}>
-          <button css={[IconButtonStyle, likeButtonStyle]} ref={likeButtonRef}>
+          <button css={[IconButtonStyle, likeButtonStyle]} ref={likeButtonRef} onClick={handleLikeSubmit}>
             {liked
               ? <span className='icon-like-filled' css={{ fontSize: '42px' }}/>
               : <span className='icon-like-unfilled' css={{ fontSize: '42px' }}/>

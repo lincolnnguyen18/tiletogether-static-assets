@@ -3,10 +3,9 @@ import { css, jsx } from '@emotion/react';
 import { FlexRow } from '../../components/Layouts/FlexRow';
 import { FlexColumn } from '../../components/Layouts/FlexColumn';
 import { useRef, useState } from 'react';
-import { postComment } from './FileViewerSlice';
 import { Button, IconButtonStyle, whiteButtonStyle, blackButtonStyle } from '../../components/inputs/Button';
 import { useDispatch } from 'react-redux';
-import { localAddComment } from '../File/fileSlice';
+import { localEditFile, localEditFiles, postComment } from '../File/fileSlice';
 
 // eslint-disable-next-line no-unused-vars
 export function AddComment ({ comments, fileId }) {
@@ -38,7 +37,8 @@ export function AddComment ({ comments, fileId }) {
       fileId,
     });
     if (res.status === 200) {
-      dispatch(localAddComment(res.data.comment));
+      dispatch(localEditFiles(res.data.file));
+      dispatch(localEditFile(res.data.file));
     }
   };
   return (
