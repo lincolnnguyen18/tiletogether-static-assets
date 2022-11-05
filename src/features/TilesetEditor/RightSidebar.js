@@ -127,7 +127,7 @@ export function RightSidebar () {
         {/*</FlexRow>*/}
       </FlexRow>
       <div className='layers'>
-        <Layer layer={rootLayer}/>
+        <Layer layer={rootLayer} level={-1} />
       </div>
     </div>
   );

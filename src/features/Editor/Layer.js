@@ -18,7 +18,7 @@ const layerStyle = css`
   flex-direction: column;
 `;
 
-export function Layer ({ layer, parentSelected }) {
+export function Layer ({ layer, parentSelected, level }) {
   const dispatch = useDispatch();
   const filePrimitives = useSelector(selectPrimitives);
   const dragging = filePrimitives.dragging;
@@ -69,7 +69,6 @@ export function Layer ({ layer, parentSelected }) {
   const subLayerStyle = css`
     display: ${expanded ? 'flex' : 'none'};
     flex-direction: column;
-    padding-left: 20px;
   `;
 
   function Arrow () {
@@ -78,9 +77,8 @@ export function Layer ({ layer, parentSelected }) {
         onMouseUp={e => handleToggleExpand(e, layer)}
         onMouseDown={(e) => e.stopPropagation()}
         css={css`
-          cursor: pointer;
-          width: 40px;
-          font-size: 12px;
+          width: 30px;
+          font-size: 8px;
           display: flex;
           justify-content: center;
           align-items: center;
@@ -93,8 +91,8 @@ export function Layer ({ layer, parentSelected }) {
   }
 
   function getBackground () {
-    if (selected && !parentSelected) return '#6e6e6e';
-    if (selected && parentSelected) return '#333';
+    if (selected && !parentSelected) return '#282828';
+    if (selected && parentSelected) return '#313131';
     return 'transparent';
   }
 
@@ -107,7 +105,8 @@ export function Layer ({ layer, parentSelected }) {
 
   function getHoverBorder () {
     if (dragging && (parentSelected || layer.selected)) return 'border: 1px solid transparent;';
-    if (dragging && layer.type !== 'group') return 'border-bottom: 1px solid #efefef;';
+    if (dragging && layer.type !== 'group') return 'border-bottom: 1px solid #00b3ff;';
+    if (dragging && layer.type === 'group') return 'border: 1px solid #00b3ff;';
     return 'border: 1px solid #efefef;';
   }
 
@@ -119,6 +118,7 @@ export function Layer ({ layer, parentSelected }) {
     background: ${getBackground()};
     color: white;
     border: 1px solid transparent;
+    padding-left: ${level * 20}px;
 
     &:hover {
       ${getHoverBorder()}
@@ -128,15 +128,17 @@ export function Layer ({ layer, parentSelected }) {
 
   return layer && (
     <div css={layerStyle}>
-      <div
-        css={layerNameStyle}
-        draggable={false}
-        onMouseDown={e => handleDragStart(e, layer)}
-        onMouseUp={e => handleDragEnd(e, layer)}
-      >
-        <Arrow />
-        {layer.name}
-      </div>
+      {!layer.isRootLayer && (
+        <div
+          css={layerNameStyle}
+          draggable={false}
+          onMouseDown={e => handleDragStart(e, layer)}
+          onMouseUp={e => handleDragEnd(e, layer)}
+        >
+          <Arrow />
+          {layer.name}
+        </div>
+      )}
       {expanded && layer.layers.length > 0 && (
         <div css={subLayerStyle}>
           {layer.layers.map((layer, index) => (
@@ -144,6 +146,7 @@ export function Layer ({ layer, parentSelected }) {
               key={index}
               layer={layer}
               parentSelected={selected}
+              level={level + 1}
             >
               {layer.name}
             </Layer>
