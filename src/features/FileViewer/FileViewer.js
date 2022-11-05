@@ -98,6 +98,7 @@ export function FileViewer () {
                 tagStr={file.tags}
               />
               <CommentSection
+                fileId={id}
                 authorUserName={file.authorUsername}
                 comments={file.comments}
               />

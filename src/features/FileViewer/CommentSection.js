@@ -3,13 +3,15 @@ import { css, jsx } from '@emotion/react';
 import { FlexRow } from '../../components/Layouts/FlexRow';
 import { FlexColumn } from '../../components/Layouts/FlexColumn';
 import { timeUtils } from '../../utils/timeUtils';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
+import { postComment } from './FileViewerSlice';
 import { Button, IconButtonStyle, likeButtonStyle, whiteButtonStyle, blackButtonStyle } from '../../components/inputs/Button';
 
 // eslint-disable-next-line no-unused-vars
-export function CommentSection ({ authorUserName, comments }) {
+export function CommentSection ({ authorUserName, comments, fileId }) {
   const userButtonRef = useRef(null);
   const likeButtonRef = useRef(null);
+  const [comment, setComment] = useState('');
 
   const verticalSectionStyle = css`
     color: white;
@@ -29,6 +31,12 @@ export function CommentSection ({ authorUserName, comments }) {
     }
   `;
 
+  const handleCommentSubmit = async () => {
+    await postComment({
+      content: comment,
+      fileId,
+    });
+  };
   return (
     <FlexColumn>
       <FlexRow>
@@ -52,11 +60,13 @@ export function CommentSection ({ authorUserName, comments }) {
             <input
               name='content'
               placeholder='Add comment ...'
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
             />
             <FlexRow style={{ marginRight: 'auto' }}>
-              <Button css={[blackButtonStyle, { marginRight: '10px' }]}>
+              <Button css={[blackButtonStyle, { marginRight: '10px' }]} onClick={() => { setComment(''); }}>
                 Cancel</Button>
-              <Button css={whiteButtonStyle}>Comment</Button>
+              <Button css={whiteButtonStyle} onClick={handleCommentSubmit}>Comment</Button>
             </FlexRow>
           </FlexRow>
         </div>
