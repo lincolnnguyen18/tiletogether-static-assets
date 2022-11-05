@@ -77,7 +77,7 @@ export function RightSidebar () {
     dispatch(setTilesetEditorPrimitives({ calculateColors: true }));
   }
 
-  return colors && activeLayer && (
+  return (
     <div css={rightSidebarStyle}>
       <FlexRow gap={8} justify="space-between">
         <FlexRow gap={4}>
@@ -127,9 +127,7 @@ export function RightSidebar () {
         {/*</FlexRow>*/}
       </FlexRow>
       <div className='layers'>
-        {activeLayer && (
-          <Layer layer={rootLayer}/>
-        )}
+        <Layer layer={rootLayer}/>
       </div>
     </div>
   );

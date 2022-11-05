@@ -36,7 +36,6 @@ export function Layer ({ layer, parentSelected }) {
 
   function handleDragStart (e, layer) {
     if (layer.isRootLayer) return;
-    console.log(layer.selected);
     if ((!e.shiftKey && !e.ctrlKey && !e.metaKey) && (!layer.selected || parentSelected)) {
       dispatch(updateAllLayers({ selected: false }));
     }
@@ -57,11 +56,8 @@ export function Layer ({ layer, parentSelected }) {
 
   function handleDragEnd (e, layer) {
     if (dragging && !layer.selected && !parentSelected) {
-      console.log('dragend!');
       const delta = { x: e.clientX - dragStart.x, y: e.clientY - dragStart.y };
-      console.log(delta);
       if (delta.x !== 0 || delta.y !== 0) {
-        console.log('move!');
         dispatch(moveSelectedLayers({ moveToLayer: layer }));
       }
     }
@@ -97,8 +93,8 @@ export function Layer ({ layer, parentSelected }) {
   }
 
   function getBackground () {
-    if (selected && !parentSelected) return '#fff';
-    if (selected && parentSelected) return '#e0e0e0';
+    if (selected && !parentSelected) return '#6e6e6e';
+    if (selected && parentSelected) return '#333';
     return 'transparent';
   }
 
@@ -110,7 +106,6 @@ export function Layer ({ layer, parentSelected }) {
   }
 
   function getHoverBorder () {
-    if (selected) return;
     if (dragging && (parentSelected || layer.selected)) return 'border: 1px solid transparent;';
     if (dragging && layer.type !== 'group') return 'border-bottom: 1px solid #efefef;';
     return 'border: 1px solid #efefef;';
@@ -122,7 +117,7 @@ export function Layer ({ layer, parentSelected }) {
     display: flex;
     align-items: center;
     background: ${getBackground()};
-    color: ${selected ? 'black' : 'white'};
+    color: white;
     border: 1px solid transparent;
 
     &:hover {

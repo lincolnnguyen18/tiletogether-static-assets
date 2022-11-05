@@ -33,6 +33,67 @@ export function getImageColors (imageData) {
   return Array.from(colors);
 }
 
+export function trimPng (image) {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = image.width;
+  canvas.height = image.height;
+  ctx.drawImage(image, 0, 0);
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const pixels = imageData.data;
+  const len = pixels.length;
+  const bound = {
+    top: null,
+    left: null,
+    right: null,
+    bottom: null,
+  };
+  let i;
+  let x;
+  let y;
+
+  // Iterate over every pixel to find the highest
+  // and where it ends on every axis ()
+  for (i = 0; i < len; i += 4) {
+    if (pixels[i + 3] !== 0) {
+      x = (i / 4) % canvas.width;
+      y = ~~((i / 4) / canvas.width);
+
+      if (bound.top === null) {
+        bound.top = y;
+      }
+
+      if (bound.left === null) {
+        bound.left = x;
+      } else if (x < bound.left) {
+        bound.left = x;
+      }
+
+      if (bound.right === null) {
+        bound.right = x;
+      } else if (bound.right < x) {
+        bound.right = x;
+      }
+
+      if (bound.bottom === null) {
+        bound.bottom = y;
+      } else if (bound.bottom < y) {
+        bound.bottom = y;
+      }
+    }
+  }
+
+  const trimHeight = bound.bottom - bound.top + 1;
+  const trimWidth = bound.right - bound.left + 1;
+  const trimmed = ctx.getImageData(bound.left, bound.top, trimWidth, trimHeight);
+
+  canvas.width = trimWidth;
+  canvas.height = trimHeight;
+  ctx.putImageData(trimmed, 0, 0);
+
+  return canvas;
+}
+
 export function getRandomColor () {
   return `#${Math.floor(Math.random() * 16777215).toString(16)}`;
 }

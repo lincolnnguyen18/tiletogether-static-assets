@@ -3,6 +3,7 @@ import { createAsyncThunk, createSlice, isAnyOf } from '@reduxjs/toolkit';
 import { apiClient } from '../../app/apiClient';
 import { getActionName } from '../../utils/stringUtils';
 import ObjectID from 'bson-objectid';
+import { trimPng } from '../../utils/canvasUtils';
 
 const initialState = {
   file: null,
@@ -145,8 +146,6 @@ const tilesetEditorSlice = createSlice({
       }
 
       state.file.rootLayer = _.cloneDeepWith(state.file.rootLayer, customizer);
-
-      console.log(state.file.rootLayer);
     },
     updateAllLayersBetween: (state, action) => {
       const { startLayer, endLayer, newAttributes } = action.payload;
@@ -227,7 +226,7 @@ const tilesetEditorSlice = createSlice({
       if (invalid) return;
 
       let moved = false;
-      console.log(`selectedLayers: ${JSON.stringify(selectedLayers)}`);
+      // console.log(`selectedLayers: ${JSON.stringify(selectedLayers)}`);
 
       // cloneDeep while excluding selected layers
       function traverse2 (layer) {
@@ -237,12 +236,12 @@ const tilesetEditorSlice = createSlice({
           if (!moved) {
             if (layer.layers.some((layer) => layer._id === moveToLayer._id && layer.type === 'layer')) {
               const index = _.findIndex(layer.layers, { _id: moveToLayer._id });
-              console.log(`${layer.name} contains ${moveToLayer.name}, moving after ${moveToLayer.name}`);
+              // console.log(`${layer.name} contains ${moveToLayer.name}, moving after ${moveToLayer.name}`);
               layer.layers = [...layer.layers.slice(0, index + 1), ...selectedLayers, ...layer.layers.slice(index + 1)];
               moved = true;
             // else if moveToLayer is a group, insert selectedLayers at beginning of group's layers
             } else if (layer._id === moveToLayer._id && layer.type === 'group') {
-              console.log(`Moving to start of ${moveToLayer.name}'s layers`);
+              // console.log(`Moving to start of ${moveToLayer.name}'s layers`);
               layer.layers = [...selectedLayers, ...layer.layers];
             }
           }
@@ -256,11 +255,18 @@ const tilesetEditorSlice = createSlice({
   extraReducers (builder) {
     builder
       .addCase(getFileToEdit.fulfilled, (state, action) => {
+        const imageUrls = _.range(0, 30).map((i) => `mock-layer-images/${i}.png`);
+
         const file = action.payload;
         // use cloneDeepWith to set all layers selected and expanded to false
         function customizer (value) {
           if (_.get(value, '_id')) {
             _.assign(value, { selected: false, expanded: true });
+
+            if (value.type === 'layer') {
+              const imageUrl = _.sample(imageUrls);
+              _.assign(value, { imageUrl, position: { x: 0, y: 0 } });
+            }
           }
         }
 
