@@ -100,7 +100,7 @@ export function FileViewer () {
               <CommentSection
                 fileId={id}
                 authorUserName={file.authorUsername}
-                comments={file.comments}
+                initialComments={file.comments}
               />
             </div>
             <div css={rightSideStyle}>

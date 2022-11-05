@@ -13,7 +13,7 @@ export class TimeUtils {
   }
 
   timeAgo (date) {
-    if (this.currentTime < date) throw new Error('timeAgo date must be in the past');
+    if (this.currentTime < date) return pluralize(0, 'second');
 
     const seconds = Math.floor((this.currentTime - date) / 1000);
     const minutes = Math.floor(seconds / 60);

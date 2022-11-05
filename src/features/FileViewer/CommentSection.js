@@ -8,11 +8,11 @@ import { postComment } from './FileViewerSlice';
 import { Button, IconButtonStyle, likeButtonStyle, whiteButtonStyle, blackButtonStyle } from '../../components/inputs/Button';
 
 // eslint-disable-next-line no-unused-vars
-export function CommentSection ({ authorUserName, comments, fileId }) {
+export function CommentSection ({ authorUserName, initialComments, fileId }) {
   const userButtonRef = useRef(null);
   const likeButtonRef = useRef(null);
   const [comment, setComment] = useState('');
-
+  const [comments, setComments] = useState(initialComments || []);
   const verticalSectionStyle = css`
     color: white;
     padding: 10px 0 0 0;
@@ -32,16 +32,19 @@ export function CommentSection ({ authorUserName, comments, fileId }) {
   `;
 
   const handleCommentSubmit = async () => {
-    await postComment({
+    const newComment = await postComment({
       content: comment,
       fileId,
     });
+    console.log(newComment.comment);
+    const newComments = comments.concat(newComment.comment);
+    setComments(newComments);
   };
   return (
     <FlexColumn>
       <FlexRow>
         <div css={[verticalSectionStyle, { marginRight: '10px' }]}>
-          {comments.length} Comments
+          {comments ? comments.length : 0} Comments
         </div>
         <div css={verticalSectionStyle}>
           Sort By
@@ -73,7 +76,7 @@ export function CommentSection ({ authorUserName, comments, fileId }) {
       </FlexRow>
       <hr color='gray'/>
       <FlexColumn>
-        {comments.map((c, i) =>
+        {comments && comments.map((c, i) =>
           <FlexColumn
             css={{ color: 'white' }}
             key={i}
