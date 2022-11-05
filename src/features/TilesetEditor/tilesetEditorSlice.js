@@ -15,6 +15,9 @@ const initialState = {
     activeLayer: null,
     colors: [],
     calculateColors: false,
+    dragStart: null,
+    dragging: false,
+    lastSelectedLayer: null,
   },
   errors: [],
   pending: [],
@@ -113,9 +116,158 @@ const tilesetEditorSlice = createSlice({
       opacity /= 100;
       state.layerOpacities[state.primitives.activeLayer._id] = opacity;
     },
+    setFilePrimitives: (state, action) => {
+      state.primitives = _.merge(state.primitives, action.payload);
+    },
+    updateLayer: (state, action) => {
+      const { newLayer } = action.payload;
+
+      // use cloneDeepWith to avoid mutating state
+      function customizer (value) {
+        // if layer's _id matches newLayer's _id, return newLayer
+        if (_.get(value, '_id') === _.get(newLayer, '_id')) {
+          return newLayer;
+        }
+      }
+
+      state.file.rootLayer = _.cloneDeepWith(state.file.rootLayer, customizer);
+    },
+    updateAllLayers: (state, action) => {
+      // action.payload is an object of key-value pairs where the key is an attribute name and the value is the new value for that attribute
+      const newAttributes = action.payload;
+
+      // use cloneDeepWith to avoid mutating state
+      function customizer (value) {
+        // if layer has an _id, update its attributes
+        if (_.get(value, '_id')) {
+          _.assign(value, newAttributes);
+        }
+      }
+
+      state.file.rootLayer = _.cloneDeepWith(state.file.rootLayer, customizer);
+
+      console.log(state.file.rootLayer);
+    },
+    updateAllLayersBetween: (state, action) => {
+      const { startLayer, endLayer, newAttributes } = action.payload;
+
+      const selectedLayers = [];
+      let done = false;
+
+      // traverse from start layer to end layer, adding each layer to selectedLayers
+      function traverse (layer) {
+        if (done) return;
+
+        if (layer._id === startLayer._id || layer._id === endLayer._id) {
+          selectedLayers.push(layer._id);
+        } else if (selectedLayers.length > 0) {
+          selectedLayers.push(layer._id);
+        }
+
+        if (layer._id !== selectedLayers[0] && (layer._id === endLayer._id || layer._id === startLayer._id)) {
+          done = true;
+          return;
+        }
+
+        if (layer.type === 'group' && layer.layers.length > 0) {
+          layer.layers.forEach(traverse);
+        }
+      }
+
+      traverse(state.file.rootLayer);
+
+      // use cloneDeepWith to avoid mutating state
+      function customizer (value) {
+        // if layer has an _id, update its attributes
+        if (_.get(value, '_id') && selectedLayers.includes(value._id)) {
+          _.assign(value, newAttributes);
+        }
+      }
+
+      state.file.rootLayer = _.cloneDeepWith(state.file.rootLayer, customizer);
+    },
+    moveSelectedLayers: (state, action) => {
+      const { moveToLayer } = action.payload;
+      const selectedLayers = [];
+
+      let invalid = false;
+
+      // traverse from rootLayer, if a layer is selected, add it to selectedLayers, remove it from its parent layer, and don't recurse into it, continue until all layers have been traversed
+      function traverse1 (layer) {
+        if (invalid) return;
+
+        // get all selected layers
+        const selectedLayer = _.filter(layer.layers, { selected: true });
+        if (selectedLayer.length > 0) {
+          // checck if moveToLayer is selectedLayer or a child of selectedLayer, if so, return
+          if (moveToLayer._id === selectedLayer[0]._id) {
+            invalid = true;
+            return;
+          } else {
+            function traverse2 (layer) {
+              if (layer._id === moveToLayer._id) {
+                invalid = true;
+              } else if (layer.type === 'group' && layer.layers.length > 0) {
+                layer.layers.forEach(traverse2);
+              }
+            }
+            traverse2(selectedLayer[0]);
+          }
+
+          selectedLayers.push(...selectedLayer);
+        } else {
+          // if layer is a group, recurse into it
+          if (layer.type === 'group' && layer.layers.length > 0) {
+            layer.layers.forEach(traverse1);
+          }
+        }
+      }
+      traverse1(state.file.rootLayer);
+
+      if (invalid) return;
+
+      let moved = false;
+      console.log(`selectedLayers: ${JSON.stringify(selectedLayers)}`);
+
+      // cloneDeep while excluding selected layers
+      function traverse2 (layer) {
+        if (layer.type === 'group') {
+          layer.layers = _.filter(layer.layers, (layer) => !selectedLayers.includes(layer));
+
+          if (!moved) {
+            if (layer.layers.some((layer) => layer._id === moveToLayer._id && layer.type === 'layer')) {
+              const index = _.findIndex(layer.layers, { _id: moveToLayer._id });
+              console.log(`${layer.name} contains ${moveToLayer.name}, moving after ${moveToLayer.name}`);
+              layer.layers = [...layer.layers.slice(0, index + 1), ...selectedLayers, ...layer.layers.slice(index + 1)];
+              moved = true;
+            // else if moveToLayer is a group, insert selectedLayers at beginning of group's layers
+            } else if (layer._id === moveToLayer._id && layer.type === 'group') {
+              console.log(`Moving to start of ${moveToLayer.name}'s layers`);
+              layer.layers = [...selectedLayers, ...layer.layers];
+            }
+          }
+
+          layer.layers.forEach(traverse2);
+        }
+      }
+      traverse2(state.file.rootLayer);
+    },
   },
   extraReducers (builder) {
     builder
+      .addCase(getFileToEdit.fulfilled, (state, action) => {
+        const file = action.payload;
+        // use cloneDeepWith to set all layers selected and expanded to false
+        function customizer (value) {
+          if (_.get(value, '_id')) {
+            _.assign(value, { selected: false, expanded: true });
+          }
+        }
+
+        file.rootLayer.isRootLayer = true;
+
+        state.file = _.cloneDeepWith(file, customizer);
+      })
       .addMatcher(isAnyOf(getFileToEdit.rejected), (state, action) => {
         const actionName = getActionName(action);
         state.errors.push(actionName);
@@ -128,13 +280,14 @@ const tilesetEditorSlice = createSlice({
         state.errors = [];
         state.file = null;
         state.pending.push(getActionName(action));
-      })
-      .addMatcher(
-        isAnyOf(getFileToEdit.fulfilled), (state, action) => {
-          state.file = action.payload;
-        });
+      });
   },
 });
+
+export const selectFile = (state) => state.tilesetEditor.file;
+export const selectPrimitives = (state) => state.tilesetEditor.primitives;
+export const selectDrag = state => state.tilesetEditor.primitives.drag;
+export const selectLastSelectedLayer = state => state.tilesetEditor.primitives.lastSelectedLayer;
 
 export const {
   setTilesetEditorPrimitives,
@@ -145,6 +298,10 @@ export const {
   setActiveTilesetLayer,
   changeActiveLayerOpacity,
   setTilesetLayerOpacity,
+  updateLayer,
+  updateAllLayers,
+  updateAllLayersBetween,
+  moveSelectedLayers,
 } = tilesetEditorSlice.actions;
 
 export const tilesetEditorReducer = tilesetEditorSlice.reducer;

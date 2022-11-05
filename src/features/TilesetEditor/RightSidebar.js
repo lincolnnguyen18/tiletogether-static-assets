@@ -121,19 +121,14 @@ export function RightSidebar () {
             <span className='icon-trash'></span>
           </IconButton>
         </FlexRow>
-        <FlexRow gap={8}>
-          <Slider value={layerOpacities[activeLayer._id] * 100} onChange={handleSliderChange} />
-          <Text>{Math.round(layerOpacities[activeLayer._id] * 100)}%</Text>
-        </FlexRow>
+        {/*<FlexRow gap={8}>*/}
+        {/*  <Slider value={layerOpacities[activeLayer._id] * 100} onChange={handleSliderChange} />*/}
+        {/*  <Text>{Math.round(layerOpacities[activeLayer._id] * 100)}%</Text>*/}
+        {/*</FlexRow>*/}
       </FlexRow>
       <div className='layers'>
         {activeLayer && (
-          <Layer
-            layer={rootLayer}
-            activeLayerId={activeLayer._id}
-            setActiveLayer={handleSetActiveLayer}
-            rootLayer={rootLayer}
-          />
+          <Layer layer={rootLayer}/>
         )}
       </div>
     </div>
