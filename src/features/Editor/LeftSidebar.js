@@ -13,6 +13,7 @@ import { Textfield, whiteInputStyle } from '../../components/inputs/Textfield';
 import { Checkbox } from '../../components/inputs/Checkbox';
 import _ from 'lodash';
 import { FlexColumn } from '../../components/Layouts/FlexColumn';
+import { selectPrimitives, setTilesetEditorPrimitives } from '../TilesetEditor/tilesetEditorSlice';
 
 const leftSidebarStyle = css`
   background: #3F3F3F;
@@ -41,6 +42,8 @@ export function LeftSidebar ({ file }) {
   const showGrid = leftSidebarSlice.primitives.showGrid;
   const drawerOpen = leftSidebarSlice.primitives.drawerOpen;
   const drawerPage = leftSidebarSlice.primitives.drawerPage;
+  const tilesetEditorPrimitives = useSelector(selectPrimitives);
+  const activeTool = tilesetEditorPrimitives.activeTool;
 
   useEffect(() => {
     dispatch(setLeftSidebarPrimitives({ drawerOpen: false }));
@@ -172,6 +175,10 @@ export function LeftSidebar ({ file }) {
       border-radius: 4px;`}></div>
   );
 
+  function setActiveTool (tool) {
+    dispatch(setTilesetEditorPrimitives({ activeTool: tool }));
+  }
+
   return (
     <Fragment>
       <LeftSidebarDrawer
@@ -184,11 +191,14 @@ export function LeftSidebar ({ file }) {
       </LeftSidebarDrawer>
       <div css={leftSidebarStyle}>
         <div className='group'>
-          <IconButton>
+          <IconButton active={activeTool === 'draw' && !drawerOpen} onClick={() => setActiveTool('draw')}>
             <span className='icon-pencil'></span>
           </IconButton>
-          <IconButton>
+          <IconButton active={activeTool === 'eraser' && !drawerOpen} onClick={() => setActiveTool('eraser')}>
             <span className='icon-eraser'></span>
+          </IconButton>
+          <IconButton active={activeTool === 'select' && !drawerOpen} onClick={() => setActiveTool('select')}>
+            <span className='icon-cursor'></span>
           </IconButton>
         </div>
         <div className='group'>

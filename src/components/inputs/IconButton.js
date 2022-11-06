@@ -7,6 +7,7 @@ export function IconButton ({
   style,
   color = 'var(--off-white)',
   focusColor = '#6b6b6b',
+  active,
   refProp,
   ...props
 }) {
@@ -21,7 +22,7 @@ export function IconButton ({
       color: ${color};
       cursor: pointer;
       border: none;
-      background: none;
+      background: ${active ? focusColor : 'transparent'};
       user-select: none;
       box-sizing: border-box;
       flex-shrink: 0;
@@ -34,7 +35,7 @@ export function IconButton ({
     }
 
     &:focus {
-      ${focusColor ? `background: ${focusColor};` : ''}
+      ${focusColor && active === undefined ? `background: ${focusColor};` : ''}
       box-shadow: none;
       outline: none;
     }

@@ -66,7 +66,6 @@ export function TilesetCanvas () {
       });
       if (Object.keys(newLayerImages).length > 0) {
         setLayerImages(newLayerImages);
-        console.log(newLayerImages);
       }
     }
 
@@ -74,24 +73,33 @@ export function TilesetCanvas () {
   }, []);
 
   useEffect(() => {
-    console.log(layerImages);
-
     function layerToElement (layer, level) {
       if (layer == null) return null;
       if (layer.type === 'group') {
         return (
-          <Group key={layer._id}>
-            {layer.layers.map((layer) => layerToElement(layer, level + 1)).filter((x) => x != null)}
+          <Group
+            key={layer._id}
+          >
+            {layer.layers.map((layer) => layerToElement(layer, level + 1))}
           </Group>
         );
       } else if (layer.type === 'layer') {
         return (
-          <Image key={layer._id} image={layerImages[layer._id]} x={layer.position.x} y={layer.position.y} name={layer._id} />
+          <Image
+            key={layer._id}
+            image={layerImages[layer._id]}
+            x={layer.position.x}
+            y={layer.position.y}
+            name={layer._id}
+            // stroke={'white'}
+            // strokeWidth={1}
+          />
         );
       }
     }
 
     const newLayerElements = layers.map((layer) => layerToElement(layer, 0));
+    console.log(newLayerElements);
     setLayerElements(newLayerElements);
   }, [layerImages]);
 

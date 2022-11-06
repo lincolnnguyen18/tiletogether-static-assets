@@ -3,14 +3,12 @@ import { createAsyncThunk, createSlice, isAnyOf } from '@reduxjs/toolkit';
 import { apiClient } from '../../app/apiClient';
 import { getActionName } from '../../utils/stringUtils';
 import ObjectID from 'bson-objectid';
-import { trimPng } from '../../utils/canvasUtils';
 
 const initialState = {
   file: null,
-  layerImages: {},
-  layerCanvases: {},
-  layerOpacities: {},
   primitives: {
+    // draw, eraser, select
+    activeTool: 'draw',
     activeCanvas: null,
     activeCanvasCtx: null,
     activeLayer: null,
