@@ -11,6 +11,7 @@ import { File } from '../File/File';
 import { getSubtext, loadMoreButtonStyle } from '../Dashboard/Dashboard';
 import { Button, transparentButtonStyle } from '../../components/inputs/Button';
 import { NotFound } from './NotFound';
+import { AddComment } from './AddComment';
 
 const fileViewerStyle = css`
   display: flex;
@@ -97,8 +98,11 @@ export function FileViewer () {
                 description={file.description}
                 tagStr={file.tags}
               />
+              <AddComment
+                fileId={id}
+                comments={file.comments}
+              />
               <CommentSection
-                authorUserName={file.authorUsername}
                 comments={file.comments}
               />
             </div>
