@@ -5,6 +5,7 @@ import { Fragment, useEffect, useRef, useState } from 'react';
 import { selectLastSelectedLayer, selectPrimitives, setTilesetEditorPrimitives, updateAllLayers, updateLayer, updateLayersUpToRoot } from './tilesetEditorSlice';
 import { Group, Image, Layer, Rect, Stage } from 'react-konva';
 import { trimPng } from '../../utils/canvasUtils';
+import _ from 'lodash';
 
 const virtualCanvasesStyle = css`
   position: absolute;
@@ -56,6 +57,11 @@ export function TilesetCanvas () {
   const [layerElements, setLayerElements] = useState([]);
   const [brushColor, setBrushColor] = useState('red');
   const [brushSize, setBrushSize] = useState(10);
+
+  const [dragStartCoordinates, setDragStartCoordinates] = useState(null);
+  const [draggingLayerId, setDraggingLayerId] = useState(null);
+  const [dragging, setDragging] = useState(false);
+
   const stageRef = useRef(null);
 
   function colorPixelInCanvas (layerId, stageRef) {
@@ -154,6 +160,8 @@ export function TilesetCanvas () {
 
   function handleMouseDownLayer (e, layer) {
     if (activeTool === 'select') {
+      setDraggingLayerId(layer._id);
+      console.log('drag start');
       if (lastSelectedLayer && layer._id === lastSelectedLayer._id) return;
       // if shift and command and ctrl not pressed then clear all selected layers
       if (!e.evt.shiftKey && !e.evt.ctrlKey && !e.evt.metaKey) {
@@ -189,8 +197,8 @@ export function TilesetCanvas () {
           <Image
             key={layer._id}
             image={layerData[layer._id].canvas}
-            x={layer.position.x}
-            y={layer.position.y}
+            x={layerData[layer._id].position.x}
+            y={layerData[layer._id].position.y}
             name={layer._id}
             onMouseDown={(e) => handleMouseDownLayer(e, layer)}
           />
@@ -319,6 +327,65 @@ export function TilesetCanvas () {
     } else {
       setHoveredRect(null);
     }
+
+    if (activeTool === 'select' && draggingLayerId != null) {
+      const mousePosition = stageRef.current.getPointerPosition();
+      const stagePosition = stageRef.current.position();
+      const stageScale = stageRef.current.scaleX();
+      const relativeMousePos = {
+        x: Math.floor((mousePosition.x - stagePosition.x) / stageScale),
+        y: Math.floor((mousePosition.y - stagePosition.y) / stageScale),
+      };
+
+      if (dragStartCoordinates == null) {
+        setDragStartCoordinates(relativeMousePos);
+        console.log('mousedown', JSON.stringify(relativeMousePos));
+      } else {
+        console.log('mousemove', JSON.stringify(relativeMousePos));
+        // const layer = layerData[draggingLayerId];
+        // const newImagePosition = {
+        //   x: layer.position.x + relativeMousePos.x - dragStartCoordinates.x,
+        //   y: layer.position.y + relativeMousePos.y - dragStartCoordinates.y,
+        // };
+        // const newLayer = {
+        //   ...layer,
+        //   position: newImagePosition,
+        // };
+        // const newLayerData = _.cloneDeep(layerData);
+        // newLayerData[draggingLayerId] = newLayer;
+        // setLayerData(newLayerData);
+      }
+    }
+  };
+
+  const handleStageMouseUp = () => {
+    if (activeTool === 'select') {
+      console.log('drag end');
+      setDragStartCoordinates(null);
+
+      const mousePosition = stageRef.current.getPointerPosition();
+      const stagePosition = stageRef.current.position();
+      const stageScale = stageRef.current.scaleX();
+      const relativeMousePos = {
+        x: Math.floor((mousePosition.x - stagePosition.x) / stageScale),
+        y: Math.floor((mousePosition.y - stagePosition.y) / stageScale),
+      };
+      console.log('mouseup', JSON.stringify(relativeMousePos));
+
+      const layer = layerData[draggingLayerId];
+      const newImagePosition = {
+        x: layer.position.x + relativeMousePos.x - dragStartCoordinates.x,
+        y: layer.position.y + relativeMousePos.y - dragStartCoordinates.y,
+      };
+      const newLayer = {
+        ...layer,
+        position: newImagePosition,
+      };
+      const newLayerData = _.cloneDeep(layerData);
+      newLayerData[draggingLayerId] = newLayer;
+      setLayerData(newLayerData);
+      setDraggingLayerId(null);
+    }
   };
 
   function getCursorStyle () {
@@ -340,7 +407,7 @@ export function TilesetCanvas () {
         onWheel={handleStageMouseWheel}
         onMouseDown={handleStageMouseDown}
         onMouseMove={handleStageMouseMove}
-        // onMouseUp={handleStageMouseUp}
+        onMouseUp={handleStageMouseUp}
         style={{ position: 'absolute', top: 0, left: 56, cursor: getCursorStyle() }}
       >
         <Layer imageSmoothingEnabled={false}>
