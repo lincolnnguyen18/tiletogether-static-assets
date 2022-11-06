@@ -1,12 +1,12 @@
 /** @jsx jsx */
 import { css, jsx } from '@emotion/react';
 
-export function FlexRow ({ children, gap, style, ...props }) {
+export function FlexRow ({ children, gap = 0, style, ...props }) {
   const flexStyle = css`
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: ${gap || '0px'};
+    gap: ${gap}px;
   `;
 
   return (

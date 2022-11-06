@@ -12,6 +12,9 @@ import { Icon } from '../../components/Icon';
 import { Textfield, whiteInputStyle } from '../../components/inputs/Textfield';
 import { Checkbox } from '../../components/inputs/Checkbox';
 import _ from 'lodash';
+import { FlexColumn } from '../../components/Layouts/FlexColumn';
+import { FlexRow } from '../../components/Layouts/FlexRow';
+import { wait } from '../../utils/timeUtils';
 
 const leftSidebarStyle = css`
   background: #3F3F3F;
@@ -87,6 +90,25 @@ export function LeftSidebar () {
     }
   `;
 
+  const editTextStyle = css`
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    border-radius: 4px;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+
+    // truncate span to ellipsis with width of 270px
+    h4 {
+      display: inline-block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      width: 215px;
+    }
+  `;
+
   const sharedWithStyle = css`
     div {
       display: flex;
@@ -101,20 +123,25 @@ export function LeftSidebar () {
 
   const sharePage = (
     <Fragment>
-      <h4>Sharing URL</h4>
-      <div css={copyLinkStyle}>
+      <FlexColumn gap={4}>
+        <span>Sharing URL</span>
+        <div css={copyLinkStyle}>
         <span className='link-container'>
           https://www.tiletogether.com/files/t4Kmfkh4QYEaB8iuXhTmFA/edit
         </span>
-        <Icon color='black'>
-          <span className='icon-copy'></span>
-        </Icon>
-      </div>
+          <Icon color='black'>
+            <span className='icon-copy'></span>
+          </Icon>
+        </div>
+      </FlexColumn>
       <span>Users added to the list below can view and edit this file using the URL above.</span>
       <div css={sharedWithStyle}>
         <div className='header'>
-          <h4>Shared with</h4>
-          <IconButton>
+          <h4>Currently shared with</h4>
+          <IconButton onClick={async () => {
+            await wait(170);
+            dispatch(setLeftSidebarPrimitives({ drawerPage: 'addCollaborator' }));
+          }}>
             <span className='icon-plus'></span>
           </IconButton>
         </div>
@@ -141,6 +168,33 @@ export function LeftSidebar () {
 
   const settingsPage = (
     <Fragment>
+      <FlexColumn gap={4}>
+        <span>{_.capitalize(file.type)} name</span>
+        <FlexRow css={editTextStyle}>
+          <h4>{file.name}</h4>
+          <IconButton color='white' onClick={async () => {
+            await wait(170);
+            dispatch(setLeftSidebarPrimitives({ drawerPage: 'renameFile' }));
+          }}>
+            <span className='icon-pencil'></span>
+          </IconButton>
+        </FlexRow>
+      </FlexColumn>
+      <Checkbox
+        label='View grid lines'
+        name='gridLines'
+        defaultValue={true}
+      />
+      <h4>{publishText}</h4>
+      <FlexRow gap={24}>
+        <Button style={grayButtonStyle}>{file.publishedAt ? 'Unpublish' : 'Publish'}</Button>
+        <Button style={redButtonStyle}>Delete</Button>
+      </FlexRow>
+    </Fragment>
+  );
+
+  const renameFilePage = (
+    <Fragment>
       <Textfield
         placeholder={`Type a name for your ${file.type}`}
         label={`${_.capitalize(file.type)} name`}
@@ -149,16 +203,23 @@ export function LeftSidebar () {
         name='name'
         defaultValue={file.name}
       />
-      <Checkbox
-        label='View grid lines'
-        name='gridLines'
-        defaultValue={true}
+      <Button style={grayButtonStyle}>Rename</Button>
+      <Button style={redButtonStyle} onClick={() => dispatch(setLeftSidebarPrimitives({ drawerPage: 'settings' }))}>Cancel</Button>
+    </Fragment>
+  );
+
+  const addCollaboratorPage = (
+    <Fragment>
+      <Textfield
+        placeholder='Type a username'
+        label='Add collaborator'
+        type='text'
+        style={whiteInputStyle}
+        name='name'
+        defaultValue=''
       />
-      <h4>{publishText}</h4>
-      <div css={css`display: flex; gap: 24px; justify-content: flex-start;`}>
-        <Button style={grayButtonStyle}>{file.publishedAt ? 'Unpublish' : 'Publish'}</Button>
-        <Button style={redButtonStyle}>Delete</Button>
-      </div>
+      <Button style={grayButtonStyle}>Add</Button>
+      <Button style={redButtonStyle} onClick={() => dispatch(setLeftSidebarPrimitives({ drawerPage: 'share' }))}>Cancel</Button>
     </Fragment>
   );
 
@@ -178,6 +239,8 @@ export function LeftSidebar () {
         {drawerPage === 'download' && downloadPage}
         {drawerPage === 'share' && sharePage}
         {drawerPage === 'settings' && settingsPage}
+        {drawerPage === 'renameFile' && renameFilePage}
+        {drawerPage === 'addCollaborator' && addCollaboratorPage}
       </LeftSidebarDrawer>
       <div css={leftSidebarStyle}>
         <div className='group'>

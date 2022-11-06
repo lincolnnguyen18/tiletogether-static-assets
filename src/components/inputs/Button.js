@@ -95,7 +95,7 @@ export const grayButtonStyle = css`
     color: white;
   }
 
-  &:active {
+  &:active, &:focus {
     background: #4a4a4a;
   }
 
@@ -110,7 +110,7 @@ export const redButtonStyle = css`
     color: white;
   }
 
-  &:active {
+  &:active, &:focus {
     background: #c80000;
   }
 

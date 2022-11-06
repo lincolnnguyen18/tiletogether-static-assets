@@ -51,7 +51,7 @@ export function FileInfo ({ authorUserName, filename, description, type, dimensi
       </FlexRow>
       <hr color='gray'/>
       <p css={verticalSectionStyle}>{description}</p>
-      <FlexRow style={verticalSectionStyle} gap={'10px'}>
+      <FlexRow style={verticalSectionStyle} gap={10}>
         {tags.map(t => (
           <Link
             key={_.uniqueId('filetag-')}
