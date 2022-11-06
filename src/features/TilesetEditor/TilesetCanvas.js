@@ -3,7 +3,7 @@ import { css, jsx } from '@emotion/react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { selectPrimitives } from './tilesetEditorSlice';
-import { Layer, Rect, Stage } from 'react-konva';
+import { Group, Image, Layer, Rect, Stage } from 'react-konva';
 import { trimPng } from '../../utils/canvasUtils';
 
 const virtualCanvasesStyle = css`
@@ -31,6 +31,7 @@ export function TilesetCanvas () {
   const dispatch = useDispatch();
   const [stageData, setStageData] = useState({ scale: 5, position: { x: 0, y: 0 } });
   const [layerImages, setLayerImages] = useState({});
+  const [layerElements, setLayerElements] = useState([]);
   const stageRef = useRef(null);
 
   useEffect(() => {
@@ -45,17 +46,14 @@ export function TilesetCanvas () {
     }
     traverse(file.rootLayer);
 
-    console.log(layerIdToImageUrl);
-
     async function loadImages () {
       await Promise.all(Object.keys(layerIdToImageUrl).map(async (layerId) => {
         const imageUrl = layerIdToImageUrl[layerId];
-        const image = new Image();
+        const image = new window.Image();
         image.src = imageUrl;
         await image.decode();
         layerIdToImageUrl[layerId] = image;
       }));
-      // console.log(layerIdToImageUrl);
 
       const virtualCanvases = document.getElementById('virtual-canvases');
       const newLayerImages = {};
@@ -66,11 +64,36 @@ export function TilesetCanvas () {
         virtualCanvases.appendChild(canvas);
         newLayerImages[layerId] = canvas;
       });
-      setLayerImages(newLayerImages);
+      if (Object.keys(newLayerImages).length > 0) {
+        setLayerImages(newLayerImages);
+        console.log(newLayerImages);
+      }
     }
 
     loadImages();
   }, []);
+
+  useEffect(() => {
+    console.log(layerImages);
+
+    function layerToElement (layer, level) {
+      if (layer == null) return null;
+      if (layer.type === 'group') {
+        return (
+          <Group key={layer._id}>
+            {layer.layers.map((layer) => layerToElement(layer, level + 1)).filter((x) => x != null)}
+          </Group>
+        );
+      } else if (layer.type === 'layer') {
+        return (
+          <Image key={layer._id} image={layerImages[layer._id]} x={layer.position.x} y={layer.position.y} name={layer._id} />
+        );
+      }
+    }
+
+    const newLayerElements = layers.map((layer) => layerToElement(layer, 0));
+    setLayerElements(newLayerElements);
+  }, [layerImages]);
 
   const handleStageMouseWheel = (e) => {
     e.evt.preventDefault();
@@ -136,7 +159,7 @@ export function TilesetCanvas () {
         style={{ position: 'absolute', top: 0, left: 56 }}
       >
         <Layer imageSmoothingEnabled={false}>
-          <Rect x={0} y={0} width={10} height={10} fill={'red'} />
+          {layerElements}
         </Layer>
       </Stage>
     </Fragment>
