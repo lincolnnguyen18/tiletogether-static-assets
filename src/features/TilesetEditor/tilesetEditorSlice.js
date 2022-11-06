@@ -7,8 +7,8 @@ import ObjectID from 'bson-objectid';
 const initialState = {
   file: null,
   primitives: {
-    // draw, eraser, select
-    activeTool: 'draw',
+    // draw, erase, select
+    activeTool: 'select',
     activeCanvas: null,
     activeCanvasCtx: null,
     activeLayer: null,
@@ -183,6 +183,28 @@ const tilesetEditorSlice = createSlice({
 
       state.file.rootLayer = _.cloneDeepWith(state.file.rootLayer, customizer);
     },
+    updateLayerAndItsChildren: (state, action) => {
+      const { newLayer, newAttributes } = action.payload;
+
+      // traverse layer and its children, updating attributes
+      function traverse (layer) {
+        _.assign(layer, newAttributes);
+
+        if (layer.type === 'group' && layer.layers.length > 0) {
+          layer.layers.forEach(traverse);
+        }
+      }
+      traverse(newLayer);
+
+      // use cloneDeepWith to avoid mutating state
+      function customizer (value) {
+        // if layer's _id matches layer's _id, return layer
+        if (_.get(value, '_id') === _.get(newLayer, '_id')) {
+          return newLayer;
+        }
+      }
+      state.file.rootLayer = _.cloneDeepWith(state.file.rootLayer, customizer);
+    },
     moveSelectedLayers: (state, action) => {
       const { moveToLayer } = action.payload;
       const selectedLayers = [];
@@ -249,6 +271,26 @@ const tilesetEditorSlice = createSlice({
       }
       traverse2(state.file.rootLayer);
     },
+    updateLayersUpToRoot: (state, action) => {
+      const { fromLayer, newAttributes } = action.payload;
+
+      // create function to traverse from root layer to fromFayer, once path to layer is found, recurse back up while updating each layer's value until root layer is reached
+      function traverse (layer) {
+        if (layer._id === fromLayer._id) {
+          return layer;
+        } else if (layer.type === 'group' && layer.layers.length > 0) {
+          for (let i = 0; i < layer.layers.length; i++) {
+            const result = traverse(layer.layers[i]);
+            if (result) {
+              _.assign(layer, newAttributes);
+              return result;
+            }
+          }
+        }
+      }
+
+      traverse(state.file.rootLayer);
+    },
   },
   extraReducers (builder) {
     builder
@@ -259,7 +301,12 @@ const tilesetEditorSlice = createSlice({
         // use cloneDeepWith to set all layers selected and expanded to false
         function customizer (value) {
           if (_.get(value, '_id')) {
-            _.assign(value, { selected: false, expanded: true });
+            // TODO: figure out way to identify root layer more properly
+            if (value.name === 'test_root_layer') {
+              _.assign(value, { selected: false, expanded: true });
+            } else {
+              _.assign(value, { selected: false, expanded: false });
+            }
 
             if (value.type === 'layer') {
               const imageUrl = _.sample(imageUrls);
@@ -305,6 +352,8 @@ export const {
   updateLayer,
   updateAllLayers,
   updateAllLayersBetween,
+  updateLayersUpToRoot,
+  updateLayerAndItsChildren,
   moveSelectedLayers,
 } = tilesetEditorSlice.actions;
 

@@ -194,7 +194,7 @@ export function LeftSidebar ({ file }) {
           <IconButton active={activeTool === 'draw' && !drawerOpen} onClick={() => setActiveTool('draw')}>
             <span className='icon-pencil'></span>
           </IconButton>
-          <IconButton active={activeTool === 'eraser' && !drawerOpen} onClick={() => setActiveTool('eraser')}>
+          <IconButton active={activeTool === 'erase' && !drawerOpen} onClick={() => setActiveTool('erase')}>
             <span className='icon-eraser'></span>
           </IconButton>
           <IconButton active={activeTool === 'select' && !drawerOpen} onClick={() => setActiveTool('select')}>

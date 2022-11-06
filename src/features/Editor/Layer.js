@@ -9,7 +9,7 @@ import {
   updateAllLayersBetween,
   updateLayer,
   setTilesetEditorPrimitives,
-  selectPrimitives,
+  selectPrimitives, updateLayerAndItsChildren,
 } from '../TilesetEditor/tilesetEditorSlice';
 
 const layerStyle = css`
@@ -36,13 +36,15 @@ export function Layer ({ layer, parentSelected, level }) {
 
   function handleDragStart (e, layer) {
     if (layer.isRootLayer) return;
+    if (lastSelectedLayer && layer._id === lastSelectedLayer._id) return;
     if ((!e.shiftKey && !e.ctrlKey && !e.metaKey) && (!layer.selected || parentSelected)) {
       dispatch(updateAllLayers({ selected: false }));
+      dispatch(setTilesetEditorPrimitives({ lastSelectedLayer: null }));
     }
     if (!e.shiftKey) {
       const newLayer = _.cloneDeep(layer);
       newLayer.selected = true;
-      dispatch(updateLayer({ newLayer }));
+      dispatch(updateLayerAndItsChildren({ newLayer, newAttributes: { selected: true } }));
     }
     if (e.shiftKey && layer._id !== lastSelectedLayer._id) {
       const startLayer = lastSelectedLayer;
@@ -107,8 +109,22 @@ export function Layer ({ layer, parentSelected, level }) {
     if (dragging && (parentSelected || layer.selected)) return 'border: 1px solid transparent;';
     if (dragging && layer.type !== 'group') return 'border-bottom: 1px solid #00b3ff;';
     if (dragging && layer.type === 'group') return 'border: 1px solid #00b3ff;';
-    return 'border: 1px solid #efefef;';
+    return 'border: 1px solid #c4c4c4;';
   }
+
+  // function getHoverBackground () {
+  //   // if (layer.type !== 'group') return 'background: red;';
+  //   if (parentSelected) return 'background: default;';
+  //   if (!dragging && !layer.selected) return 'background: #333;';
+  //   return 'background: default;';
+  // }
+
+  // function getHoverBorder () {
+  //   if (dragging && (parentSelected || layer.selected)) return 'border: 1px solid transparent;';
+  //   if (dragging && layer.type !== 'group') return 'border-bottom: 1px solid #00b3ff;';
+  //   if (dragging && layer.type === 'group') return 'border: 1px solid #00b3ff;';
+  //   return 'border: 1px solid transparent;';
+  // }
 
   const layerNameStyle = css`
     height: 20px;
@@ -134,6 +150,7 @@ export function Layer ({ layer, parentSelected, level }) {
           draggable={false}
           onMouseDown={e => handleDragStart(e, layer)}
           onMouseUp={e => handleDragEnd(e, layer)}
+          id={`explorer-${layer._id}`}
         >
           <Arrow />
           {layer.name}
