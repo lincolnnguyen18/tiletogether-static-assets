@@ -2,17 +2,20 @@
 import { css, jsx } from '@emotion/react';
 import { FlexRow } from '../../components/Layouts/FlexRow';
 import { FlexColumn } from '../../components/Layouts/FlexColumn';
-import { timeUtils } from '../../utils/timeUtils';
+import { TimeUtils } from '../../utils/timeUtils';
 import { useRef, useState } from 'react';
 import { postComment } from './FileViewerSlice';
 import { Button, IconButtonStyle, likeButtonStyle, whiteButtonStyle, blackButtonStyle } from '../../components/inputs/Button';
+import { useDispatch } from 'react-redux';
+import { localAddComment } from '../File/fileSlice';
 
 // eslint-disable-next-line no-unused-vars
-export function CommentSection ({ authorUserName, initialComments, fileId }) {
+export function CommentSection ({ authorUserName, comments, fileId }) {
+  const dispatch = useDispatch();
   const userButtonRef = useRef(null);
   const likeButtonRef = useRef(null);
   const [comment, setComment] = useState('');
-  const [comments, setComments] = useState(initialComments || []);
+
   const verticalSectionStyle = css`
     color: white;
     padding: 10px 0 0 0;
@@ -32,19 +35,19 @@ export function CommentSection ({ authorUserName, initialComments, fileId }) {
   `;
 
   const handleCommentSubmit = async () => {
-    const newComment = await postComment({
+    const res = await postComment({
       content: comment,
       fileId,
     });
-    console.log(newComment.comment);
-    const newComments = comments.concat(newComment.comment);
-    setComments(newComments);
+    if (res.status === 200) {
+      dispatch(localAddComment(res.data.comment));
+    }
   };
   return (
     <FlexColumn>
       <FlexRow>
         <div css={[verticalSectionStyle, { marginRight: '10px' }]}>
-          {comments ? comments.length : 0} Comments
+          {comments.length} Comments
         </div>
         <div css={verticalSectionStyle}>
           Sort By
@@ -76,7 +79,7 @@ export function CommentSection ({ authorUserName, initialComments, fileId }) {
       </FlexRow>
       <hr color='gray'/>
       <FlexColumn>
-        {comments && comments.map((c, i) =>
+        {comments.map((c, i) =>
           <FlexColumn
             css={{ color: 'white' }}
             key={i}
@@ -88,7 +91,7 @@ export function CommentSection ({ authorUserName, initialComments, fileId }) {
               />
               <div>
                 <span css={{ marginRight: '10px' }}>{c.username}</span>
-                <span>{timeUtils.timeAgo(new Date(c.createdAt)) + ' ago'}</span>
+                <span>{new TimeUtils().timeAgo(new Date(c.createdAt)) + ' ago'}</span>
               </div>
             </FlexRow>
             <div>

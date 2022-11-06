@@ -73,7 +73,12 @@ export const getFileToEdit = createAsyncThunk(
 const fileSlice = createSlice({
   name: 'file',
   initialState,
-  reducers: {},
+  reducers: {
+    localAddComment: (state, action) => {
+      // add payload to beginning of comments array
+      state.file.comments.unshift(action.payload);
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(getFiles.pending, (state, action) => {
@@ -115,5 +120,7 @@ const fileSlice = createSlice({
         });
   },
 });
+
+export const { localAddComment } = fileSlice.actions;
 
 export const fileReducer = fileSlice.reducer;
