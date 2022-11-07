@@ -4,6 +4,9 @@ import { Badge } from '../../components/Badge';
 import { IconButton } from '../../components/inputs/IconButton';
 import { Link, useLocation } from 'react-router-dom';
 import { useRef } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { likeFile } from '../FileViewer/FileInfo';
+import { selectUser } from '../User/userSlice';
 
 const fileStyle = css`
   width: 100%;
@@ -82,9 +85,11 @@ const leftSideStyle = css`
 `;
 
 export function File ({ imageUrl, title, subtext, liked, type, id, isLoading = false, maxNameWidth = 250 }) {
+  const dispatch = useDispatch();
   const likeButtonRef = useRef(null);
   const location = useLocation();
   const path = location.pathname;
+  const user = useSelector(selectUser);
 
   const fileInfoTextStyle = css`
   display: inline-block;
@@ -108,6 +113,15 @@ export function File ({ imageUrl, title, subtext, liked, type, id, isLoading = f
   }
 
   let file;
+
+  const handleLikeSubmit = () => {
+    likeFile({
+      dispatch,
+      id,
+      liked,
+      username: user.username,
+    });
+  };
 
   if (!isLoading) {
     file = (
@@ -135,6 +149,7 @@ export function File ({ imageUrl, title, subtext, liked, type, id, isLoading = f
               style={likeButtonStyle}
               refProp={likeButtonRef}
               focusColor={null}
+              onClick={handleLikeSubmit}
             >
               {liked
                 ? <span className='icon-like-filled' />

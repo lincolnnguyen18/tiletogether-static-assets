@@ -12,6 +12,7 @@ import { getSubtext, loadMoreButtonStyle } from '../Dashboard/Dashboard';
 import { Button, transparentButtonStyle } from '../../components/inputs/Button';
 import { NotFound } from './NotFound';
 import { AddComment } from './AddComment';
+import { selectUser } from '../User/userSlice';
 
 const fileViewerStyle = css`
   display: flex;
@@ -63,7 +64,7 @@ export function FileViewer () {
   const fileSlice = useSelector((state) => state.file);
   const userSlice = useSelector((state) => state.user);
   const file = fileSlice.file;
-  const username = userSlice.primitives.user && userSlice.primitives.user.username;
+  const user = useSelector(selectUser);
   const noMoreFiles = fileSlice.primitives.noMoreFiles;
   const pending = fileSlice.pending;
   const files = fileSlice.files;
@@ -84,27 +85,9 @@ export function FileViewer () {
           <div css={fileViewerStyle}>
             <div css={leftSideStyle}>
               <img src='/mock-data/file-image.png' css={canvasStyle} />
-              <FileInfo
-                authorUserName={file.authorUsername}
-                filename={file.name}
-                type={file.type}
-                dimension={file.tileDimension}
-                width={file.width}
-                height={file.height}
-                publishDate={file.publishedAt}
-                views={file.views}
-                likes={file.likeCount}
-                liked={file.likes.some(l => l.username === username)}
-                description={file.description}
-                tagStr={file.tags}
-              />
-              <AddComment
-                fileId={id}
-                comments={file.comments}
-              />
-              <CommentSection
-                comments={file.comments}
-              />
+              <FileInfo />
+              <AddComment />
+              <CommentSection />
             </div>
             <div css={rightSideStyle}>
               {files.map((file, index) => (
@@ -112,11 +95,11 @@ export function FileViewer () {
                   key={index}
                   imageUrl='/mock-data/file-image.png'
                   title={file.name}
-                  subtext={getSubtext(username === file.username
+                  subtext={getSubtext(user.username === file.username
                     ? 'your-files'
                     : 'file-viewer', file)}
-                  liked={userSlice.primitives.user && file.likes && file.likes.find(like => like.username === userSlice.primitives.user.username) != null}
-                  id={file._id}
+                  liked={userSlice.primitives.user && file.likes && file.likes.find(like => like.username === user.username) != null}
+                  id={file._id || file.id}
                   type={file.type}
                   maxNameWidth={260}
                 />
