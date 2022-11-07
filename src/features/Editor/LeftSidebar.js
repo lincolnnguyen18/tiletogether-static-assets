@@ -304,6 +304,7 @@ export function LeftSidebar () {
         name='username'
         defaultValue=''
         error={errors.sharedWith}
+        autoFocus
       />
       <Button
         style={grayButtonStyle}
