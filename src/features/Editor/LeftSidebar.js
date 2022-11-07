@@ -1,7 +1,7 @@
 /** @jsx jsx */
 import { css, jsx } from '@emotion/react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Fragment, useEffect } from 'react';
+import { Fragment, useEffect, useRef } from 'react';
 import { LeftSidebarDrawer } from './LeftSidebarDrawer';
 import { setLeftSidebarPrimitives } from './leftSidebarSlice';
 import { IconButton } from '../../components/inputs/IconButton';
@@ -15,6 +15,7 @@ import _ from 'lodash';
 import { FlexColumn } from '../../components/Layouts/FlexColumn';
 import { FlexRow } from '../../components/Layouts/FlexRow';
 import { wait } from '../../utils/timeUtils';
+import { editFile } from '../File/fileSlice';
 
 const leftSidebarStyle = css`
   background: #3F3F3F;
@@ -44,6 +45,8 @@ export function LeftSidebar () {
   const drawerPage = leftSidebarSlice.primitives.drawerPage;
   const fileSlice = useSelector((state) => state.file);
   const file = fileSlice.file;
+  const fileNameTextField = useRef(null);
+  const userNameTextField = useRef(null);
 
   useEffect(() => {
     dispatch(setLeftSidebarPrimitives({ drawerOpen: false }));
@@ -193,9 +196,16 @@ export function LeftSidebar () {
     </Fragment>
   );
 
+  const OnRenameSubmit = function () {
+    if (file && fileNameTextField && fileNameTextField.current.value && fileNameTextField.current.value.length > 0) {
+      dispatch(editFile(file.id, { name: fileNameTextField.current.value }));
+    }
+  };
+
   const renameFilePage = (
     <Fragment>
       <Textfield
+        ref={fileNameTextField}
         placeholder={`Type a name for your ${file.type}`}
         label={`${_.capitalize(file.type)} name`}
         type='text'
@@ -203,7 +213,7 @@ export function LeftSidebar () {
         name='name'
         defaultValue={file.name}
       />
-      <Button style={grayButtonStyle}>Rename</Button>
+      <Button style={grayButtonStyle} onClick={OnRenameSubmit}>Rename</Button>
       <Button style={redButtonStyle} onClick={() => dispatch(setLeftSidebarPrimitives({ drawerPage: 'settings' }))}>Cancel</Button>
     </Fragment>
   );
@@ -211,6 +221,7 @@ export function LeftSidebar () {
   const addCollaboratorPage = (
     <Fragment>
       <Textfield
+        ref={userNameTextField}
         placeholder='Type a username'
         label='Add collaborator'
         type='text'

@@ -70,6 +70,18 @@ export const getFileToEdit = createAsyncThunk(
   },
 );
 
+export const editFile = createAsyncThunk(
+  'common/editFile',
+  async ({ id, updates }) => {
+    try {
+      const response = await apiClient.patch(`/files/${id}/edit`, updates);
+      return response.data.file;
+    } catch (err) {
+      throw new Error(err.response.data.error);
+    }
+  },
+);
+
 const fileSlice = createSlice({
   name: 'file',
   initialState,
@@ -100,6 +112,9 @@ const fileSlice = createSlice({
         if (action.payload.length < state.primitives.limit) {
           state.primitives.noMoreFiles = true;
         }
+      })
+      .addCase(editFile.fulfilled, (state, action) => {
+        state.file = action.payload;
       })
       .addMatcher(isAnyOf(getFiles.rejected, getFileToEdit.rejected, getFileToView.rejected), (state, action) => {
         const actionName = getActionName(action);
