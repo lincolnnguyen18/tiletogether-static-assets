@@ -15,7 +15,7 @@ import _ from 'lodash';
 import { FlexColumn } from '../../components/Layouts/FlexColumn';
 import { FlexRow } from '../../components/Layouts/FlexRow';
 import { wait } from '../../utils/timeUtils';
-import { editFile } from '../File/fileSlice';
+import { editCollaborator, editFile } from '../File/fileSlice';
 
 const leftSidebarStyle = css`
   background: #3F3F3F;
@@ -124,6 +124,15 @@ export function LeftSidebar () {
     }
   `;
 
+  const OnRemoveCollaboratorSubmit = function (username) {
+    dispatch(editCollaborator({
+      id: file.id,
+      username,
+      isRemove: true,
+      onAdded: () => dispatch(setLeftSidebarPrimitives({ drawerPage: 'share' })),
+    }));
+  };
+
   const sharePage = (
     <Fragment>
       <FlexColumn gap={4}>
@@ -148,10 +157,10 @@ export function LeftSidebar () {
             <span className='icon-plus'></span>
           </IconButton>
         </div>
-        {['anawesomeuser3', 'anawesomeuser4', 'anawesomeuser5'].map((user, index) => (
+        {file.sharedWith.map((user, index) => (
           <div key={index}>
             <span>{user}</span>
-            <IconButton>
+            <IconButton onClick={() => OnRemoveCollaboratorSubmit(user)}>
               <span className='icon-trash'></span>
             </IconButton>
           </div>
@@ -198,14 +207,17 @@ export function LeftSidebar () {
 
   const OnRenameSubmit = function () {
     if (file && fileNameTextField && fileNameTextField.current.value && fileNameTextField.current.value.length > 0) {
-      dispatch(editFile(file.id, { name: fileNameTextField.current.value }));
+      dispatch(editFile({
+        id: file.id,
+        updates: { name: fileNameTextField.current.value },
+      }));
     }
   };
 
   const renameFilePage = (
     <Fragment>
       <Textfield
-        ref={fileNameTextField}
+        intputRef={fileNameTextField}
         placeholder={`Type a name for your ${file.type}`}
         label={`${_.capitalize(file.type)} name`}
         type='text'
@@ -218,10 +230,21 @@ export function LeftSidebar () {
     </Fragment>
   );
 
+  const OnCollaboratorSubmit = function () {
+    if (file && userNameTextField && userNameTextField.current.value && userNameTextField.current.value.length > 0) {
+      dispatch(editCollaborator({
+        id: file.id,
+        username: userNameTextField.current.value,
+        isRemove: false,
+        onAdded: () => dispatch(setLeftSidebarPrimitives({ drawerPage: 'share' })),
+      }));
+    }
+  };
+
   const addCollaboratorPage = (
     <Fragment>
       <Textfield
-        ref={userNameTextField}
+        intputRef={userNameTextField}
         placeholder='Type a username'
         label='Add collaborator'
         type='text'
@@ -229,7 +252,7 @@ export function LeftSidebar () {
         name='name'
         defaultValue=''
       />
-      <Button style={grayButtonStyle}>Add</Button>
+      <Button style={grayButtonStyle} onClick={OnCollaboratorSubmit}>Add</Button>
       <Button style={redButtonStyle} onClick={() => dispatch(setLeftSidebarPrimitives({ drawerPage: 'share' }))}>Cancel</Button>
     </Fragment>
   );

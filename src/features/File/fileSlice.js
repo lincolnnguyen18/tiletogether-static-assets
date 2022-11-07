@@ -74,8 +74,13 @@ export const editFile = createAsyncThunk(
   'common/editFile',
   async ({ id, updates }) => {
     try {
-      const response = await apiClient.patch(`/files/${id}/edit`, updates);
-      return response.data.file;
+      return apiClient.patch(`/files/${id}`, updates);
+    } catch (err) {
+      throw new Error(err.response.data.error);
+    }
+  },
+);
+
 export const asyncLikeFile = createAsyncThunk(
   'file/likeFile',
   async ({ id, liked }) => {
@@ -92,6 +97,21 @@ export const postComment = createAsyncThunk(
   async ({ fileId, content }) => {
     try {
       return apiClient.post(`/files/${fileId}/comment`, { content });
+    } catch (err) {
+      throw new Error(JSON.stringify(err.response.data.error));
+    }
+  },
+);
+
+export const editCollaborator = createAsyncThunk(
+  'file/addCollaborator',
+  async ({ id, username, isRemove, onAdded }) => {
+    try {
+      const res = await apiClient.post(`/files/${id}/share`, { username, isRemove });
+      if (res.status === 200) {
+        onAdded();
+        return res;
+      }
     } catch (err) {
       throw new Error(JSON.stringify(err.response.data.error));
     }
@@ -150,9 +170,15 @@ const fileSlice = createSlice({
         }
       })
       .addCase(editFile.fulfilled, (state, action) => {
-        state.file = action.payload;
+        state.file = action.payload.data.file;
+      })
       .addCase(postComment.fulfilled, (state, action) => {
         state.file = action.payload.data.file;
+      })
+      .addCase(editCollaborator.fulfilled, (state, action) => {
+        console.log(state.file);
+        state.file = action.payload.data.file;
+        console.log(state.file);
       })
       .addMatcher(isAnyOf(getFiles.rejected, getFileToEdit.rejected, getFileToView.rejected), (state, action) => {
         const actionName = getActionName(action);

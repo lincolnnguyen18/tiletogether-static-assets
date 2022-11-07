@@ -42,7 +42,7 @@ export const whiteInputStyle = css`
   }
 `;
 
-export function Textfield ({ placeholder = 'Enter a value', style, label, error, ...props }) {
+export function Textfield ({ intputRef, placeholder = 'Enter a value', style, label, error, ...props }) {
   const id = _.uniqueId('textfield-');
   return (
     <div>
@@ -53,6 +53,7 @@ export function Textfield ({ placeholder = 'Enter a value', style, label, error,
         id={id}
         {...props}
         placeholder={placeholder}
+        ref={intputRef}
       />
       {error && (
         <span css={css`color: var(--error-color);`}>
