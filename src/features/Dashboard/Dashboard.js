@@ -13,7 +13,7 @@ import { RedirectPage } from '../../components/RedirectPage';
 import { Icon } from '../../components/Icon';
 import { getFiles } from '../File/fileSlice';
 import { Button, transparentButtonStyle, whiteButtonStyle } from '../../components/inputs/Button';
-import { TimeUtils } from '../../utils/timeUtils';
+import { timeAgo } from '../../utils/timeUtils';
 import { File } from '../File/File';
 
 const gridStyle = css`
@@ -117,11 +117,11 @@ export function getSubtext (currentPage, file) {
     } else {
       secondPart = 'Not published';
     }
-    firstPart = `Updated ${new TimeUtils().timeAgo(new Date(file.updatedAt))} ago`;
+    firstPart = `Updated ${timeAgo(new Date(file.updatedAt))} ago`;
     return `${firstPart} • ${secondPart}`;
   } else {
     firstPart = file.authorUsername;
-    secondPart = `Published ${new TimeUtils().timeAgo(new Date(file.publishedAt))} ago`;
+    secondPart = `Published ${timeAgo(new Date(file.publishedAt))} ago`;
     return (
       <Fragment>
         <Link to={`/users/${file.authorUsername}`}>

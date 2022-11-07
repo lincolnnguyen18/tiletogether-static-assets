@@ -4,13 +4,15 @@ import { FlexRow } from '../../components/Layouts/FlexRow';
 import { FlexColumn } from '../../components/Layouts/FlexColumn';
 import { useRef, useState } from 'react';
 import { Button, IconButtonStyle, whiteButtonStyle, blackButtonStyle } from '../../components/inputs/Button';
-import { useDispatch } from 'react-redux';
-import { localEditFile, localEditFiles, postComment } from '../File/fileSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { postComment } from '../File/fileSlice';
 
-// eslint-disable-next-line no-unused-vars
-export function AddComment ({ comments, fileId }) {
+export function AddComment () {
   const dispatch = useDispatch();
   const userButtonRef = useRef(null);
+  const fileSlice = useSelector((state) => state.file);
+  const comments = fileSlice.file.comments;
+  const fileId = fileSlice.file.id || fileSlice.file._id;
   const [comment, setComment] = useState('');
 
   const verticalSectionStyle = css`
@@ -32,15 +34,9 @@ export function AddComment ({ comments, fileId }) {
   `;
 
   const handleCommentSubmit = async () => {
-    const res = await postComment({
-      content: comment,
-      fileId,
-    });
-    if (res.status === 200) {
-      dispatch(localEditFiles(res.data.file));
-      dispatch(localEditFile(res.data.file));
-    }
+    dispatch(postComment({ content: comment, fileId }));
   };
+
   return (
     <FlexColumn>
       <FlexRow>

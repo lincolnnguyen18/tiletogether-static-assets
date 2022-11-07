@@ -36,7 +36,6 @@ export function submitSearch (navigate, location, oldOptions, newOptions) {
 
   const validPathNames = ['likes', 'your-files', 'shared-files', 'users'];
   let newRoute;
-  // eslint-disable-next-line no-unused-vars
   const path = location.pathname.split('/')[1];
   if (!validPathNames.includes(path)) {
     newRoute = '/search?';

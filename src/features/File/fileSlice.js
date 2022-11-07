@@ -18,7 +18,7 @@ const initialState = {
 };
 
 export const getFiles = createAsyncThunk(
-  'common/getFiles',
+  'file/getFiles',
   async ({ location, loadMore, getRecommended }, { getState }) => {
     const fileSlice = getState().file;
     const { limit, page, noMoreFiles } = fileSlice.primitives;
@@ -47,7 +47,7 @@ export const getFiles = createAsyncThunk(
 );
 
 export const getFileToView = createAsyncThunk(
-  'common/getFileToView',
+  'file/getFileToView',
   async ({ id }) => {
     try {
       const response = await apiClient.get(`/files/${id}`);
@@ -59,7 +59,7 @@ export const getFileToView = createAsyncThunk(
 );
 
 export const getFileToEdit = createAsyncThunk(
-  'common/getFileToEdit',
+  'file/getFileToEdit',
   async ({ id }) => {
     try {
       const response = await apiClient.get(`/files/${id}/edit`);
@@ -70,37 +70,55 @@ export const getFileToEdit = createAsyncThunk(
   },
 );
 
-export const likeFile = async ({ id, liked }) => {
-  try {
-    return apiClient.post(`/files/${id}/like`, { liked });
-  } catch (err) {
-    throw new Error(err.response.data.error);
-  }
-};
+export const asyncLikeFile = createAsyncThunk(
+  'file/likeFile',
+  async ({ id, liked }) => {
+    try {
+      return apiClient.post(`/files/${id}/like`, { liked });
+    } catch (err) {
+      throw new Error(err.response.data.error);
+    }
+  },
+);
 
-export const postComment = async ({ fileId, content }) => {
-  try {
-    return apiClient.post(`/files/${fileId}/comment`, { content });
-  } catch (err) {
-    throw new Error(JSON.stringify(err.response.data.error));
-  }
-};
+export const postComment = createAsyncThunk(
+  'file/postComment',
+  async ({ fileId, content }) => {
+    try {
+      return apiClient.post(`/files/${fileId}/comment`, { content });
+    } catch (err) {
+      throw new Error(JSON.stringify(err.response.data.error));
+    }
+  },
+);
 
 const fileSlice = createSlice({
   name: 'file',
   initialState,
   reducers: {
-    localEditFiles: (state, action) => {
-      // edit file
-      for (let i = 0; i < state.files.length; i++) {
-        if (state.files[i]._id === action.payload._id) {
-          state.files[i] = action.payload;
+    setFileLike: (state, action) => {
+      const { username, liked, fileId } = action.payload;
+      if (state.file && (state.file._id === fileId || state.file.id === fileId)) {
+        if (liked) {
+          state.file.likes.push({ username, createdAt: Date.now() });
+          state.file.likeCount += 1;
+        } else {
+          state.file.likes = state.file.likes.filter(l => l.username !== username);
+          state.file.likeCount -= 1;
         }
       }
-    },
-    localEditFile: (state, action) => {
-      // edit file
-      state.file = action.payload;
+      if (state.files) {
+        const fileIndex = state.files.findIndex(file => file._id === fileId);
+        if (fileIndex !== -1) {
+          if (liked) {
+            state.files[fileIndex].likes.push({ username, createdAt: Date.now() });
+            state.files[fileIndex].likeCount += 1;
+          } else {
+            state.files[fileIndex].likes = state.files[fileIndex].likes.filter(l => l.username !== username);
+            state.files[fileIndex].likeCount -= 1;
+          }
+        }
+      }
     },
   },
   extraReducers: (builder) => {
@@ -125,6 +143,9 @@ const fileSlice = createSlice({
           state.primitives.noMoreFiles = true;
         }
       })
+      .addCase(postComment.fulfilled, (state, action) => {
+        state.file = action.payload.data.file;
+      })
       .addMatcher(isAnyOf(getFiles.rejected, getFileToEdit.rejected, getFileToView.rejected), (state, action) => {
         const actionName = getActionName(action);
         state.errors.push(actionName);
@@ -144,6 +165,6 @@ const fileSlice = createSlice({
   },
 });
 
-export const { localEditFile, localEditFiles } = fileSlice.actions;
+export const { setFileLike } = fileSlice.actions;
 
 export const fileReducer = fileSlice.reducer;
