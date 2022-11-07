@@ -5,7 +5,10 @@ import { useRef } from 'react';
 import { FlexRow } from '../../components/Layouts/FlexRow';
 import { FlexColumn } from '../../components/Layouts/FlexColumn';
 import { IconButtonStyle, likeButtonStyle } from '../../components/inputs/Button';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { asyncLikeFile, setFileLike } from '../File/fileSlice';
+import { selectUser } from '../User/userSlice';
 
 const verticalSectionStyle = css`
   color: white;
@@ -14,25 +17,47 @@ const verticalSectionStyle = css`
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-export function FileInfo ({ authorUserName, filename, description, type, dimension, width, height, publishDate, views, likes, liked, tagStr }) {
+export function likeFile ({ dispatch, id, liked, username }) {
+  dispatch(asyncLikeFile({ id, liked: !liked }));
+  dispatch(setFileLike({ liked: !liked, username, fileId: id }));
+}
+
+export function FileInfo () {
+  const dispatch = useDispatch();
+  const { id } = useParams();
+  const fileSlice = useSelector((state) => state.file);
+  const file = fileSlice.file;
   const likeButtonRef = useRef(null);
   const downloadButtonRef = useRef(null);
   const importButtonRef = useRef(null);
   const userButtonRef = useRef(null);
+  const user = useSelector(selectUser);
 
-  const date = new Date(publishDate);
-  const tags = tagStr.split(' ');
-  const isMap = type === 'map';
+  const date = new Date(file.publishedAt);
+  const tags = file.tags.split(' ');
+  const isMap = file.type === 'map';
+
+  const liked = file.likes.some(l => l.username === user.username);
+  const likes = file.likeCount;
+
+  const handleLikeSubmit = () => {
+    likeFile({
+      dispatch,
+      id,
+      liked,
+      username: user.username,
+    });
+  };
 
   return (
     <FlexColumn>
-      <h1 css={verticalSectionStyle}>{filename}</h1>
+      <h1 css={verticalSectionStyle}>{file.name}</h1>
       <FlexRow>
         <label css={{ color: 'white' }}>
-          {`${views} views`} <span>&#x2022;</span> {`${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`}
+          {`${file.views} views`} <span>&#x2022;</span> {`${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`}
         </label>
         <FlexRow style={{ marginLeft: 'auto' }}>
-          <button css={[IconButtonStyle, likeButtonStyle]} ref={likeButtonRef}>
+          <button css={[IconButtonStyle, likeButtonStyle]} ref={likeButtonRef} onClick={handleLikeSubmit}>
             {liked
               ? <span className='icon-like-filled' css={{ fontSize: '42px' }}/>
               : <span className='icon-like-unfilled' css={{ fontSize: '42px' }}/>
@@ -50,7 +75,7 @@ export function FileInfo ({ authorUserName, filename, description, type, dimensi
         </FlexRow>
       </FlexRow>
       <hr color='gray'/>
-      <p css={verticalSectionStyle}>{description}</p>
+      <p css={verticalSectionStyle}>{file.description}</p>
       <FlexRow style={verticalSectionStyle} gap={10}>
         {tags.map(t => (
           <Link
@@ -61,12 +86,12 @@ export function FileInfo ({ authorUserName, filename, description, type, dimensi
         ))}
       </FlexRow>
       <label css={verticalSectionStyle}>
-        {`${type}`} <span>&#x2022;</span> {`${dimension} pixel tiles`} {isMap && <span>&#x2022;</span>} { isMap && `${width} x ${height} map`}
+        {`${file.type}`} <span>&#x2022;</span> {`${file.tileDimension} pixel tiles`} {isMap && <span>&#x2022;</span>} { isMap && `${file.width} x ${file.height} map`}
       </label>
       <FlexRow>
         <button css={[IconButtonStyle, { marginLeft: '0px' }]} ref={userButtonRef}>
           <span className='icon-avatar' css={{ fontSize: '42px' }}/>
-          <span>{authorUserName}</span>
+          <span>{file.authorUserName}</span>
         </button>
       </FlexRow>
       <hr color='gray'/>
