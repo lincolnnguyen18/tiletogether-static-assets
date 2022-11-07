@@ -5,16 +5,17 @@ import { Fragment, useEffect } from 'react';
 import { LeftSidebarDrawer } from './LeftSidebarDrawer';
 import { setLeftSidebarPrimitives } from './leftSidebarSlice';
 import { IconButton } from '../../components/inputs/IconButton';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { SelectMenu } from '../../components/inputs/SelectMenu';
 import { Button, grayButtonStyle, redButtonStyle } from '../../components/inputs/Button';
 import { Icon } from '../../components/Icon';
 import { Textfield, whiteInputStyle } from '../../components/inputs/Textfield';
 import { Checkbox } from '../../components/inputs/Checkbox';
 import _ from 'lodash';
-import { FlexColumn } from '../../components/Layouts/FlexColumn';
+import { defaultFlexColumnStyle, FlexColumn } from '../../components/Layouts/FlexColumn';
 import { FlexRow } from '../../components/Layouts/FlexRow';
 import { wait } from '../../utils/timeUtils';
+import { asyncDeleteFile, asyncPatchFile, clearFileErrors, clearFileStatus, selectDashboardErrors, selectDashboardStatuses } from '../File/fileSlice';
 
 const leftSidebarStyle = css`
   background: #3F3F3F;
@@ -43,7 +44,12 @@ export function LeftSidebar () {
   const drawerOpen = leftSidebarSlice.primitives.drawerOpen;
   const drawerPage = leftSidebarSlice.primitives.drawerPage;
   const fileSlice = useSelector((state) => state.file);
+  const statuses = useSelector(selectDashboardStatuses);
+  const errors = useSelector(selectDashboardErrors);
+  const navigate = useNavigate();
   const file = fileSlice.file;
+
+  const patchingPending = statuses.patchFile === 'pending';
 
   useEffect(() => {
     dispatch(setLeftSidebarPrimitives({ drawerOpen: false }));
@@ -138,17 +144,29 @@ export function LeftSidebar () {
       <div css={sharedWithStyle}>
         <div className='header'>
           <h4>Currently shared with</h4>
-          <IconButton onClick={async () => {
-            await wait(170);
-            dispatch(setLeftSidebarPrimitives({ drawerPage: 'addCollaborator' }));
-          }}>
+          <IconButton
+            onClick={async () => {
+              await wait(170);
+              dispatch(setLeftSidebarPrimitives({ drawerPage: 'sharedWith' }));
+            }}
+            disabled={patchingPending}
+          >
             <span className='icon-plus'></span>
           </IconButton>
         </div>
-        {['anawesomeuser3', 'anawesomeuser4', 'anawesomeuser5'].map((user, index) => (
+        {file.sharedWith.map((user, index) => (
           <div key={index}>
             <span>{user}</span>
-            <IconButton>
+            <IconButton
+              onClick={async () => {
+                const confirm = window.confirm(`Are you sure you want to unshare this file with ${user}?`);
+                if (confirm) {
+                  const sharedWith = file.sharedWith.filter((u) => u !== user);
+                  dispatch(asyncPatchFile({ id: file.id, updates: { sharedWith } }));
+                }
+              }}
+              disabled={patchingPending}
+            >
               <span className='icon-trash'></span>
             </IconButton>
           </div>
@@ -187,14 +205,63 @@ export function LeftSidebar () {
       />
       <h4>{publishText}</h4>
       <FlexRow gap={24}>
-        <Button style={grayButtonStyle}>{file.publishedAt ? 'Unpublish' : 'Publish'}</Button>
-        <Button style={redButtonStyle}>Delete</Button>
+        <Button
+          style={grayButtonStyle}
+          onClick={() => {
+            const newPublishedAt = file.publishedAt ? null : true;
+            dispatch(asyncPatchFile({ id: file.id, updates: { publishedAt: newPublishedAt } }));
+          }}
+          disabled={patchingPending}
+        >
+          {file.publishedAt
+            ? 'Unpublish'
+            : 'Publish'}
+        </Button>
+        <Button
+          style={redButtonStyle}
+          disabled={patchingPending}
+          onClick={() => {
+            // use html5 confirm alert to confirm delete
+            const confirmed = window.confirm('Are you sure you want to delete this file?');
+            if (confirmed) {
+              dispatch(asyncDeleteFile({ id: file.id }));
+            }
+          }}
+        >
+          Delete
+        </Button>
       </FlexRow>
     </Fragment>
   );
 
+  useEffect(() => {
+    if (statuses.patchFile === 'fulfilled') {
+      if (drawerPage === 'renameFile') {
+        dispatch(setLeftSidebarPrimitives({ drawerPage: 'settings' }));
+      } else if (drawerPage === 'sharedWith') {
+        dispatch(setLeftSidebarPrimitives({ drawerPage: 'share' }));
+      }
+      dispatch(clearFileStatus({ status: 'patchFile' }));
+    }
+    if (statuses.deleteFile === 'fulfilled') {
+      navigate('/your-files');
+      dispatch(clearFileStatus({ status: 'deleteFile' }));
+    }
+  }, [statuses, errors]);
+
+  useEffect(() => {
+    dispatch(clearFileErrors());
+  }, [drawerPage]);
+
   const renameFilePage = (
-    <Fragment>
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        const formData = Object.fromEntries(new FormData(e.target));
+        dispatch(asyncPatchFile({ id: file.id, updates: formData }));
+      }}
+      css={defaultFlexColumnStyle}
+    >
       <Textfield
         placeholder={`Type a name for your ${file.type}`}
         label={`${_.capitalize(file.type)} name`}
@@ -202,25 +269,53 @@ export function LeftSidebar () {
         style={whiteInputStyle}
         name='name'
         defaultValue={file.name}
+        error={errors.name}
       />
-      <Button style={grayButtonStyle}>Rename</Button>
-      <Button style={redButtonStyle} onClick={() => dispatch(setLeftSidebarPrimitives({ drawerPage: 'settings' }))}>Cancel</Button>
-    </Fragment>
+      <Button
+        style={[grayButtonStyle, { width: '100%' }]}
+        type='submit'
+        disabled={patchingPending}
+      >Rename</Button>
+      <Button
+        style={[redButtonStyle, { width: '100%' }]}
+        onClick={() => dispatch(setLeftSidebarPrimitives({ drawerPage: 'settings' }))}
+        disabled={patchingPending}
+      >Cancel</Button>
+    </form>
   );
 
-  const addCollaboratorPage = (
-    <Fragment>
+  const sharedWithPage = (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        const formData = Object.fromEntries(new FormData(e.target));
+        console.log(formData);
+        const sharedWith = [...file.sharedWith, formData.username];
+        dispatch(asyncPatchFile({ id: file.id, updates: { sharedWith } }));
+      }}
+      css={defaultFlexColumnStyle}
+    >
       <Textfield
-        placeholder='Type a username'
-        label='Add collaborator'
+        placeholder='Enter a username'
+        autoComplete='off'
+        label='Share this file with a user'
         type='text'
         style={whiteInputStyle}
-        name='name'
+        name='username'
         defaultValue=''
+        error={errors.sharedWith}
       />
-      <Button style={grayButtonStyle}>Add</Button>
-      <Button style={redButtonStyle} onClick={() => dispatch(setLeftSidebarPrimitives({ drawerPage: 'share' }))}>Cancel</Button>
-    </Fragment>
+      <Button
+        style={grayButtonStyle}
+        type='submit'
+        disabled={patchingPending}
+      >Add</Button>
+      <Button
+        style={redButtonStyle}
+        onClick={() => dispatch(setLeftSidebarPrimitives({ drawerPage: 'share' }))}
+        disabled={patchingPending}
+      >Cancel</Button>
+    </form>
   );
 
   const divider = (
@@ -240,7 +335,7 @@ export function LeftSidebar () {
         {drawerPage === 'share' && sharePage}
         {drawerPage === 'settings' && settingsPage}
         {drawerPage === 'renameFile' && renameFilePage}
-        {drawerPage === 'addCollaborator' && addCollaboratorPage}
+        {drawerPage === 'sharedWith' && sharedWithPage}
       </LeftSidebarDrawer>
       <div css={leftSidebarStyle}>
         <div className='group'>
@@ -255,7 +350,7 @@ export function LeftSidebar () {
           <IconButton onClick={() => openDrawer('download')} title={`Download ${file.type}`}>
             <span className='icon-download'></span>
           </IconButton>
-          <IconButton onClick={() => openDrawer('share')} title='Collaboration settings'>
+          <IconButton onClick={() => openDrawer('share')} title='Sharing settings'>
             <span className='icon-share'></span>
           </IconButton>
           <IconButton onClick={() => openDrawer('settings')} title={`${_.capitalize(file.type)} properties`}>

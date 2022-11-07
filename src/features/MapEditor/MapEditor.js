@@ -5,7 +5,7 @@ import { useParams } from 'react-router-dom';
 import { LeftSidebar } from '../Editor/LeftSidebar';
 import { useDispatch, useSelector } from 'react-redux';
 import { FilenameIndicator } from '../Editor/FilenameIndicator';
-import { getFileToEdit } from '../File/fileSlice';
+import { asyncGetFileToEdit, selectDashboardStatuses } from '../File/fileSlice';
 import { NotFound } from '../Editor/NotFound';
 import { RightSidebar } from './RightSidebar';
 
@@ -17,15 +17,15 @@ export function MapEditor () {
   const dispatch = useDispatch();
   const fileSlice = useSelector((state) => state.file);
   const file = fileSlice.file;
-  const error = fileSlice.errors.includes('getFileToEdit');
+  const statuses = useSelector(selectDashboardStatuses);
 
   useEffect(() => {
-    dispatch(getFileToEdit({ id }));
+    dispatch(asyncGetFileToEdit({ id }));
   }, []);
 
   let content;
 
-  if (!error) {
+  if (statuses.getFileToEdit !== 'rejected') {
     content = file && file.rootLayer && (
       <div css={mapEditorStyle}>
         <LeftSidebar />

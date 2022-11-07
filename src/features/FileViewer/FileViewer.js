@@ -4,7 +4,7 @@ import { Fragment, useEffect } from 'react';
 import { Navbar } from '../Dashboard/Navbar/Navbar';
 import { useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { getFiles, getFileToView } from '../File/fileSlice';
+import { asyncGetFiles, asyncGetFileToView, selectDashboardStatuses } from '../File/fileSlice';
 import { FileInfo } from './FileInfo';
 import { CommentSection } from './CommentSection';
 import { File } from '../File/File';
@@ -66,18 +66,17 @@ export function FileViewer () {
   const file = fileSlice.file;
   const user = useSelector(selectUser);
   const noMoreFiles = fileSlice.primitives.noMoreFiles;
-  const pending = fileSlice.pending;
   const files = fileSlice.files;
-  const error = fileSlice.errors.includes('getFileToView');
+  const statuses = useSelector(selectDashboardStatuses);
 
   useEffect(() => {
-    dispatch(getFileToView({ id }));
-    dispatch(getFiles({ location, getRecommended: id }));
+    dispatch(asyncGetFileToView({ id }));
+    dispatch(asyncGetFiles({ location, getRecommended: id }));
   }, [id]);
 
   let content;
 
-  if (!error) {
+  if (statuses.getFileToView !== 'rejected') {
     content = (
       <Fragment>
         <Navbar />
@@ -95,7 +94,7 @@ export function FileViewer () {
                   key={index}
                   imageUrl='/mock-data/file-image.png'
                   title={file.name}
-                  subtext={getSubtext(user.username === file.username
+                  subtext={getSubtext(user && user.username === file.username
                     ? 'your-files'
                     : 'file-viewer', file)}
                   liked={userSlice.primitives.user && file.likes && file.likes.find(like => like.username === user.username) != null}
@@ -108,9 +107,9 @@ export function FileViewer () {
                 <div className={'load-more-container'}>
                   <Button
                     style={[transparentButtonStyle, loadMoreButtonStyle]}
-                    onClick={() => dispatch(getFiles({ location, loadMore: true, getRecommendation: id }))}
+                    onClick={() => dispatch(asyncGetFiles({ location, loadMore: true, getRecommendation: id }))}
                   >
-                    <span className='text'>{pending.includes('getFiles') ? 'Loading...' : 'Load More'}</span>
+                    <span className='text'>{statuses.getFiles === 'pending' ? 'Loading...' : 'Load More'}</span>
                     <span className='icon-more' />
                   </Button>
                 </div>

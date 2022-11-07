@@ -4,7 +4,7 @@ import { Menu } from './components/Menu/Menu';
 import { Modal } from './components/Modal/Modal';
 import { Route, Routes, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { getUser } from './features/User/userSlice';
+import { asyncGetUser } from './features/User/userSlice';
 import { apiClient } from './app/apiClient';
 import { FileViewer } from './features/FileViewer/FileViewer';
 import { TilesetEditor } from './features/TilesetEditor/TilesetEditor';
@@ -33,7 +33,7 @@ function App () {
 
   useEffect(() => {
     if (!user) {
-      dispatch(getUser());
+      dispatch(asyncGetUser());
     }
   }, [user]);
 

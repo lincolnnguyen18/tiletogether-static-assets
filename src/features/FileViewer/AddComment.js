@@ -5,7 +5,7 @@ import { FlexColumn } from '../../components/Layouts/FlexColumn';
 import { useRef, useState } from 'react';
 import { Button, IconButtonStyle, whiteButtonStyle, blackButtonStyle } from '../../components/inputs/Button';
 import { useDispatch, useSelector } from 'react-redux';
-import { postComment } from '../File/fileSlice';
+import { asyncPostComment } from '../File/fileSlice';
 
 export function AddComment () {
   const dispatch = useDispatch();
@@ -34,7 +34,7 @@ export function AddComment () {
   `;
 
   const handleCommentSubmit = async () => {
-    dispatch(postComment({ content: comment, fileId }));
+    dispatch(asyncPostComment({ content: comment, fileId }));
   };
 
   return (
