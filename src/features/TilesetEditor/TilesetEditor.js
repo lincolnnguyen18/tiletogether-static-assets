@@ -7,7 +7,7 @@ import { NotFound } from '../Editor/NotFound';
 import { RightSidebar } from './RightSidebar';
 import { TilesetCanvas } from './TilesetCanvas';
 import { useEffect } from 'react';
-import { getFileToEdit } from '../File/fileSlice';
+import { asyncGetFileToEdit, selectDashboardStatuses } from '../File/fileSlice';
 import { useParams } from 'react-router-dom';
 
 const tilesetEditorStyle = css`
@@ -23,15 +23,15 @@ export function TilesetEditor () {
   const dispatch = useDispatch();
   const fileSlice = useSelector((state) => state.file);
   const file = fileSlice.file;
-  const error = fileSlice.errors.includes('getFileToEdit');
+  const statuses = useSelector(selectDashboardStatuses);
 
   useEffect(() => {
-    dispatch(getFileToEdit({ id }));
+    dispatch(asyncGetFileToEdit({ id }));
   }, [id]);
 
   let content;
 
-  if (!error) {
+  if (statuses.getFileToEdit !== 'rejected') {
     content = file && file.rootLayer && (
       <div css={tilesetEditorStyle}>
         <LeftSidebar />

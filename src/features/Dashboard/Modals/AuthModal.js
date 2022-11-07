@@ -3,9 +3,9 @@ import { css, jsx } from '@emotion/react';
 import { setModalPrimitives, setModalReactElements } from '../../../components/Modal/modalSlice';
 import { Textfield, whiteInputStyle } from '../../../components/inputs/Textfield';
 import { blackButtonStyle, Button } from '../../../components/inputs/Button';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useState } from 'react';
-import { getUser, postUser } from '../../User/userSlice';
+import { asyncGetUser, asyncPostUser, selectUserStatuses } from '../../User/userSlice';
 import { useNavigate } from 'react-router-dom';
 import { modalBodyStyle } from '../../../components/Modal/Modal';
 
@@ -33,12 +33,13 @@ export function AuthModalHeader ({ type }) {
 export function AuthModalBody ({ type }) {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const userStatuses = useSelector(selectUserStatuses);
   const [errors, setErrors] = useState({});
 
   async function onRegister (formData) {
-    const res = await dispatch(postUser(formData));
+    const res = await dispatch(asyncPostUser(formData));
 
-    if (res.type === postUser.rejected.type) {
+    if (res.type === asyncPostUser.rejected.type) {
       const errors = JSON.parse(res.error.message);
       setErrors(errors);
     } else {
@@ -47,9 +48,9 @@ export function AuthModalBody ({ type }) {
   }
 
   async function onLogin (formData) {
-    const res = await dispatch(getUser(formData));
+    const res = await dispatch(asyncGetUser(formData));
 
-    if (res.type === getUser.rejected.type) {
+    if (res.type === asyncGetUser.rejected.type) {
       setErrors({ login: 'Invalid email or password' });
     } else {
       navigate('/');
@@ -105,7 +106,10 @@ export function AuthModalBody ({ type }) {
       {errors.login && (
         <span css={css`color: red;`}>{errors.login}</span>
       )}
-      <Button style={blackButtonStyle}>
+      <Button
+        style={blackButtonStyle}
+        disabled={userStatuses.postUser === 'pending' || userStatuses.getUser === 'pending'}
+      >
         <span>{type === 'login' ? 'Login' : 'Register'}</span>
       </Button>
     </form>

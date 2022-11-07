@@ -11,10 +11,11 @@ import { Navbar } from './Navbar/Navbar';
 import { openAuthModal } from './Modals/AuthModal';
 import { RedirectPage } from '../../components/RedirectPage';
 import { Icon } from '../../components/Icon';
-import { getFiles } from '../File/fileSlice';
+import { asyncGetFiles, selectDashboardStatuses } from '../File/fileSlice';
 import { Button, transparentButtonStyle, whiteButtonStyle } from '../../components/inputs/Button';
 import { timeAgo } from '../../utils/timeUtils';
 import { File } from '../File/File';
+import { selectUserStatuses } from '../User/userSlice';
 
 const gridStyle = css`
   padding: 0 20px 8px 20px;
@@ -140,11 +141,12 @@ export function Dashboard () {
   const queryParams = getQueryParams(location);
   const dispatch = useDispatch();
   const userSlice = useSelector((state) => state.user);
-  const authenticating = userSlice.pending.includes('getUser');
+  const userStatuses = useSelector(selectUserStatuses);
+  const authenticating = userStatuses.getUser === 'pending';
   const fileSlice = useSelector((state) => state.file);
   const currentPage = useSelector((state) => state.dashboard.primitives.currentPage);
   const files = fileSlice.files;
-  const pending = fileSlice.pending;
+  const fileStatuses = useSelector(selectDashboardStatuses);
   const noMoreFiles = fileSlice.primitives.noMoreFiles;
 
   useEffect(() => {
@@ -163,11 +165,11 @@ export function Dashboard () {
       navigate('/');
     }
 
-    dispatch(getFiles({ location }));
+    dispatch(asyncGetFiles({ location }));
   }, [location]);
 
   useEffect(() => {
-    dispatch(getFiles({ location }));
+    dispatch(asyncGetFiles({ location }));
   }, []);
 
   let content;
@@ -196,9 +198,9 @@ export function Dashboard () {
             <div css={loadMoreContainerStyle}>
               <Button
                 style={[transparentButtonStyle, loadMoreButtonStyle]}
-                onClick={() => dispatch(getFiles({ location, loadMore: true }))}
+                onClick={() => dispatch(asyncGetFiles({ location, loadMore: true }))}
               >
-                <span className='text'>{pending.includes('getFiles') ? 'Loading...' : 'Load More'}</span>
+                <span className='text'>{fileStatuses.getFiles === 'pending' ? 'Loading...' : 'Load More'}</span>
                 <span className='icon-more' />
               </Button>
             </div>

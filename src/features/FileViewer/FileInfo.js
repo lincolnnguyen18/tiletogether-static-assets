@@ -37,7 +37,7 @@ export function FileInfo () {
   const tags = file.tags.split(' ');
   const isMap = file.type === 'map';
 
-  const liked = file.likes.some(l => l.username === user.username);
+  const liked = user && file.likes.some(l => l.username === user.username);
   const likes = file.likeCount;
 
   const handleLikeSubmit = () => {
@@ -91,7 +91,7 @@ export function FileInfo () {
       <FlexRow>
         <button css={[IconButtonStyle, { marginLeft: '0px' }]} ref={userButtonRef}>
           <span className='icon-avatar' css={{ fontSize: '42px' }}/>
-          <span>{file.authorUserName}</span>
+          <span>{file.authorUsername}</span>
         </button>
       </FlexRow>
       <hr color='gray'/>

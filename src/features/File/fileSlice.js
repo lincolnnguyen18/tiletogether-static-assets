@@ -1,4 +1,4 @@
-import { createAsyncThunk, createSlice, isAnyOf } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice, isAnyOf, isFulfilled, isPending, isRejected } from '@reduxjs/toolkit';
 import { apiClient } from '../../app/apiClient';
 import { getQueryParams } from '../Dashboard/Dashboard';
 import _ from 'lodash';
@@ -13,93 +13,82 @@ const initialState = {
     page: 1,
     noMoreFiles: false,
   },
-  pending: [],
-  errors: [],
+  statuses: {},
+  errors: {},
 };
 
-export const getFiles = createAsyncThunk(
+export const asyncGetFiles = createAsyncThunk(
   'file/getFiles',
   async ({ location, loadMore, getRecommended }, { getState }) => {
     const fileSlice = getState().file;
     const { limit, page, noMoreFiles } = fileSlice.primitives;
     if (noMoreFiles) return;
 
-    try {
-      let params = getQueryParams(location);
-      params.limit = limit;
-      params.page = page;
-      if (notPresent(loadMore)) {
-        params.page = 1;
-      }
-      params = _.mapKeys(params, (__, key) => _.snakeCase(key));
-
-      let response;
-      if (notPresent(getRecommended)) {
-        response = await apiClient.get('/files', { params });
-      } else {
-        response = await apiClient.get(`/files/${getRecommended}/recommend`, { params });
-      }
-      return response.data.files;
-    } catch (err) {
-      throw new Error(err.response.data.error);
+    let params = getQueryParams(location);
+    params.limit = limit;
+    params.page = page;
+    if (notPresent(loadMore)) {
+      params.page = 1;
     }
+    params = _.mapKeys(params, (__, key) => _.snakeCase(key));
+
+    let response;
+    if (notPresent(getRecommended)) {
+      response = await apiClient.get('/files', { params });
+    } else {
+      response = await apiClient.get(`/files/${getRecommended}/recommend`, { params });
+    }
+    return response.data.files;
   },
 );
 
-export const getFileToView = createAsyncThunk(
+export const asyncGetFileToView = createAsyncThunk(
   'file/getFileToView',
   async ({ id }) => {
-    try {
-      const response = await apiClient.get(`/files/${id}`);
-      return response.data.file;
-    } catch (err) {
-      throw new Error(err.response.data.error);
-    }
+    const response = await apiClient.get(`/files/${id}`);
+    return response.data.file;
   },
 );
 
-export const getFileToEdit = createAsyncThunk(
+export const asyncGetFileToEdit = createAsyncThunk(
   'file/getFileToEdit',
   async ({ id }) => {
+    const response = await apiClient.get(`/files/${id}/edit`);
+    return response.data.file;
+  },
+);
+
+export const asyncPatchFile = createAsyncThunk(
+  'file/patchFile',
+  async ({ id, updates }, { rejectWithValue }) => {
     try {
-      const response = await apiClient.get(`/files/${id}/edit`);
+      const response = await apiClient.patch(`/files/${id}`, updates);
       return response.data.file;
     } catch (err) {
-      throw new Error(err.response.data.error);
+      return rejectWithValue(err.response.data.error);
     }
   },
 );
 
-export const editFile = createAsyncThunk(
-  'common/editFile',
-  async ({ id, updates }) => {
-    try {
-      return apiClient.patch(`/files/${id}`, updates);
-    } catch (err) {
-      throw new Error(err.response.data.error);
-    }
+export const asyncDeleteFile = createAsyncThunk(
+  'file/deleteFile',
+  async ({ id }) => {
+    const response = await apiClient.delete(`/files/${id}`);
+    return response.data.file;
   },
 );
 
 export const asyncLikeFile = createAsyncThunk(
   'file/likeFile',
   async ({ id, liked }) => {
-    try {
-      return apiClient.post(`/files/${id}/like`, { liked });
-    } catch (err) {
-      throw new Error(err.response.data.error);
-    }
+    return apiClient.post(`/files/${id}/like`, { liked });
   },
 );
 
-export const postComment = createAsyncThunk(
+export const asyncPostComment = createAsyncThunk(
   'file/postComment',
   async ({ fileId, content }) => {
-    try {
-      return apiClient.post(`/files/${fileId}/comment`, { content });
-    } catch (err) {
-      throw new Error(JSON.stringify(err.response.data.error));
-    }
+    return apiClient.post(`/files/${fileId}/comment`, { content });
   },
 );
 
@@ -131,18 +120,23 @@ const fileSlice = createSlice({
         }
       }
     },
+    clearFileErrors: state => {
+      state.errors = {};
+    },
+    clearFileStatus: (state, action) => {
+      const { status } = action.payload;
+      state.statuses[status] = null;
+    },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(getFiles.pending, (state, action) => {
+      .addCase(asyncGetFiles.pending, (state, action) => {
         if (notPresent(action.meta.arg.loadMore)) {
           state.files = null;
           state.primitives.noMoreFiles = false;
-        } else {
-          state.pending.push('getFiles');
         }
       })
-      .addCase(getFiles.fulfilled, (state, action) => {
+      .addCase(asyncGetFiles.fulfilled, (state, action) => {
         if (notPresent(action.meta.arg.loadMore)) {
           state.files = action.payload;
           state.primitives.page = 2;
@@ -154,34 +148,40 @@ const fileSlice = createSlice({
           state.primitives.noMoreFiles = true;
         }
       })
-      .addCase(editFile.fulfilled, (state, action) => {
+      .addCase(asyncPatchFile.fulfilled, (state, action) => {
+        const fieldsToUpdate = Object.keys(action.meta.arg.updates);
+        const pickedFile = _.pick(action.payload, fieldsToUpdate);
+        _.merge(state.file, pickedFile);
+        // replace the sharedWith field
+        state.file.sharedWith = action.payload.sharedWith;
+      })
+      .addCase(asyncPostComment.fulfilled, (state, action) => {
         state.file = action.payload.data.file;
       })
-      .addCase(postComment.fulfilled, (state, action) => {
-        state.file = action.payload.data.file;
+      .addMatcher(isPending, (state, action) => {
+        state.errors = {};
+        state.statuses[getActionName(action)] = 'pending';
       })
-      .addMatcher(isAnyOf(getFiles.rejected, getFileToEdit.rejected, getFileToView.rejected), (state, action) => {
-        const actionName = getActionName(action);
-        state.errors.push(actionName);
-        state.pending = _.pull(state.pending, actionName);
+      .addMatcher(isFulfilled, (state, action) => {
+        state.errors = {};
+        state.statuses[getActionName(action)] = 'fulfilled';
       })
-      .addMatcher(isAnyOf(getFiles.fulfilled, getFileToEdit.fulfilled, getFileToView.fulfilled), (state, action) => {
-        state.pending = _.pull(state.pending, getActionName(action));
+      .addMatcher(isRejected, (state, action) => {
+        state.statuses[getActionName(action)] = 'rejected';
+        state.errors = action.payload;
       })
-      .addMatcher(isAnyOf(editFile.rejected), (_, action) => {
-        alert(action.error.message);
-      })
-      .addMatcher(isAnyOf(getFileToEdit.pending, getFileToView.pending), (state, action) => {
-        state.errors = [];
-        state.file = null;
-        state.pending.push(getActionName(action));
-      })
-      .addMatcher(isAnyOf(getFileToView.fulfilled, getFileToEdit.fulfilled), (state, action) => {
+      .addMatcher(isAnyOf(asyncGetFileToView.fulfilled, asyncGetFileToEdit.fulfilled), (state, action) => {
         state.file = action.payload;
+      })
+      .addMatcher(isAnyOf(asyncGetFileToView.pending, asyncGetFileToEdit.pending), (state) => {
+        state.file = null;
       });
   },
 });
 
-export const { setFileLike } = fileSlice.actions;
+export const { setFileLike, clearFileErrors, clearFileStatus } = fileSlice.actions;
+
+export const selectDashboardStatuses = state => state.file.statuses;
+export const selectDashboardErrors = state => state.file.errors;
 
 export const fileReducer = fileSlice.reducer;

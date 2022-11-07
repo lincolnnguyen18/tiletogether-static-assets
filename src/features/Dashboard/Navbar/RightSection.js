@@ -8,7 +8,7 @@ import { menuItemStyle, openMenu } from '../../../components/Menu/Menu';
 import { Icon } from '../../../components/Icon';
 import { Badge } from '../../../components/Badge';
 import { openAuthModal } from '../Modals/AuthModal';
-import { logout } from '../../User/userSlice';
+import { logout, selectUserStatuses } from '../../User/userSlice';
 import { useNavigate } from 'react-router-dom';
 import { openNewFileModal } from '../Modals/NewFileModal';
 
@@ -18,15 +18,16 @@ export function RightSection () {
   const userSlice = useSelector((state) => state.user);
   const menuSlice = useSelector((state) => state.menu);
   const menu = menuSlice.menu;
-  const authenticating = userSlice.pending.includes('getUser');
+  const userStatuses = useSelector(selectUserStatuses);
+  const authenticating = userStatuses.getUser === 'pending';
 
   const rightSectionStyle = css`
-  flex-shrink: 0;
-  gap: 16px;
-  visibility: ${authenticating ? 'hidden' : 'visible'};
-  width: 180px;
-  justify-content: flex-end;  
-`;
+    flex-shrink: 0;
+    gap: 16px;
+    visibility: ${authenticating ? 'hidden' : 'visible'};
+    width: 180px;
+    justify-content: flex-end;  
+  `;
 
   const newFileButtons = [
     {

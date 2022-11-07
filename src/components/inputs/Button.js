@@ -57,6 +57,10 @@ export const blackButtonStyle = css`
   &:focus {
     outline: 2px solid #e3e3e3;
   }
+
+  &:disabled {
+    background: #868686;
+  }
 `;
 
 export const whiteButtonStyle = css`
@@ -102,6 +106,10 @@ export const grayButtonStyle = css`
   &:focus-visible {
     outline: 2px solid var(--outline-color);
   }
+
+  &:disabled {
+    background: #a8a8a8;
+  }
 `;
 
 export const redButtonStyle = css`
@@ -116,6 +124,10 @@ export const redButtonStyle = css`
 
   &:focus-visible {
     outline: 2px solid var(--outline-color);
+  }
+
+  &:disabled {
+    background: #ff8e8e;
   }
 `;
 
@@ -145,6 +157,10 @@ export function Button ({
       flex-shrink: 0;
       
       transition: background 0.1s ease-out;
+    }
+    
+    &:disabled {
+      pointer-events: none;
     }
   `;
 

@@ -38,6 +38,11 @@ export function IconButton ({
       box-shadow: none;
       outline: none;
     }
+    
+    &:disabled {
+      pointer-events: none;
+      opacity: 0.5;
+    }
   `;
 
   return (
