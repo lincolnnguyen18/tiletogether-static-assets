@@ -15,7 +15,7 @@ import _ from 'lodash';
 import { FlexColumn } from '../../components/Layouts/FlexColumn';
 import { FlexRow } from '../../components/Layouts/FlexRow';
 import { wait } from '../../utils/timeUtils';
-import { editCollaborator, editFile } from '../File/fileSlice';
+import { editFile } from '../File/fileSlice';
 
 const leftSidebarStyle = css`
   background: #3F3F3F;
@@ -125,11 +125,14 @@ export function LeftSidebar () {
   `;
 
   const OnRemoveCollaboratorSubmit = function (username) {
-    dispatch(editCollaborator({
+    dispatch(editFile({
       id: file.id,
-      username,
-      isRemove: true,
-      onAdded: () => dispatch(setLeftSidebarPrimitives({ drawerPage: 'share' })),
+      updates: {
+        sharedWith: {
+          username,
+          isRemove: true,
+        },
+      },
     }));
   };
 
@@ -160,7 +163,11 @@ export function LeftSidebar () {
         {file.sharedWith.map((user, index) => (
           <div key={index}>
             <span>{user}</span>
-            <IconButton onClick={() => OnRemoveCollaboratorSubmit(user)}>
+            <IconButton onClick={() => {
+              if (confirm(`Are You Sure You Want To Remove ${user} From Your File?`)) {
+                OnRemoveCollaboratorSubmit(user);
+              }
+            }}>
               <span className='icon-trash'></span>
             </IconButton>
           </div>
@@ -206,11 +213,17 @@ export function LeftSidebar () {
   );
 
   const OnRenameSubmit = function () {
-    if (file && fileNameTextField && fileNameTextField.current.value && fileNameTextField.current.value.length > 0) {
+    if (!file || !fileNameTextField || !fileNameTextField.current.value || fileNameTextField.current.value.length < 1) {
+      alert('File Name Can Not Be Empty');
+      return;
+    }
+
+    if (confirm(`Are You Sure You Want To Change File Name To "${fileNameTextField.current.value}"`)) {
       dispatch(editFile({
         id: file.id,
         updates: { name: fileNameTextField.current.value },
       }));
+      dispatch(setLeftSidebarPrimitives({ drawerPage: 'settings' }));
     }
   };
 
@@ -231,13 +244,21 @@ export function LeftSidebar () {
   );
 
   const OnCollaboratorSubmit = function () {
-    if (file && userNameTextField && userNameTextField.current.value && userNameTextField.current.value.length > 0) {
-      dispatch(editCollaborator({
+    if (!file && !userNameTextField && !userNameTextField.current.value && userNameTextField.current.value.length < 1) {
+      alert('User Name Can Not Be Empty');
+      return;
+    }
+    if (confirm(`Are You Sure You Want To Share File With ${userNameTextField.current.value}?`)) {
+      dispatch(editFile({
         id: file.id,
-        username: userNameTextField.current.value,
-        isRemove: false,
-        onAdded: () => dispatch(setLeftSidebarPrimitives({ drawerPage: 'share' })),
+        updates: {
+          sharedWith: {
+            username: userNameTextField.current.value,
+            isRemove: false,
+          },
+        },
       }));
+      dispatch(setLeftSidebarPrimitives({ drawerPage: 'share' }));
     }
   };
 

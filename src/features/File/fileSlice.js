@@ -103,21 +103,6 @@ export const postComment = createAsyncThunk(
   },
 );
 
-export const editCollaborator = createAsyncThunk(
-  'file/addCollaborator',
-  async ({ id, username, isRemove, onAdded }) => {
-    try {
-      const res = await apiClient.post(`/files/${id}/share`, { username, isRemove });
-      if (res.status === 200) {
-        onAdded();
-        return res;
-      }
-    } catch (err) {
-      throw new Error(JSON.stringify(err.response.data.error));
-    }
-  },
-);
-
 const fileSlice = createSlice({
   name: 'file',
   initialState,
@@ -175,11 +160,6 @@ const fileSlice = createSlice({
       .addCase(postComment.fulfilled, (state, action) => {
         state.file = action.payload.data.file;
       })
-      .addCase(editCollaborator.fulfilled, (state, action) => {
-        console.log(state.file);
-        state.file = action.payload.data.file;
-        console.log(state.file);
-      })
       .addMatcher(isAnyOf(getFiles.rejected, getFileToEdit.rejected, getFileToView.rejected), (state, action) => {
         const actionName = getActionName(action);
         state.errors.push(actionName);
@@ -187,6 +167,9 @@ const fileSlice = createSlice({
       })
       .addMatcher(isAnyOf(getFiles.fulfilled, getFileToEdit.fulfilled, getFileToView.fulfilled), (state, action) => {
         state.pending = _.pull(state.pending, getActionName(action));
+      })
+      .addMatcher(isAnyOf(editFile.rejected), (_, action) => {
+        alert(action.error.message);
       })
       .addMatcher(isAnyOf(getFileToEdit.pending, getFileToView.pending), (state, action) => {
         state.errors = [];
