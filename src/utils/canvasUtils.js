@@ -10,3 +10,111 @@ export function getPointsBetweenTwoCoordinates (x1, y1, x2, y2) {
   }
   return points;
 }
+
+export function rgbToHex (r, g, b) {
+  return '#' + [r, g, b].map(x => {
+    const hex = x.toString(16);
+    return hex.length === 1 ? '0' + hex : hex;
+  }).join('');
+}
+
+export function getImageColors (imageData) {
+  const data = imageData.data;
+  const colors = new Set();
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+    const a = data[i + 3];
+    if (a === 0) continue;
+    const hexColor = rgbToHex(r, g, b);
+    colors.add(hexColor);
+  }
+  return Array.from(colors);
+}
+
+function initializeFreqReadCanvas () {
+  // using a global canvas for frequent reads to stop console warnings
+  if (window.freqReadCtx == null) {
+    const canvas = document.getElementById('frequent-read-canvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    window.freqReadCanvas = canvas;
+    window.freqReadCtx = ctx;
+  }
+}
+
+export function trimPng (image) {
+  initializeFreqReadCanvas();
+  const ctx = window.freqReadCtx;
+  const canvas = window.freqReadCanvas;
+  canvas.width = image.width;
+  canvas.height = image.height;
+  ctx.drawImage(image, 0, 0);
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const pixels = imageData.data;
+  const len = pixels.length;
+  const bound = {
+    top: null,
+    left: null,
+    right: null,
+    bottom: null,
+  };
+  let i;
+  let x;
+  let y;
+
+  // Iterate over every pixel to find the edges of the non-transparent content
+  for (i = 0; i < len; i += 4) {
+    if (pixels[i + 3] !== 0) {
+      x = (i / 4) % canvas.width;
+      y = ~~((i / 4) / canvas.width);
+
+      if (bound.top === null) {
+        bound.top = y;
+      }
+
+      if (bound.left === null) {
+        bound.left = x;
+      } else if (x < bound.left) {
+        bound.left = x;
+      }
+
+      if (bound.right === null) {
+        bound.right = x;
+      } else if (bound.right < x) {
+        bound.right = x;
+      }
+
+      if (bound.bottom === null) {
+        bound.bottom = y;
+      } else if (bound.bottom < y) {
+        bound.bottom = y;
+      }
+    }
+  }
+
+  const trimHeight = bound.bottom - bound.top + 1;
+  const trimWidth = bound.right - bound.left + 1;
+  return ctx.getImageData(bound.left, bound.top, trimWidth, trimHeight);
+}
+
+export function getRandomColor () {
+  return `#${Math.floor(Math.random() * 16777215).toString(16)}`;
+}
+
+export function reverseColor (color) {
+  initializeFreqReadCanvas();
+  // calculate opposite color given a color string
+  const ctx = window.freqReadCtx;
+  const canvas = window.freqReadCanvas;
+  canvas.width = 1;
+  canvas.height = 1;
+  ctx.fillStyle = color;
+  ctx.fillRect(0, 0, 1, 1);
+  const imageData = ctx.getImageData(0, 0, 1, 1);
+  const data = imageData.data;
+  const r = 255 - data[0];
+  const g = 255 - data[1];
+  const b = 255 - data[2];
+  return rgbToHex(r, g, b);
+}

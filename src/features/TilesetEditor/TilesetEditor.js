@@ -7,8 +7,9 @@ import { NotFound } from '../Editor/NotFound';
 import { RightSidebar } from './RightSidebar';
 import { TilesetCanvas } from './TilesetCanvas';
 import { useEffect } from 'react';
-import { asyncGetFileToEdit, selectDashboardStatuses } from '../File/fileSlice';
 import { useParams } from 'react-router-dom';
+import { asyncDeleteFile, asyncGetFileToEdit, asyncPatchFile, clearTilesetEditorErrors, clearTilesetEditorStatus, selectTilesetEditorErrors, selectTilesetEditorPrimitives, selectTilesetEditorStatuses, selectTilesetFile, selectTilesetNewChanges, setTilesetEditorPrimitives } from './tilesetEditorSlice';
+import { socketJoin } from './tilesetEditorSocketApi';
 
 const tilesetEditorStyle = css`
   margin: 0;
@@ -21,21 +22,37 @@ const tilesetEditorStyle = css`
 export function TilesetEditor () {
   const { id } = useParams();
   const dispatch = useDispatch();
-  const fileSlice = useSelector((state) => state.file);
-  const file = fileSlice.file;
-  const statuses = useSelector(selectDashboardStatuses);
+  const statuses = useSelector(selectTilesetEditorStatuses);
+  const file = useSelector(selectTilesetFile);
+  const primitives = useSelector(selectTilesetEditorPrimitives);
+  const newChanges = useSelector(selectTilesetNewChanges);
 
   useEffect(() => {
     dispatch(asyncGetFileToEdit({ id }));
-  }, [id]);
+    socketJoin({ fileId: id });
+  }, []);
 
   let content;
+
+  function setActiveTool (tool) {
+    dispatch(setTilesetEditorPrimitives({ activeTool: tool }));
+  }
 
   if (statuses.getFileToEdit !== 'rejected') {
     content = file && file.rootLayer && (
       <div css={tilesetEditorStyle}>
-        <LeftSidebar />
-        <FilenameIndicator />
+        <LeftSidebar
+          file={file}
+          activeTool={primitives.activeTool}
+          asyncDeleteFile={asyncDeleteFile}
+          asyncPatchFile={asyncPatchFile}
+          clearFileErrors={clearTilesetEditorErrors}
+          clearFileStatus={clearTilesetEditorStatus}
+          selectFileErrors={selectTilesetEditorErrors}
+          selectFileStatuses={selectTilesetEditorStatuses}
+          setActiveTool={setActiveTool}
+        />
+        <FilenameIndicator file={file} saving={newChanges.length > 0} />
         <RightSidebar />
         <TilesetCanvas />
       </div>

@@ -1,6 +1,5 @@
 /** @jsx jsx */
 import { css, jsx } from '@emotion/react';
-import { useSelector } from 'react-redux';
 
 const filenameIndicatorStyle = css`
   position: absolute;
@@ -13,12 +12,13 @@ const filenameIndicatorStyle = css`
   transform: translateX(-50%);
   user-select: none;
   z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
 `;
 
-export function FilenameIndicator () {
-  const fileSlice = useSelector((state) => state.file);
-  const file = fileSlice.file;
-
+export function FilenameIndicator ({ file }) {
   return (
     <div css={filenameIndicatorStyle}>
       <span>{`Editing ${file.type} "${file.name}"`}</span>

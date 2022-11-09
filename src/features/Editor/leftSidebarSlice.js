@@ -5,6 +5,7 @@ const intitialState = {
   primitives: {
     drawerOpen: false,
     drawerPage: null,
+    showGrid: true,
   },
 };
 

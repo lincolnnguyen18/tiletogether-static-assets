@@ -11,7 +11,7 @@ import { Navbar } from './Navbar/Navbar';
 import { openAuthModal } from './Modals/AuthModal';
 import { RedirectPage } from '../../components/RedirectPage';
 import { Icon } from '../../components/Icon';
-import { asyncGetFiles, selectDashboardStatuses } from '../File/fileSlice';
+import { asyncGetFiles, selectFileStatuses } from '../File/fileSlice';
 import { Button, transparentButtonStyle, whiteButtonStyle } from '../../components/inputs/Button';
 import { timeAgo } from '../../utils/timeUtils';
 import { File } from '../File/File';
@@ -146,7 +146,7 @@ export function Dashboard () {
   const fileSlice = useSelector((state) => state.file);
   const currentPage = useSelector((state) => state.dashboard.primitives.currentPage);
   const files = fileSlice.files;
-  const fileStatuses = useSelector(selectDashboardStatuses);
+  const fileStatuses = useSelector(selectFileStatuses);
   const noMoreFiles = fileSlice.primitives.noMoreFiles;
 
   useEffect(() => {
@@ -167,10 +167,6 @@ export function Dashboard () {
 
     dispatch(asyncGetFiles({ location }));
   }, [location]);
-
-  useEffect(() => {
-    dispatch(asyncGetFiles({ location }));
-  }, []);
 
   let content;
 

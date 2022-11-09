@@ -45,10 +45,9 @@ const userSlice = createSlice({
   name: 'user',
   initialState,
   reducers: {
-    logout: (state, action) => {
+    logout: (state) => {
       state.primitives.user = null;
       Cookies.remove('token');
-      action.payload.navigate('/');
     },
   },
   extraReducers: (builder) => {

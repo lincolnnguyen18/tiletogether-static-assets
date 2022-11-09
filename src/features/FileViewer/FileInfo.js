@@ -2,8 +2,8 @@
 import { css, jsx } from '@emotion/react';
 import _ from 'lodash';
 import { useRef } from 'react';
-import { FlexRow } from '../../components/Layouts/FlexRow';
-import { FlexColumn } from '../../components/Layouts/FlexColumn';
+import { FlexRow } from '../../components/layout/FlexRow';
+import { FlexColumn } from '../../components/layout/FlexColumn';
 import { IconButtonStyle, likeButtonStyle } from '../../components/inputs/Button';
 import { Link, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';

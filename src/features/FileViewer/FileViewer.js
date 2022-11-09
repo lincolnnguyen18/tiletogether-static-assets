@@ -4,7 +4,7 @@ import { Fragment, useEffect } from 'react';
 import { Navbar } from '../Dashboard/Navbar/Navbar';
 import { useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { asyncGetFiles, asyncGetFileToView, selectDashboardStatuses } from '../File/fileSlice';
+import { asyncGetFiles, asyncGetFileToView, selectFileStatuses } from '../File/fileSlice';
 import { FileInfo } from './FileInfo';
 import { CommentSection } from './CommentSection';
 import { File } from '../File/File';
@@ -67,7 +67,7 @@ export function FileViewer () {
   const user = useSelector(selectUser);
   const noMoreFiles = fileSlice.primitives.noMoreFiles;
   const files = fileSlice.files;
-  const statuses = useSelector(selectDashboardStatuses);
+  const statuses = useSelector(selectFileStatuses);
 
   useEffect(() => {
     dispatch(asyncGetFileToView({ id }));
