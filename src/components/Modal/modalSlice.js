@@ -5,6 +5,8 @@ const initialState = {
   primitives: {
     open: false,
     width: 300,
+    closeOnEscape: false,
+    clickOnBackdropToClose: true,
   },
   reactElements: {
     children: null,
@@ -26,5 +28,7 @@ const modalSlice = createSlice({
 });
 
 export const { setModalPrimitives, setModalReactElements } = modalSlice.actions;
+
+export const selectModalPrimitives = (state) => state.modal.primitives;
 
 export const modalReducer = modalSlice.reducer;

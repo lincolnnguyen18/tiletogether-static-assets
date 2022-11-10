@@ -3,7 +3,7 @@ import { css, jsx } from '@emotion/react';
 import { createPortal } from 'react-dom';
 import { Backdrop } from '../Backdrop';
 import { useDispatch, useSelector } from 'react-redux';
-import { setModalPrimitives } from './modalSlice';
+import { selectModalPrimitives, setModalPrimitives } from './modalSlice';
 import { IconButton } from '../inputs/IconButton';
 import { useEffect, useRef } from 'react';
 
@@ -42,10 +42,11 @@ function onEscape (e) {
   }
 }
 
-export function Modal ({ style, closeOnEscape = false }) {
+export function Modal () {
   const dispatch = useDispatch();
   const modalSlice = useSelector((state) => state.modal);
-  const primitives = modalSlice.primitives;
+  const primitives = useSelector(selectModalPrimitives);
+  const { closeOnEscape = false, clickOnBackdropToClose = true } = primitives;
   const reactElements = modalSlice.reactElements;
   const modalRef = useRef(null);
 
@@ -82,10 +83,11 @@ export function Modal ({ style, closeOnEscape = false }) {
         onClose={() => dispatch(setModalPrimitives({ open: false }))}
         open={primitives.open}
         transitionDuration={0.3}
+        clickOnToClose={clickOnBackdropToClose}
       >
         {primitives.open && (
           <div
-            css={[modalStyle, modifiableModalStyle, style]}
+            css={[modalStyle, modifiableModalStyle]}
             onClick={onModalClick}
             ref={modalRef}
           >

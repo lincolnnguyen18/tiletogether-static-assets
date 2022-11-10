@@ -139,3 +139,22 @@ export function reverseColor (color) {
   const b = 255 - data[2];
   return rgbToHex(r, g, b);
 }
+
+export function parseRgbaStr (rgbaStr) {
+  const rgba = rgbaStr.match(/(\d+(\.\d+)?)/g);
+  return {
+    r: rgba[0],
+    g: rgba[1],
+    b: rgba[2],
+    a: rgba[3],
+  };
+}
+
+export function getRgbaStrOpacity (rgbaStr) {
+  const rgba = rgbaStr.match(/(\d+(\.\d+)?)/g);
+  return rgba[3];
+}
+
+export function removeRgbaOpacity (rgbaStr) {
+  return rgbaStr.replace(/,\s*[\d.]+\)/, ')');
+}

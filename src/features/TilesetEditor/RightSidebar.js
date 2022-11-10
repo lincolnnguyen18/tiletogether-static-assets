@@ -1,17 +1,55 @@
 /** @jsx jsx */
 import { css, jsx } from '@emotion/react';
 import { Icon } from '../../components/Icon';
-import { ColorSet } from './ColorSet';
 import { Divider } from '../MapEditor/RightSidebar';
 import { useDispatch, useSelector } from 'react-redux';
 import { FlexRow } from '../../components/layout/FlexRow';
 import { Slider } from '../../components/inputs/Slider';
 import { Text } from '../../components/Text';
 import { IconButton } from '../../components/inputs/IconButton';
-import { setTilesetRightSidebarPrimitives } from './rightSidebarSlice';
-import { addNewTilesetLayer, deleteSelectedLayers, setTilesetEditorPrimitives } from './tilesetEditorSlice';
+import { addNewTilesetLayer, deleteSelectedLayers } from './tilesetEditorSlice';
 import { TilesetLayer } from './TilesetLayer';
 import { useEffect } from 'react';
+import { selectTilesetRightSidebarPrimitives, setTilesetRightSidebarPrimitives } from './rightSidebarSlice';
+import { HexColorInput, HexColorPicker } from 'react-colorful';
+
+const colorPickerStyle = css`
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 8px;
+
+  .react-colorful {
+    width: 200px;
+    height: 200px;
+    padding: 0;
+    margin: 0 auto;
+  }
+
+  input {
+    & {
+      background: #f6f6f6;
+      color: black;
+      border: 1px solid #ccc;
+      width: 80px;
+      height: 38px;
+      font-size: 16px;
+      border-radius: 4px;
+      outline: none;
+      text-align: center;
+      margin: 0 auto;
+    }
+
+    &::placeholder {
+      color: var(--placeholder-color);
+    }
+
+    &:focus {
+      background: #fff;
+      outline: 1px solid black;
+    }
+  }
+`;
 
 const rightSidebarStyle = css`
   background: #3F3F3F;
@@ -38,7 +76,7 @@ const rightSidebarStyle = css`
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: 18px;  
+    gap: 18px;
   }
 
   .layers {
@@ -49,9 +87,8 @@ const rightSidebarStyle = css`
 
 export function RightSidebar () {
   const dispatch = useDispatch();
-  const tilesetRightSidebarSlice = useSelector((state) => state.tilesetRightSidebar);
-  const colors = tilesetRightSidebarSlice.primitives.colors;
-  const currentColor = tilesetRightSidebarSlice.primitives.currentColor;
+  const primitives = useSelector(selectTilesetRightSidebarPrimitives);
+  const { brushColor } = primitives;
   const tilesetEditorSlice = useSelector((state) => state.tilesetEditor);
   const file = tilesetEditorSlice.file;
   const rootLayer = file.rootLayer;
@@ -62,10 +99,6 @@ export function RightSidebar () {
 
   function handleDeleteSelectedLayers () {
     dispatch(deleteSelectedLayers());
-  }
-
-  function handleRefreshColors () {
-    dispatch(setTilesetEditorPrimitives({ calculateColors: true }));
   }
 
   function handleKeyDown (e) {
@@ -88,19 +121,6 @@ export function RightSidebar () {
 
   return (
     <div css={rightSidebarStyle}>
-      <FlexRow gap={8} justify="space-between">
-        <FlexRow gap={4}>
-          <Icon color='white'>
-            <span className='icon-paint-roller'></span>
-          </Icon>
-          <span>Color set</span>
-        </FlexRow>
-        <IconButton onClick={handleRefreshColors}>
-          <span className={'icon-refresh'}/>
-        </IconButton>
-      </FlexRow>
-      <ColorSet colors={colors} />
-      <Divider />
       <div className={'current-color'}>
         <div className='header'>
           <Icon color='white'>
@@ -108,10 +128,16 @@ export function RightSidebar () {
           </Icon>
           <span>Current color</span>
         </div>
-        <input
-          type='color'
-          value={currentColor}
-          onChange={(e) => dispatch(setTilesetRightSidebarPrimitives({ currentColor: e.target.value }))}
+      </div>
+      <div css={colorPickerStyle}>
+        <HexColorPicker
+          color={brushColor}
+          onChange={(color) => dispatch(setTilesetRightSidebarPrimitives({ brushColor: color }))}
+        />
+        <HexColorInput
+          color={brushColor}
+          onChange={(color) => dispatch(setTilesetRightSidebarPrimitives({ brushColor: color }))}
+          prefixed
         />
       </div>
       <Divider />

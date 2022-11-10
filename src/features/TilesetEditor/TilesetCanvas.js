@@ -4,9 +4,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { addNewChange, deleteLayerById, selectLastSelectedLayer, selectTilesetEditorPrimitives, selectTilesetFile, setTilesetEditorPrimitives, updateAllLayers, updateLayer, updateLayersUpToRoot } from './tilesetEditorSlice';
 import { Circle, Group, Image, Layer, Rect, Stage } from 'react-konva';
-import { isCompletelyTransparent, reverseColor, trimPng } from '../../utils/canvasUtils';
+import { isCompletelyTransparent, rgbToHex, trimPng } from '../../utils/canvasUtils';
 import { onLayerPosition, emitLayerPosition } from './tilesetEditorSocketApi';
 import { usePrevious } from '../../utils/stateUtils';
+import { selectTilesetRightSidebarPrimitives, setTilesetRightSidebarPrimitives } from './rightSidebarSlice';
 
 const virtualCanvasesStyle = css`
   position: absolute;
@@ -46,9 +47,11 @@ export function getLayerFromId (layers, id) {
 export function TilesetCanvas () {
   const [canvasSize, setCanvasSize] = useState({ width: window.innerWidth - 56 - 270, height: window.innerHeight });
   const primitives = useSelector(selectTilesetEditorPrimitives);
+  const rightSidebarPrimitives = useSelector(selectTilesetRightSidebarPrimitives);
   const lastSelectedLayer = useSelector(selectLastSelectedLayer);
   const file = useSelector(selectTilesetFile);
-  const { activeTool, brushColor } = primitives;
+  const { activeTool } = primitives;
+  const { brushColor } = rightSidebarPrimitives;
   const layers = file.rootLayer.layers;
   const dispatch = useDispatch();
   const [stageData, setStageData] = useState({ scale: 5, position: { x: 0, y: 0 } });
@@ -65,6 +68,7 @@ export function TilesetCanvas () {
   const [mousePosition, setMousePosition] = useState(null);
   const [cursorStyle, setCursorStyle] = useState('default');
   const [brushSizeKeyWasDown, setBrushSizeKeyWasDown] = useState(false);
+  const [points, setPoints] = useState([]);
 
   const stageRef = useRef(null);
 
@@ -107,6 +111,7 @@ export function TilesetCanvas () {
     const layer = layerData[prevLastSelectedLayer._id];
     // console.log(layer);
     if (!layer || !layer.canvas || isCompletelyTransparent(layer.canvas)) {
+      if (prevLastSelectedLayer.type !== 'layer') return;
       // console.log('canvas is completely transparent or uninitialized');
       dispatch(deleteLayerById({ id: prevLastSelectedLayer._id }));
     }
@@ -126,6 +131,10 @@ export function TilesetCanvas () {
   function colorPixelInCanvas (layerId, stageRef, e) {
     // console.log('color pixel in canvas', layerId);
 
+    if (brushSize < 1) {
+      setBrushSize(1);
+    }
+
     let layer = layerData[layerId];
     // get mouse position adjusted for stage position/scale and image position
     const mousePosition = stageRef.current.getPointerPosition();
@@ -136,8 +145,12 @@ export function TilesetCanvas () {
       y: Math.floor((mousePosition.y - stagePosition.y) / stageScale),
     };
     const halfBrushSize = Math.floor(brushSize / 2);
-    // logging halfBrushSize because a rare bug sometimes occurs where the brush size is 1 but nothing is being drawn or the brush outline is slightly larger than the actual brush size; trying to reproduce it and track down the cause
-    // console.log('halfBrushSize', halfBrushSize);
+    // logging halfBrushSize because a rare bug sometimes occurs where the brush size is 1 but nothing is being drawn or the brush outline is slightly larger than the actual brush size; trying to reproduce it and track down the cause; update: should be fixed now, when brush size was increased/decreased by a factor, forgot to floor so was not whole number sometimes
+    console.log('halfBrushSize', halfBrushSize);
+
+    if (halfBrushSize < 0) {
+      return;
+    }
 
     // if clicked outside layer, deselect
     // use relativeMousePos and layer.position
@@ -163,13 +176,14 @@ export function TilesetCanvas () {
       };
     }
 
-    let layerCanvas = layer?.canvas;
+    let layerCanvas = layer ? layer.canvas : null;
     if (!layerCanvas) {
       // set layer canvas to blank canvas with same size as brush size if it doesn't exist
       layerCanvas = document.createElement('canvas');
       layerCanvas.width = brushSize;
       layerCanvas.height = brushSize;
     }
+    console.log(layerCanvas);
 
     const overflows = {
       left: Math.min(0, relativeMousePos.x - layerPosition.x - halfBrushSize),
@@ -187,8 +201,16 @@ export function TilesetCanvas () {
       const newCanvas = document.createElement('canvas');
       const newCtx = newCanvas.getContext('2d');
       const ctx = layerCanvas.getContext('2d');
-      const newCanvasWidth = layerCanvas.width + overflows.left + overflows.right;
-      const newCanvasHeight = layerCanvas.height + overflows.top + overflows.bottom;
+      let newCanvasWidth = layerCanvas.width + overflows.left + overflows.right;
+      let newCanvasHeight = layerCanvas.height + overflows.top + overflows.bottom;
+
+      if (overflows.right > 0 && brushSize === 1) {
+        newCanvasWidth += 1;
+      }
+      if (overflows.bottom > 0 && brushSize === 1) {
+        newCanvasHeight += 1;
+      }
+
       newCanvas.width = newCanvasWidth;
       newCanvas.height = newCanvasHeight;
       newCtx.drawImage(layerCanvas, overflows.left, overflows.top);
@@ -245,6 +267,8 @@ export function TilesetCanvas () {
 
       layer.canvas.width = newCanvasWidth;
       layer.canvas.height = newCanvasHeight;
+      // console.log('newCanvasWidth', newCanvasWidth);
+      // console.log('newCanvasHeight', newCanvasHeight);
       ctx.filter = 'url(#remove-alpha)';
       ctx.drawImage(newCanvas, 0, 0);
       ctx.fillStyle = brushColor;
@@ -261,6 +285,8 @@ export function TilesetCanvas () {
       } else {
         ctx.clearRect(brushRect.x, brushRect.y, brushRect.width, brushRect.height);
       }
+
+      setPoints([]);
 
       const newLayerData = { ...layerData };
       if (!layer) {
@@ -286,8 +312,9 @@ export function TilesetCanvas () {
         y: relativeMousePos.y - layerPosition.y - halfBrushSize,
       };
       brushRect = { x: rectPos.x, y: rectPos.y, width: brushSize, height: brushSize };
+      setPoints([...points, { x: relativeMousePos.x - layerPosition.x, y: relativeMousePos.y - layerPosition.y }]);
 
-      let ctx = layerCanvas.getContext('2d', { desynchronized: true });
+      const ctx = layerCanvas.getContext('2d', { desynchronized: true });
       ctx.filter = 'url(#remove-alpha)';
       if (activeTool === 'draw') {
         ctx.fillStyle = brushColor;
@@ -296,20 +323,44 @@ export function TilesetCanvas () {
         ctx.globalCompositeOperation = 'destination-out';
       }
 
-      if (brushSize === 1) {
-        ctx.fillRect(brushRect.x, brushRect.y, brushRect.width, brushRect.height);
-      } else {
-        // color pixels that intersect with circle of radius halfBrushSize at mouse position
-        // make sure there is no aliasing at edges of circle using svg filter
-        const circle = new Path2D();
-        const params = [relativeMousePos.x - layerPosition.x, relativeMousePos.y - layerPosition.y, halfBrushSize, 0, 2 * Math.PI];
-        circle.arc(...params);
-        ctx.fill(circle);
+      if (points.length <= 1) {
+        if (brushSize === 1) {
+          ctx.fillRect(brushRect.x, brushRect.y, brushRect.width, brushRect.height);
+        } else {
+          // color pixels that intersect with circle of radius halfBrushSize at mouse position
+          // make sure there is no aliasing at edges of circle using svg filter
+          const circle = new Path2D();
+          const params = [relativeMousePos.x - layerPosition.x, relativeMousePos.y - layerPosition.y, halfBrushSize, 0, 2 * Math.PI];
+          circle.arc(...params);
+          ctx.fill(circle);
+        }
       }
+
+      ctx.strokeStyle = brushColor;
+      ctx.lineWidth = brushSize;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      // draw path of all points in points array
+      ctx.beginPath();
+      points.forEach((point) => {
+        // canvas calculates from half of a pixel so need to offset by half of a pixel if brush size is 1
+        if (brushSize === 1) {
+          ctx.lineTo(point.x + 0.5, point.y + 0.5);
+        } else {
+          ctx.lineTo(point.x, point.y);
+        }
+        ctx.stroke();
+      });
+
+      // keep only 7 points in array to reduce lag; if there are more than 7 points, remove the first points until there are 7
+      if (points.length > 7) {
+        setPoints(points.slice(points.length - 7));
+      }
+
       // dispatch(addNewChange({ newChange: 'draw' }));
       // emitLayerImage({ layerId, color: 'red', brushSize, brushType: 'circle', params });
 
-      let newLayerData = { ...layerData };
+      const newLayerData = { ...layerData };
       if (!layer) {
         layer = {
           position: {
@@ -322,52 +373,53 @@ export function TilesetCanvas () {
 
       newLayerData[layerId] = layer;
       setLayerData(newLayerData);
-      const inputCanvas = layerCanvas;
+      // const inputCanvas = layerCanvas;
 
-      // call trimPng on lastSelectedLayer's image if its width and height are at least 1000
-      if (lastSelectedLayer && layerData[lastSelectedLayer._id] &&
-        layer.canvas.width >= 100 && layer.canvas.height >= 100) {
-        // console.log('trimming', inputCanvas.width, inputCanvas.height);
-        const { trimmedImageData, overflows } = trimPng(inputCanvas);
-        // console.log('trimmed', trimmedImageData.width, trimmedImageData.height);
-        const canvas = document.createElement('canvas');
-        canvas.width = trimmedImageData.width;
-        canvas.height = trimmedImageData.height;
-        ctx = canvas.getContext('2d');
-        ctx.putImageData(trimmedImageData, 0, 0);
-        newLayerData = { ...layerData };
-        // console.log(_.cloneDeep(newLayerData[lastSelectedLayer._id]));
-        newLayerData[lastSelectedLayer._id] = {
-          ...newLayerData[lastSelectedLayer._id],
-          canvas,
-          position: {
-            x: newLayerData[lastSelectedLayer._id].position.x + overflows.left,
-            y: newLayerData[lastSelectedLayer._id].position.y + overflows.top,
-          },
-        };
-        setLayerData(newLayerData);
-      } else if (lastSelectedLayer && layerData[lastSelectedLayer._id] &&
-      // else if only one of width or height are at least 1000, then just trim that dimension
-        (layer.canvas.width >= 100 || layer.canvas.height >= 100)) {
-        const { trimmedImageData, overflows } = trimPng(inputCanvas);
-        const canvas = document.createElement('canvas');
-        canvas.width = trimmedImageData.width;
-        canvas.height = trimmedImageData.height;
-        ctx = canvas.getContext('2d');
-        ctx.putImageData(trimmedImageData, 0, 0);
-        newLayerData = { ...layerData };
-        newLayerData[lastSelectedLayer._id] = {
-          ...newLayerData[lastSelectedLayer._id],
-          canvas,
-          position: {
-            x: newLayerData[lastSelectedLayer._id].position.x + overflows.left,
-            y: newLayerData[lastSelectedLayer._id].position.y + overflows.top,
-          },
-        };
-        setLayerData(newLayerData);
-      }
-
-      stageRef.current.draw();
+    // TODO: activate trimPng when a shortcut pressed or activated from context menu maybe
+    //   // call trimPng on lastSelectedLayer's image if its width and height are at least n
+    //   if (lastSelectedLayer && layerData[lastSelectedLayer._id] &&
+    //     layer.canvas.width >= 100 && layer.canvas.height >= 100) {
+    //     // console.log('trimming', inputCanvas.width, inputCanvas.height);
+    //     const { trimmedImageData, overflows } = trimPng(inputCanvas);
+    //     // console.log('trimmed', trimmedImageData.width, trimmedImageData.height);
+    //     const canvas = document.createElement('canvas');
+    //     canvas.width = trimmedImageData.width;
+    //     canvas.height = trimmedImageData.height;
+    //     console.log('trimmedImageData', trimmedImageData.width, trimmedImageData.height);
+    //     ctx = canvas.getContext('2d');
+    //     ctx.putImageData(trimmedImageData, 0, 0);
+    //     newLayerData = { ...layerData };
+    //     // console.log(_.cloneDeep(newLayerData[lastSelectedLayer._id]));
+    //     newLayerData[lastSelectedLayer._id] = {
+    //       ...newLayerData[lastSelectedLayer._id],
+    //       canvas,
+    //       position: {
+    //         x: newLayerData[lastSelectedLayer._id].position.x + overflows.left,
+    //         y: newLayerData[lastSelectedLayer._id].position.y + overflows.top,
+    //       },
+    //     };
+    //     setLayerData(newLayerData);
+    //   } else if (lastSelectedLayer && layerData[lastSelectedLayer._id] &&
+    //   // else if only one of width or height are at least 1000, then just trim that dimension
+    //     (layer.canvas.width >= 100 || layer.canvas.height >= 100)) {
+    //     const { trimmedImageData, overflows } = trimPng(inputCanvas);
+    //     const canvas = document.createElement('canvas');
+    //     canvas.width = trimmedImageData.width;
+    //     canvas.height = trimmedImageData.height;
+    //     ctx = canvas.getContext('2d');
+    //     ctx.putImageData(trimmedImageData, 0, 0);
+    //     newLayerData = { ...layerData };
+    //     newLayerData[lastSelectedLayer._id] = {
+    //       ...newLayerData[lastSelectedLayer._id],
+    //       canvas,
+    //       position: {
+    //         x: newLayerData[lastSelectedLayer._id].position.x + overflows.left,
+    //         y: newLayerData[lastSelectedLayer._id].position.y + overflows.top,
+    //       },
+    //     };
+    //     setLayerData(newLayerData);
+    //     stageRef.current.draw();
+    //   }
     }
   }
 
@@ -381,7 +433,7 @@ export function TilesetCanvas () {
       dispatch(updateAllLayers({ selected: false }));
       dispatch(setTilesetEditorPrimitives({ lastSelectedLayer: null }));
     // listen for ] and [ to change brush size
-    } else if (e.key === ']' && activeTool !== 'select') {
+    } else if (e.key === ']' && ['erase', 'draw'].includes(activeTool)) {
       const maxBrushSize = 7000;
 
       // if size is 1, set to 2 (switch from square to circle)
@@ -389,16 +441,16 @@ export function TilesetCanvas () {
         setBrushSize(2);
       // else, increase size/diameter by 2 (increase circle radius by 1)
       } else if (!brushSizeKeyWasDown) {
-        setBrushSize(Math.min(brushSize + 2), maxBrushSize);
+        setBrushSize(Math.min(Math.floor(brushSize + 2)), maxBrushSize);
       } else {
-        setBrushSize(Math.min(brushSize * 1.4), maxBrushSize);
+        setBrushSize(Math.min(Math.floor(brushSize * 1.4)), maxBrushSize);
       }
 
       if (!brushSizeKeyWasDown) {
         setBrushSizeKeyWasDown(true);
       }
     // same logic here
-    } else if (e.key === '[' && brushSize > 1 && activeTool !== 'select') {
+    } else if (e.key === '[' && brushSize > 1 && ['erase', 'draw'].includes(activeTool)) {
       if (brushSize <= 2) {
         setBrushSize(1);
       } else if (!brushSizeKeyWasDown) {
@@ -417,6 +469,8 @@ export function TilesetCanvas () {
       dispatch(setTilesetEditorPrimitives({ activeTool: 'erase' }));
     } else if (e.key === '3') {
       dispatch(setTilesetEditorPrimitives({ activeTool: 'select' }));
+    } else if (e.key === '4') {
+      dispatch(setTilesetEditorPrimitives({ activeTool: 'color-picker' }));
     }
   }
 
@@ -444,13 +498,17 @@ export function TilesetCanvas () {
     const stagePosition = stageData.position;
     const stageScale = stageData.scale;
 
-    if (mousePosition && stagePosition && stageScale && activeTool !== 'select') {
+    if (mousePosition && stagePosition && stageScale && ['draw', 'erase'].includes(activeTool)) {
       const flooredRelativeMousePos = {
         x: Math.floor((mousePosition.x - stagePosition.x) / stageScale),
         y: Math.floor((mousePosition.y - stagePosition.y) / stageScale),
       };
 
-      let strokeWidth = 4 / stageScale;
+      if (activeTool === 'color-picker') {
+        setBrushSize(1);
+      }
+
+      let strokeWidth = 2 / stageScale;
       const scaledBrushSize = brushSize * stageData.scale;
 
       if (scaledBrushSize < 13) {
@@ -458,24 +516,31 @@ export function TilesetCanvas () {
       }
 
       const newBrushOutline = [];
-      const fillColor = activeTool === 'draw' ? brushColor : 'white';
-      const outlineColor = activeTool === 'draw' ? reverseColor(fillColor) : 'red';
+      const outerRingColor = 'black';
+      const innerRingColor = 'white';
 
-      // show circle outline if big brush
+      // show circle outline if big brush; make its color the inverse of layers behind it using globalCompositeOperation
       if (brushSize > 5) {
         newBrushOutline.push(
           <Circle
             x={flooredRelativeMousePos.x}
             y={flooredRelativeMousePos.y}
             radius={brushSize / 2}
-            stroke={outlineColor}
+            stroke={outerRingColor}
             strokeWidth={strokeWidth}
-            dash={[8 / stageScale, 8 / stageScale]}
-            dashEnabled={true}
-            fill={fillColor}
-            opacity={0.5}
             listening={false}
             key={0}
+          />,
+        );
+        newBrushOutline.push(
+          <Circle
+            x={flooredRelativeMousePos.x}
+            y={flooredRelativeMousePos.y}
+            radius={(brushSize / 2) - 1 / stageScale}
+            stroke={innerRingColor}
+            strokeWidth={strokeWidth}
+            listening={false}
+            key={1}
           />,
         );
       // show centered square outline if small brush
@@ -486,14 +551,22 @@ export function TilesetCanvas () {
             y={flooredRelativeMousePos.y - brushSize / 2}
             width={brushSize}
             height={brushSize}
-            stroke={outlineColor}
+            stroke={outerRingColor}
             strokeWidth={strokeWidth}
-            dash={[8 / stageScale, 8 / stageScale]}
-            dashEnabled={true}
-            fill={fillColor}
-            opacity={0.5}
             listening={false}
             key={0}
+          />,
+        );
+        newBrushOutline.push(
+          <Rect
+            x={flooredRelativeMousePos.x - brushSize / 2 + 1 / stageScale}
+            y={flooredRelativeMousePos.y - brushSize / 2 + 1 / stageScale}
+            width={brushSize - 2 / stageScale}
+            height={brushSize - 2 / stageScale}
+            stroke={innerRingColor}
+            strokeWidth={strokeWidth}
+            listening={false}
+            key={1}
           />,
         );
       // show uncentered square outline if 1 pixel brush
@@ -504,14 +577,22 @@ export function TilesetCanvas () {
             y={flooredRelativeMousePos.y}
             width={brushSize}
             height={brushSize}
-            stroke={outlineColor}
+            stroke={outerRingColor}
             strokeWidth={strokeWidth}
-            dash={[8 / stageScale, 8 / stageScale]}
-            dashEnabled={true}
-            fill={fillColor}
-            opacity={0.5}
             listening={false}
             key={0}
+          />,
+        );
+        newBrushOutline.push(
+          <Rect
+            x={flooredRelativeMousePos.x + 1 / stageScale}
+            y={flooredRelativeMousePos.y + 1 / stageScale}
+            width={brushSize - 2 / stageScale}
+            height={brushSize - 2 / stageScale}
+            stroke={innerRingColor}
+            strokeWidth={strokeWidth}
+            listening={false}
+            key={1}
           />,
         );
       }
@@ -520,6 +601,11 @@ export function TilesetCanvas () {
       setBrushOutline(null);
     }
   }, [brushSize, brushColor, mousePosition, stageData, activeTool]);
+
+  // Clear brush outline when changing color in color picker (otherwise a ghost of it shows up on canvas edge)
+  useEffect(() => {
+    setBrushOutline(null);
+  }, [brushColor]);
 
   useEffect(() => {
     const layerIdToImageUrl = {};
@@ -582,6 +668,9 @@ export function TilesetCanvas () {
   }, []);
 
   function handleMouseDownLayer (e, layer) {
+    if (activeTool === 'color-picker') {
+      return;
+    }
     if (activeTool === 'select' || activeTool === 'erase' || (
       activeTool === 'draw' && !e.evt.shiftKey &&
       // don't focus on this layer if a new blank layer is being selected
@@ -746,7 +835,11 @@ export function TilesetCanvas () {
   };
 
   const handleStageMouseDown = (e) => {
-    if (e.target.attrs.name === undefined && activeTool === 'select') {
+    if (activeTool === 'color-picker') {
+      const hex = getPixelFromStage(stageRef);
+      dispatch(setTilesetRightSidebarPrimitives({ brushColor: hex }));
+      dispatch(setTilesetEditorPrimitives({ activeTool: 'draw' }));
+    } else if (e.target.attrs.name === undefined && activeTool === 'select') {
       // clear selection if click on stage
       dispatch(updateAllLayers({ selected: false }));
       dispatch(setTilesetEditorPrimitives({ lastSelectedLayer: null }));
@@ -757,7 +850,42 @@ export function TilesetCanvas () {
     }
   };
 
+  function getPixelFromStage (stageRef) {
+    // get all layers intersecting with pointer; use getAllIntersections
+    const intersectingLayers = stageRef.current.getAllIntersections(stageRef.current.getPointerPosition());
+    // console.log(intersectingLayers);
+
+    function getPixelAtPoint (layer, point) {
+      // console.log(layer);
+      // convert layer to canvas and open in new window
+      const canvas = layer.attrs.image;
+      // console.log(layer.attrs.name);
+
+      // get pixel from layer
+      const pixel = canvas.getContext('2d').getImageData(point.x, point.y, 1, 1).data;
+      // convert pixel to hex
+      return rgbToHex(pixel[0], pixel[1], pixel[2]);
+    }
+
+    // get pixels from first to last layer in intersectingLayers until a non-transparent pixel is found
+    for (let i = intersectingLayers.length - 1; i >= 0; i--) {
+      const layer = intersectingLayers[i];
+      const point = layer.getRelativePointerPosition();
+      const hex = getPixelAtPoint(layer, point);
+      if (hex !== '#000000') {
+        return hex;
+      }
+    }
+  }
+
   const handleStageMouseMove = (e) => {
+    if (activeTool === 'color-picker') {
+      // update color being hovered over in real time
+      const hex = getPixelFromStage(stageRef);
+      dispatch(setTilesetRightSidebarPrimitives({ brushColor: hex }));
+      return;
+    }
+
     // update mouse position
     setMousePosition(stageRef.current.getPointerPosition());
 
@@ -828,6 +956,7 @@ export function TilesetCanvas () {
   const handleStageMouseUp = () => {
     setDragging(false);
     setDragStartPosition(null);
+    setPoints([]);
   };
 
   const handleStageMouseLeave = () => {
@@ -841,7 +970,7 @@ export function TilesetCanvas () {
   useEffect(() => {
     if (activeTool === 'select') {
       setCursorStyle('default');
-    } else if (activeTool === 'draw' || activeTool === 'erase') {
+    } else if (activeTool === 'draw' || activeTool === 'erase' || activeTool === 'color-picker') {
       setCursorStyle('crosshair');
     }
   }, [stageData.scale, activeTool, brushSize]);

@@ -55,6 +55,7 @@ export function TilesetEditor () {
           selectFileErrors={selectTilesetEditorErrors}
           selectFileStatuses={selectTilesetEditorStatuses}
           setActiveTool={setActiveTool}
+          showColorPicker={true}
         />
         <FilenameIndicator file={file} saving={newChanges.length > 0} />
         <RightSidebar />

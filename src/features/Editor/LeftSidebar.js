@@ -37,7 +37,7 @@ const leftSidebarStyle = css`
   }
 `;
 
-export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile, clearFileErrors, clearFileStatus, selectFileErrors, selectFileStatuses, setActiveTool }) {
+export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile, clearFileErrors, clearFileStatus, selectFileErrors, selectFileStatuses, setActiveTool, showColorPicker = false }) {
   const dispatch = useDispatch();
   const leftSidebarSlice = useSelector((state) => state.leftSidebar);
   const showGrid = leftSidebarSlice.primitives.showGrid;
@@ -368,6 +368,11 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
           <IconButton active={activeTool === 'select' && !drawerOpen} onClick={() => setActiveTool('select')}>
             <span className='icon-cursor'></span>
           </IconButton>
+          {showColorPicker && (
+            <IconButton active={activeTool === 'color-picker' && !drawerOpen} onClick={() => setActiveTool('color-picker')}>
+              <span className='icon-color-picker'></span>
+            </IconButton>
+          )}
         </div>
         <div className='group'>
           <IconButton onClick={() => openDrawer('download')} title={`Download ${file.type}`}>

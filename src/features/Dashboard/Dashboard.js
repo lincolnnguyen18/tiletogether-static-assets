@@ -6,7 +6,7 @@ import { Fragment, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { setDashboardPrimitives } from './dashboardSlice';
-import { setModalPrimitives } from '../../components/Modal/modalSlice';
+import { selectModalPrimitives, setModalPrimitives } from '../../components/Modal/modalSlice';
 import { Navbar } from './Navbar/Navbar';
 import { openAuthModal } from './Modals/AuthModal';
 import { RedirectPage } from '../../components/RedirectPage';
@@ -148,6 +148,15 @@ export function Dashboard () {
   const files = fileSlice.files;
   const fileStatuses = useSelector(selectFileStatuses);
   const noMoreFiles = fileSlice.primitives.noMoreFiles;
+  const modalPrimitives = useSelector(selectModalPrimitives);
+  const { open } = modalPrimitives;
+
+  // reload files once modal closes (user probably logged in successfully)
+  useEffect(() => {
+    if (!open) {
+      dispatch(asyncGetFiles({ location }));
+    }
+  }, [open]);
 
   useEffect(() => {
     dispatch(setDashboardPrimitives({ sidebarOpen: false }));
