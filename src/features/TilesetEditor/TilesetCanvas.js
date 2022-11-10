@@ -2,10 +2,11 @@
 import { css, jsx } from '@emotion/react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Fragment, useEffect, useRef, useState } from 'react';
-import { addNewChange, selectLastSelectedLayer, selectTilesetEditorPrimitives, selectTilesetFile, setTilesetEditorPrimitives, updateAllLayers, updateLayer, updateLayersUpToRoot } from './tilesetEditorSlice';
+import { addNewChange, deleteLayerById, selectLastSelectedLayer, selectTilesetEditorPrimitives, selectTilesetFile, setTilesetEditorPrimitives, updateAllLayers, updateLayer, updateLayersUpToRoot } from './tilesetEditorSlice';
 import { Circle, Group, Image, Layer, Rect, Stage } from 'react-konva';
-import { reverseColor, trimPng } from '../../utils/canvasUtils';
+import { isCompletelyTransparent, reverseColor, trimPng } from '../../utils/canvasUtils';
 import { onLayerPosition, emitLayerPosition } from './tilesetEditorSocketApi';
+import { usePrevious } from '../../utils/stateUtils';
 
 const virtualCanvasesStyle = css`
   position: absolute;
@@ -99,6 +100,29 @@ export function TilesetCanvas () {
   //   }
   // }, [newChanges, file]);
 
+  function deletePrevLastSelectedLayerIfEmpty () {
+    // check if last selected layer's canvas is completely transparent
+    if (!prevLastSelectedLayer) return;
+    // console.log(prevLastSelectedLayer);
+    const layer = layerData[prevLastSelectedLayer._id];
+    // console.log(layer);
+    if (!layer || !layer.canvas || isCompletelyTransparent(layer.canvas)) {
+      // console.log('canvas is completely transparent or uninitialized');
+      dispatch(deleteLayerById({ id: prevLastSelectedLayer._id }));
+    }
+  }
+
+  const prevLastSelectedLayer = usePrevious(lastSelectedLayer);
+
+  useEffect(() => {
+    // console.log('last selected layer', _.cloneDeep(lastSelectedLayer));
+    // console.log('prev last selected layer', _.cloneDeep(prevLastSelectedLayer));
+
+    if (lastSelectedLayer == null && prevLastSelectedLayer != null) {
+      deletePrevLastSelectedLayerIfEmpty();
+    }
+  }, [lastSelectedLayer]);
+
   function colorPixelInCanvas (layerId, stageRef, e) {
     // console.log('color pixel in canvas', layerId);
 
@@ -112,7 +136,8 @@ export function TilesetCanvas () {
       y: Math.floor((mousePosition.y - stagePosition.y) / stageScale),
     };
     const halfBrushSize = Math.floor(brushSize / 2);
-    console.log('halfBrushSize', halfBrushSize);
+    // logging halfBrushSize because a rare bug sometimes occurs where the brush size is 1 but nothing is being drawn or the brush outline is slightly larger than the actual brush size; trying to reproduce it and track down the cause
+    // console.log('halfBrushSize', halfBrushSize);
 
     // if clicked outside layer, deselect
     // use relativeMousePos and layer.position
@@ -121,9 +146,9 @@ export function TilesetCanvas () {
       relativeMousePos.x > layer.position.x + layer.canvas.width ||
       relativeMousePos.y < layer.position.y ||
       relativeMousePos.y > layer.position.y + layer.canvas.height) &&
-      !e.evt.shiftKey
+      !e.evt.shiftKey && !dragging
     ) {
-      console.log('clicked outside layer');
+      // console.log('clicked outside layer');
       dispatch(updateAllLayers({ selected: false }));
       dispatch(setTilesetEditorPrimitives({ lastSelectedLayer: null }));
       return;
@@ -158,7 +183,7 @@ export function TilesetCanvas () {
     let brushRect = null;
 
     // extend layer if shift being pressed using overflows
-    if ((overflows.left > 0 || overflows.right > 0 || overflows.top > 0 || overflows.bottom > 0) && e.evt.shiftKey) {
+    if ((overflows.left > 0 || overflows.right > 0 || overflows.top > 0 || overflows.bottom > 0) && e.evt.shiftKey && activeTool === 'draw') {
       const newCanvas = document.createElement('canvas');
       const newCtx = newCanvas.getContext('2d');
       const ctx = layerCanvas.getContext('2d');
@@ -262,13 +287,12 @@ export function TilesetCanvas () {
       };
       brushRect = { x: rectPos.x, y: rectPos.y, width: brushSize, height: brushSize };
 
-      const ctx = layerCanvas.getContext('2d', { desynchronized: true });
+      let ctx = layerCanvas.getContext('2d', { desynchronized: true });
+      ctx.filter = 'url(#remove-alpha)';
       if (activeTool === 'draw') {
         ctx.fillStyle = brushColor;
-        ctx.filter = 'url(#remove-alpha)';
         ctx.globalCompositeOperation = 'source-over';
       } else {
-        ctx.filter = 'url(#remove-alpha)';
         ctx.globalCompositeOperation = 'destination-out';
       }
 
@@ -285,7 +309,7 @@ export function TilesetCanvas () {
       // dispatch(addNewChange({ newChange: 'draw' }));
       // emitLayerImage({ layerId, color: 'red', brushSize, brushType: 'circle', params });
 
-      const newLayerData = { ...layerData };
+      let newLayerData = { ...layerData };
       if (!layer) {
         layer = {
           position: {
@@ -298,6 +322,51 @@ export function TilesetCanvas () {
 
       newLayerData[layerId] = layer;
       setLayerData(newLayerData);
+      const inputCanvas = layerCanvas;
+
+      // call trimPng on lastSelectedLayer's image if its width and height are at least 1000
+      if (lastSelectedLayer && layerData[lastSelectedLayer._id] &&
+        layer.canvas.width >= 100 && layer.canvas.height >= 100) {
+        // console.log('trimming', inputCanvas.width, inputCanvas.height);
+        const { trimmedImageData, overflows } = trimPng(inputCanvas);
+        // console.log('trimmed', trimmedImageData.width, trimmedImageData.height);
+        const canvas = document.createElement('canvas');
+        canvas.width = trimmedImageData.width;
+        canvas.height = trimmedImageData.height;
+        ctx = canvas.getContext('2d');
+        ctx.putImageData(trimmedImageData, 0, 0);
+        newLayerData = { ...layerData };
+        // console.log(_.cloneDeep(newLayerData[lastSelectedLayer._id]));
+        newLayerData[lastSelectedLayer._id] = {
+          ...newLayerData[lastSelectedLayer._id],
+          canvas,
+          position: {
+            x: newLayerData[lastSelectedLayer._id].position.x + overflows.left,
+            y: newLayerData[lastSelectedLayer._id].position.y + overflows.top,
+          },
+        };
+        setLayerData(newLayerData);
+      } else if (lastSelectedLayer && layerData[lastSelectedLayer._id] &&
+      // else if only one of width or height are at least 1000, then just trim that dimension
+        (layer.canvas.width >= 100 || layer.canvas.height >= 100)) {
+        const { trimmedImageData, overflows } = trimPng(inputCanvas);
+        const canvas = document.createElement('canvas');
+        canvas.width = trimmedImageData.width;
+        canvas.height = trimmedImageData.height;
+        ctx = canvas.getContext('2d');
+        ctx.putImageData(trimmedImageData, 0, 0);
+        newLayerData = { ...layerData };
+        newLayerData[lastSelectedLayer._id] = {
+          ...newLayerData[lastSelectedLayer._id],
+          canvas,
+          position: {
+            x: newLayerData[lastSelectedLayer._id].position.x + overflows.left,
+            y: newLayerData[lastSelectedLayer._id].position.y + overflows.top,
+          },
+        };
+        setLayerData(newLayerData);
+      }
+
       stageRef.current.draw();
     }
   }
@@ -309,6 +378,8 @@ export function TilesetCanvas () {
   function handleKeyDown (e) {
     if (e.key === 'Escape') {
       setSelectedRects([]);
+      dispatch(updateAllLayers({ selected: false }));
+      dispatch(setTilesetEditorPrimitives({ lastSelectedLayer: null }));
     // listen for ] and [ to change brush size
     } else if (e.key === ']' && activeTool !== 'select') {
       const maxBrushSize = 7000;
@@ -448,7 +519,7 @@ export function TilesetCanvas () {
     } else {
       setBrushOutline(null);
     }
-  }, [brushSize, brushColor, mousePosition, stageData]);
+  }, [brushSize, brushColor, mousePosition, stageData, activeTool]);
 
   useEffect(() => {
     const layerIdToImageUrl = {};
@@ -469,19 +540,20 @@ export function TilesetCanvas () {
         layerIdToImageUrl[layerId] = image;
       }));
 
-      const virtualCanvases = document.getElementById('virtual-canvases');
-      if (!virtualCanvases) return;
+      // not using virtualCanvases for now
+      // const virtualCanvases = document.getElementById('virtual-canvases');
+      // if (!virtualCanvases) return;
       const newLayerData = {};
       Object.keys(layerIdToImageUrl).forEach((layerId) => {
         if (document.getElementById(layerId)) return;
-        const trimmedImageData = trimPng(layerIdToImageUrl[layerId]);
+        const { trimmedImageData } = trimPng(layerIdToImageUrl[layerId]);
         const canvas = document.createElement('canvas');
         canvas.id = `canvas-${layerId}`;
         canvas.width = trimmedImageData.width;
         canvas.height = trimmedImageData.height;
         const ctx = canvas.getContext('2d');
         ctx.putImageData(trimmedImageData, 0, 0);
-        virtualCanvases.appendChild(canvas);
+        // virtualCanvases.appendChild(canvas);
         newLayerData[layerId] = {};
         newLayerData[layerId].canvas = canvas;
       });
@@ -511,7 +583,9 @@ export function TilesetCanvas () {
 
   function handleMouseDownLayer (e, layer) {
     if (activeTool === 'select' || activeTool === 'erase' || (
-      activeTool === 'draw' && !e.evt.shiftKey
+      activeTool === 'draw' && !e.evt.shiftKey &&
+      // don't focus on this layer if a new blank layer is being selected
+      (!lastSelectedLayer || layerData[lastSelectedLayer._id] !== undefined)
     )) {
       setDragging(true);
       const mousePosition = stageRef.current.getPointerPosition();
@@ -611,6 +685,12 @@ export function TilesetCanvas () {
     if (!file || !file.rootLayer) return;
     traverse(file.rootLayer);
     setSelectedRects(newSelectedRects);
+
+    // remove hover rect if hoverLayerId not in newSelectedRects (to prevent ghost hover rect after deleting a layer)
+    if (hoverLayerId && !newSelectedRects.find((rect) => rect.key === hoverLayerId)) {
+      setHoveredRect(null);
+      setHoverLayerId(null);
+    }
   }, [layers, layerData, stageData.scale]);
 
   const handleStageMouseWheel = (e) => {
@@ -740,14 +820,14 @@ export function TilesetCanvas () {
         dispatch(addNewChange({ newChange: 'moveLayer' }));
         emitLayerPosition({ layerId, position: newImagePosition });
       }
+    } else if (dragging && ['draw', 'erase'].includes(activeTool) && lastSelectedLayer) {
+      colorPixelInCanvas(lastSelectedLayer._id, stageRef, e);
     }
   };
 
   const handleStageMouseUp = () => {
-    if (activeTool === 'select') {
-      setDragging(false);
-      setDragStartPosition(null);
-    }
+    setDragging(false);
+    setDragStartPosition(null);
   };
 
   const handleStageMouseLeave = () => {

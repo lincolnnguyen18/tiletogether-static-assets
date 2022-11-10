@@ -38,6 +38,7 @@ export function TilesetLayer ({ layer, parentSelected, level }) {
   function handleDragStart (e, layer) {
     if (layer.isRootLayer) return;
     if (lastSelectedLayer && layer._id === lastSelectedLayer._id) return;
+
     if ((!e.shiftKey && !e.ctrlKey && !e.metaKey) && (!layer.selected || parentSelected)) {
       dispatch(setTilesetEditorPrimitives({ activeTool: 'select' }));
       dispatch(updateAllLayers({ selected: false }));

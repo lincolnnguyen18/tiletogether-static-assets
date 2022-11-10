@@ -11,6 +11,7 @@ import { IconButton } from '../../components/inputs/IconButton';
 import { setTilesetRightSidebarPrimitives } from './rightSidebarSlice';
 import { addNewTilesetLayer, deleteSelectedLayers, setTilesetEditorPrimitives } from './tilesetEditorSlice';
 import { TilesetLayer } from './TilesetLayer';
+import { useEffect } from 'react';
 
 const rightSidebarStyle = css`
   background: #3F3F3F;
@@ -59,13 +60,31 @@ export function RightSidebar () {
     dispatch(addNewTilesetLayer());
   }
 
-  function handleDeleteLayer () {
+  function handleDeleteSelectedLayers () {
     dispatch(deleteSelectedLayers());
   }
 
   function handleRefreshColors () {
     dispatch(setTilesetEditorPrimitives({ calculateColors: true }));
   }
+
+  function handleKeyDown (e) {
+    // listen for shift + c to create a new layer
+    if (e.key === 'C') {
+      handleAddNewLayer();
+    }
+    // listen for delete or backspace to delete the selected layer
+    if (e.key === 'Delete' || e.key === 'Backspace') {
+      handleDeleteSelectedLayers();
+    }
+  }
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   return (
     <div css={rightSidebarStyle}>
@@ -107,7 +126,7 @@ export function RightSidebar () {
           <IconButton onClick={handleAddNewLayer}>
             <span className='icon-plus'></span>
           </IconButton>
-          <IconButton onClick={handleDeleteLayer}>
+          <IconButton onClick={handleDeleteSelectedLayers}>
             <span className='icon-trash'></span>
           </IconButton>
         </FlexRow>

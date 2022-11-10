@@ -5,6 +5,10 @@ socketClient.on('connect', () => {
   console.log('connected');
 });
 
+socketClient.on('disconnect', () => {
+  console.log('disconnected');
+});
+
 // Emitters
 
 export function emitJoinRoom ({ fileId }) {

@@ -1,6 +1,13 @@
 /** @jsx jsx */
 import { css, jsx } from '@emotion/react';
 
+export const notAllowedDisabledButtonStyle = css`
+  &:disabled {
+    pointer-events: all;
+    cursor: not-allowed;
+  }
+`;
+
 export function IconButton ({
   children,
   size = 32,

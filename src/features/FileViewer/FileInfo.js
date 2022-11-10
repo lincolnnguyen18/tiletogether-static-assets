@@ -5,7 +5,7 @@ import { useRef } from 'react';
 import { FlexRow } from '../../components/layout/FlexRow';
 import { FlexColumn } from '../../components/layout/FlexColumn';
 import { IconButtonStyle, likeButtonStyle } from '../../components/inputs/Button';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { asyncLikeFile, setFileLike } from '../File/fileSlice';
 import { selectUser } from '../User/userSlice';
@@ -28,10 +28,8 @@ export function FileInfo () {
   const fileSlice = useSelector((state) => state.file);
   const file = fileSlice.file;
   const likeButtonRef = useRef(null);
-  const downloadButtonRef = useRef(null);
-  const importButtonRef = useRef(null);
-  const userButtonRef = useRef(null);
   const user = useSelector(selectUser);
+  const navigate = useNavigate();
 
   const date = new Date(file.publishedAt);
   const tags = file.tags.split(' ');
@@ -40,14 +38,18 @@ export function FileInfo () {
   const liked = user && file.likes.some(l => l.username === user.username);
   const likes = file.likeCount;
 
-  const handleLikeSubmit = () => {
+  function handleLikeSubmit () {
     likeFile({
       dispatch,
       id,
       liked,
       username: user.username,
     });
-  };
+  }
+
+  function handleEdit () {
+    navigate(`/${file.type}s/${id}/edit`);
+  }
 
   return (
     <FlexColumn>
@@ -64,11 +66,15 @@ export function FileInfo () {
             }
             <span>{likes}</span>
           </button>
-          <button css={IconButtonStyle} ref={downloadButtonRef}>
-            <span className='icon-download' css={{ fontSize: '42px' }}/>
+          <button css={IconButtonStyle}>
+            <span className='icon-download' css={{ fontSize: '40px' }}/>
             <span>Download</span>
           </button>
-          <button css={IconButtonStyle} ref={importButtonRef}>
+          <button css={IconButtonStyle} onClick={handleEdit}>
+            <span className='icon-pencil' css={{ fontSize: '38px' }}/>
+            <span>Edit</span>
+          </button>
+          <button css={IconButtonStyle}>
             <span className='icon-file' css={{ fontSize: '42px' }}/>
             <span>Import Into Map</span>
           </button>
@@ -89,7 +95,7 @@ export function FileInfo () {
         {`${file.type}`} <span>&#x2022;</span> {`${file.tileDimension} pixel tiles`} {isMap && <span>&#x2022;</span>} { isMap && `${file.width} x ${file.height} map`}
       </label>
       <FlexRow>
-        <button css={[IconButtonStyle, { marginLeft: '0px' }]} ref={userButtonRef}>
+        <button css={[IconButtonStyle, { marginLeft: '0px' }]}>
           <span className='icon-avatar' css={{ fontSize: '42px' }}/>
           <span>{file.authorUsername}</span>
         </button>

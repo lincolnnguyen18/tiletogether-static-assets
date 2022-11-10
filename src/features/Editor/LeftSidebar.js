@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Fragment, useEffect } from 'react';
 import { LeftSidebarDrawer } from './LeftSidebarDrawer';
 import { setLeftSidebarPrimitives } from './leftSidebarSlice';
-import { IconButton } from '../../components/inputs/IconButton';
+import { IconButton, notAllowedDisabledButtonStyle } from '../../components/inputs/IconButton';
 import { Link, useNavigate } from 'react-router-dom';
 import { SelectMenu } from '../../components/inputs/SelectMenu';
 import { Button, grayButtonStyle, redButtonStyle } from '../../components/inputs/Button';
@@ -327,6 +327,24 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
       border-radius: 4px;`}></div>
   );
 
+  let publishedPageButton;
+
+  if (file.publishedAt) {
+    publishedPageButton = (
+      <Link to={`/${file.type}s/${file.id}`} title={`View published ${file.type}`} style={{ textDecoration: 'none' }}>
+        <IconButton>
+          <span className='icon-globe'></span>
+        </IconButton>
+      </Link>
+    );
+  } else {
+    publishedPageButton = (
+      <IconButton title='This file is not published' disabled style={notAllowedDisabledButtonStyle}>
+        <span className='icon-globe'></span>
+      </IconButton>
+    );
+  }
+
   return (
     <Fragment>
       <LeftSidebarDrawer
@@ -362,18 +380,12 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
             <span className='icon-settings'></span>
           </IconButton>
           {divider}
-          {file.publishedAt && (
-            <Link to={`/${file.type}s/${file.id}`} title={`View published ${file.type}`} style={{ textDecoration: 'none' }}>
-              <IconButton>
-                <span className='icon-globe'></span>
-              </IconButton>
-            </Link>
-          )}
           <Link to='/your-files' title='Go to your files' style={{ textDecoration: 'none' }}>
             <IconButton>
               <span className='icon-logo'></span>
             </IconButton>
           </Link>
+          {publishedPageButton}
         </div>
       </div>
     </Fragment>
