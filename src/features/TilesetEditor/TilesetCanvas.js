@@ -5,7 +5,7 @@ import { Fragment, useEffect, useRef, useState } from 'react';
 import { addNewChange, selectLastSelectedLayer, selectTilesetEditorPrimitives, selectTilesetFile, setTilesetEditorPrimitives, updateAllLayers, updateLayer, updateLayersUpToRoot } from './tilesetEditorSlice';
 import { Circle, Group, Image, Layer, Rect, Stage } from 'react-konva';
 import { reverseColor, trimPng } from '../../utils/canvasUtils';
-import { socketSynchronizeLayerPosition, socketUpdateLayerPosition } from './tilesetEditorSocketApi';
+import { onLayerPosition, emitLayerPosition } from './tilesetEditorSocketApi';
 
 const virtualCanvasesStyle = css`
   position: absolute;
@@ -68,7 +68,7 @@ export function TilesetCanvas () {
   const stageRef = useRef(null);
 
   useEffect(() => {
-    socketSynchronizeLayerPosition((data) => {
+    onLayerPosition((data) => {
       const { layerId, position } = data;
       // console.log('synchronize layer position', data);
       // console.log(layerData);
@@ -157,7 +157,7 @@ export function TilesetCanvas () {
 
     let brushRect = null;
 
-    // TODO: extend layer if shift being pressed using overflows
+    // extend layer if shift being pressed using overflows
     if ((overflows.left > 0 || overflows.right > 0 || overflows.top > 0 || overflows.bottom > 0) && e.evt.shiftKey) {
       const newCanvas = document.createElement('canvas');
       const newCtx = newCanvas.getContext('2d');
@@ -222,19 +222,22 @@ export function TilesetCanvas () {
       layer.canvas.height = newCanvasHeight;
       ctx.filter = 'url(#remove-alpha)';
       ctx.drawImage(newCanvas, 0, 0);
+      ctx.fillStyle = brushColor;
 
       if (activeTool === 'draw') {
-        ctx.fillStyle = brushColor;
-        const circle = new Path2D();
-        const params = [brushRect.x + halfBrushSize, brushRect.y + halfBrushSize, halfBrushSize, 0, 2 * Math.PI];
-        circle.arc(...params);
-        ctx.fill(circle);
+        if (brushSize === 1) {
+          ctx.fillRect(brushRect.x, brushRect.y, brushRect.width, brushRect.height);
+        } else {
+          const circle = new Path2D();
+          const params = [brushRect.x + halfBrushSize, brushRect.y + halfBrushSize, halfBrushSize, 0, 2 * Math.PI];
+          circle.arc(...params);
+          ctx.fill(circle);
+        }
       } else {
         ctx.clearRect(brushRect.x, brushRect.y, brushRect.width, brushRect.height);
       }
 
       const newLayerData = { ...layerData };
-
       if (!layer) {
         layer = {
           position: {
@@ -249,7 +252,6 @@ export function TilesetCanvas () {
         ...layer,
         position: layerPosition,
       };
-
       setLayerData(newLayerData);
       stageRef.current.draw();
     // else color pixel normally
@@ -281,10 +283,9 @@ export function TilesetCanvas () {
         ctx.fill(circle);
       }
       // dispatch(addNewChange({ newChange: 'draw' }));
-      // socketUpdateLayerImage({ layerId, color: 'red', brushSize, brushType: 'circle', params });
+      // emitLayerImage({ layerId, color: 'red', brushSize, brushType: 'circle', params });
 
       const newLayerData = { ...layerData };
-
       if (!layer) {
         layer = {
           position: {
@@ -296,7 +297,6 @@ export function TilesetCanvas () {
       }
 
       newLayerData[layerId] = layer;
-
       setLayerData(newLayerData);
       stageRef.current.draw();
     }
@@ -339,6 +339,13 @@ export function TilesetCanvas () {
       if (!brushSizeKeyWasDown) {
         setBrushSizeKeyWasDown(true);
       }
+    // listen for 1, 2, or 3 to switch between tools
+    } else if (e.key === '1') {
+      dispatch(setTilesetEditorPrimitives({ activeTool: 'draw' }));
+    } else if (e.key === '2') {
+      dispatch(setTilesetEditorPrimitives({ activeTool: 'erase' }));
+    } else if (e.key === '3') {
+      dispatch(setTilesetEditorPrimitives({ activeTool: 'select' }));
     }
   }
 
@@ -731,7 +738,7 @@ export function TilesetCanvas () {
         setLayerData(newLayerData);
 
         dispatch(addNewChange({ newChange: 'moveLayer' }));
-        socketUpdateLayerPosition({ layerId, position: newImagePosition });
+        emitLayerPosition({ layerId, position: newImagePosition });
       }
     }
   };

@@ -157,6 +157,8 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
             <span>{user}</span>
             <IconButton
               onClick={async () => {
+                // wait 100 ms to show active white circle css effect
+                await wait(100);
                 const confirm = window.confirm(`Are you sure you want to unshare this file with ${user}?`);
                 if (confirm) {
                   const sharedWith = file.sharedWith.filter((u) => u !== user);

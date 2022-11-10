@@ -5,27 +5,30 @@ socketClient.on('connect', () => {
   console.log('connected');
 });
 
-export function socketJoin ({ fileId }) {
+// Emitters
+
+export function emitJoinRoom ({ fileId }) {
   const token = Cookies.get('token');
-  socketClient.emit('socketJoin', { fileId, token });
+  socketClient.emit('joinRoom', { fileId, token });
 }
 
-export function socketUpdateLayerPosition ({ layerId, position }) {
-  socketClient.emit('socketUpdateLayerPosition', { layerId, position });
+export function emitLeaveRoom ({ fileId }) {
+  socketClient.emit('leaveRoom', { fileId });
 }
 
-export function socketUpdateLayerImage ({ layerId, color, brushSize, brushType, params }) {
-  socketClient.emit('socketUpdateLayerImage', { layerId, color, brushSize, brushType, params });
+export function emitLayerPosition ({ layerId, position }) {
+  socketClient.emit('layerPosition', { layerId, position });
 }
 
-export function socketSynchronizeLayerPosition (handler) {
+export function emitLayerImage ({ layerId, color, brushSize, brushType, params }) {
+  socketClient.emit('layerImage', { layerId, color, brushSize, brushType, params });
+}
+
+// Event listeners
+
+export function onLayerPosition (handler) {
   // when called, clear any old listeners
-  socketClient.off('socketSynchronizeLayerPosition');
+  socketClient.off('layerPosition');
   // attach new listener
-  socketClient.on('socketSynchronizeLayerPosition', handler);
+  socketClient.on('layerPosition', handler);
 }
-
-// export function socketSendUnsavedChanges (handler) {
-//   socketClient.off('socketSendUnsavedChanges');
-//   socketClient.on('socketSendUnsavedChanges', handler);
-// }

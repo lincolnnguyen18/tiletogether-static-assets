@@ -9,7 +9,7 @@ import { TilesetCanvas } from './TilesetCanvas';
 import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { asyncDeleteFile, asyncGetFileToEdit, asyncPatchFile, clearTilesetEditorErrors, clearTilesetEditorStatus, selectTilesetEditorErrors, selectTilesetEditorPrimitives, selectTilesetEditorStatuses, selectTilesetFile, selectTilesetNewChanges, setTilesetEditorPrimitives } from './tilesetEditorSlice';
-import { socketJoin } from './tilesetEditorSocketApi';
+import { emitJoinRoom, emitLeaveRoom } from './tilesetEditorSocketApi';
 
 const tilesetEditorStyle = css`
   margin: 0;
@@ -29,7 +29,11 @@ export function TilesetEditor () {
 
   useEffect(() => {
     dispatch(asyncGetFileToEdit({ id }));
-    socketJoin({ fileId: id });
+    emitJoinRoom({ fileId: id });
+
+    return () => {
+      emitLeaveRoom({ fileId: id });
+    };
   }, []);
 
   let content;
