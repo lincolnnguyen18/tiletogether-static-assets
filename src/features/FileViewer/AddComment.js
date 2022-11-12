@@ -34,19 +34,21 @@ export function AddComment ({ parentId, setReplying }) {
   `;
 
   const handleCommentSubmit = async () => {
-    dispatch(asyncPostComment({ content: comment, fileId }));
+    dispatch(asyncPostComment({ content: comment, fileId, parentId }));
+    setComment('');
   };
 
   return (
     <FlexColumn>
-      <FlexRow>
-  { !parentId && <div> <div css={[verticalSectionStyle, { marginRight: '10px' }]}>
-          {comments.length} Comments
-        </div>
-        <div css={verticalSectionStyle}>
-          Sort By
-        </div></div> }
-      </FlexRow>
+      { !parentId &&
+        <FlexRow> <div css={[verticalSectionStyle, { marginRight: '10px' }]}>
+            {comments.length} Comments
+          </div>
+          <div css={verticalSectionStyle}>
+            Sort By
+          </div>
+          </FlexRow>
+        }
       <FlexRow style={{ width: '100%' }}>
         <div
           css={[IconButtonStyle, verticalSectionStyle, { marginLeft: '0px', width: '100%' }]}

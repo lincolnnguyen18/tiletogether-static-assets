@@ -59,8 +59,8 @@ export const asyncLikeFile = createAsyncThunk(
 
 export const asyncPostComment = createAsyncThunk(
   'file/postComment',
-  async ({ fileId, content }) => {
-    return apiClient.post(`/files/${fileId}/comment`, { content });
+  async ({ fileId, content, parentId }) => {
+    return apiClient.post(`/files/${fileId}/comment`, { content, parentId });
   },
 );
 

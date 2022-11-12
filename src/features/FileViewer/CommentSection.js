@@ -7,8 +7,24 @@ import { useSelector } from 'react-redux';
 import { timeAgo } from '../../utils/timeUtils';
 import { ReplyComment } from './ReplyComment';
 
-export function CommentInfo () {
-
+export function CommentInfo ({ c }) {
+  return (
+    <FlexColumn>
+      <FlexRow>
+      <span
+        className='icon-avatar'
+        css={{ fontSize: '42px' }}
+      />
+        <div>
+          <span css={{ marginRight: '10px' }}>{c.username}</span>
+          <span>{timeAgo(new Date(c.createdAt)) + ' ago'}</span>
+        </div>
+      </FlexRow>
+      <div>
+        {c.content}
+      </div>
+    </FlexColumn>
+  );
 }
 
 export function CommentSection () {
@@ -27,19 +43,7 @@ export function CommentSection () {
               css={{ color: 'white' }}
               key={i}
             >
-              <FlexRow>
-              <span
-                className='icon-avatar'
-                css={{ fontSize: '42px' }}
-              />
-                <div>
-                  <span css={{ marginRight: '10px' }}>{c.username}</span>
-                  <span>{timeAgo(new Date(c.createdAt)) + ' ago'}</span>
-                </div>
-              </FlexRow>
-              <div>
-                {c.content}
-              </div>
+              <CommentInfo c={c}/>
               <ReplyComment replies={replies}likeButtonRef={likeButtonRef} commentId={c._id}/>
             </FlexColumn>,
           )}
