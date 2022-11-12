@@ -59,10 +59,13 @@ const tilesetEditorSlice = createSlice({
     addNewTilesetLayer (state) {
       // log last selected layer
       const lastSelectedLayer = state.primitives.lastSelectedLayer;
+      // console.log('lastSelectedLayer', _.cloneDeep(lastSelectedLayer));
+      let lastSelectedLayerExists = false;
 
       // get new layer name; traverse through all layers and find the unnamed layer with the highest number, e.g. if "Layer 13" then new layer name is "Layer 14"
       let highestNumber = 0;
       function getHighestNumber (layer) {
+        if (!layer) return;
         if (layer.name.startsWith('Layer ')) {
           const number = parseInt(layer.name.split(' ')[1]);
           if (number > highestNumber) highestNumber = number;
@@ -70,8 +73,13 @@ const tilesetEditorSlice = createSlice({
         if (layer.layers) {
           layer.layers.forEach(layer => getHighestNumber(layer));
         }
+        if (lastSelectedLayer && layer._id === lastSelectedLayer._id) lastSelectedLayerExists = true;
       }
       getHighestNumber(state.file.rootLayer);
+
+      if (!lastSelectedLayerExists) {
+        state.primitives.lastSelectedLayer = null;
+      }
 
       const newLayer = {
         _id: ObjectID().toHexString(),
@@ -153,6 +161,11 @@ const tilesetEditorSlice = createSlice({
       }
       _.cloneDeepWith(state.file.rootLayer, customizer);
 
+      // if selectedLayers includes lastSelectedLayer, set lastSelectedLayer to null
+      if (selectedLayers.some(layer => layer._id === state.primitives.lastSelectedLayer._id)) {
+        state.primitives.lastSelectedLayer = null;
+      }
+
       // use cloneDeepWith to avoid mutating state
       function traverse (layer) {
         // if a group's layers is in selectedLayers, filter it out
@@ -166,6 +179,24 @@ const tilesetEditorSlice = createSlice({
       }
 
       state.file.rootLayer = _.cloneDeepWith(state.file.rootLayer, traverse);
+    },
+    deleteLayerById: (state, action) => {
+      const { id } = action.payload;
+
+      // use cloneDeepWith to avoid mutating state
+      function traverse (layer) {
+        if (!layer) return;
+        if (layer.type === 'group') {
+          layer.layers = layer.layers.filter(layer => layer._id !== id);
+        }
+        traverse(layer.layers);
+      }
+
+      state.file.rootLayer = _.cloneDeepWith(state.file.rootLayer, traverse);
+
+      if (state.primitives.lastSelectedLayer === id) {
+        state.primitives.lastSelectedLayer = null;
+      }
     },
     updateAllLayers: (state, action) => {
       // action.payload is an object of key-value pairs where the key is an attribute name and the value is the new value for that attribute
@@ -211,13 +242,13 @@ const tilesetEditorSlice = createSlice({
 
       traverse(state.file.rootLayer);
 
-      console.log('selectedLayers', selectedLayers);
+      // console.log('selectedLayers', selectedLayers);
 
       // use cloneDeepWith to avoid mutating state
       function customizer (layer) {
         // if layer has an _id, update its attributes
         if (_.get(layer, '_id') && selectedLayers.includes(layer._id)) {
-          console.log('layer', _.cloneDeep(layer));
+          // console.log('layer', _.cloneDeep(layer));
           _.assign(layer, newAttributes);
         }
       }
@@ -412,6 +443,7 @@ export const {
   addNewTilesetLayer,
   updateLayer,
   deleteSelectedLayers,
+  deleteLayerById,
   updateAllLayers,
   updateAllLayersBetween,
   updateLayersUpToRoot,

@@ -53,7 +53,7 @@ export function trimPng (image) {
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const pixels = imageData.data;
   const len = pixels.length;
-  const bound = {
+  const overflows = {
     top: null,
     left: null,
     right: null,
@@ -69,33 +69,54 @@ export function trimPng (image) {
       x = (i / 4) % canvas.width;
       y = ~~((i / 4) / canvas.width);
 
-      if (bound.top === null) {
-        bound.top = y;
+      if (overflows.top === null) {
+        overflows.top = y;
       }
 
-      if (bound.left === null) {
-        bound.left = x;
-      } else if (x < bound.left) {
-        bound.left = x;
+      if (overflows.left === null) {
+        overflows.left = x;
+      } else if (x < overflows.left) {
+        overflows.left = x;
       }
 
-      if (bound.right === null) {
-        bound.right = x;
-      } else if (bound.right < x) {
-        bound.right = x;
+      if (overflows.right === null) {
+        overflows.right = x;
+      } else if (overflows.right < x) {
+        overflows.right = x;
       }
 
-      if (bound.bottom === null) {
-        bound.bottom = y;
-      } else if (bound.bottom < y) {
-        bound.bottom = y;
+      if (overflows.bottom === null) {
+        overflows.bottom = y;
+      } else if (overflows.bottom < y) {
+        overflows.bottom = y;
       }
     }
   }
 
-  const trimHeight = bound.bottom - bound.top + 1;
-  const trimWidth = bound.right - bound.left + 1;
-  return ctx.getImageData(bound.left, bound.top, trimWidth, trimHeight);
+  const trimHeight = overflows.bottom - overflows.top + 1;
+  const trimWidth = overflows.right - overflows.left + 1;
+  return {
+    trimmedImageData: ctx.getImageData(overflows.left, overflows.top, trimWidth, trimHeight),
+    overflows,
+  };
+}
+
+export function isCompletelyTransparent (inputCanvas) {
+  initializeFreqReadCanvas();
+  const ctx = window.freqReadCtx;
+  const canvas = window.freqReadCanvas;
+  canvas.width = inputCanvas.width;
+  canvas.height = inputCanvas.height;
+  ctx.drawImage(inputCanvas, 0, 0);
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const pixels = imageData.data;
+  const len = pixels.length;
+  for (let i = 0; i < len; i += 4) {
+    if (pixels[i + 3] !== 0) {
+      return false;
+    }
+  }
+  return true;
 }
 
 export function getRandomColor () {
@@ -117,4 +138,23 @@ export function reverseColor (color) {
   const g = 255 - data[1];
   const b = 255 - data[2];
   return rgbToHex(r, g, b);
+}
+
+export function parseRgbaStr (rgbaStr) {
+  const rgba = rgbaStr.match(/(\d+(\.\d+)?)/g);
+  return {
+    r: rgba[0],
+    g: rgba[1],
+    b: rgba[2],
+    a: rgba[3],
+  };
+}
+
+export function getRgbaStrOpacity (rgbaStr) {
+  const rgba = rgbaStr.match(/(\d+(\.\d+)?)/g);
+  return rgba[3];
+}
+
+export function removeRgbaOpacity (rgbaStr) {
+  return rgbaStr.replace(/,\s*[\d.]+\)/, ')');
 }

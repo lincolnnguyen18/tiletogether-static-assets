@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Fragment, useEffect } from 'react';
 import { LeftSidebarDrawer } from './LeftSidebarDrawer';
 import { setLeftSidebarPrimitives } from './leftSidebarSlice';
-import { IconButton } from '../../components/inputs/IconButton';
+import { IconButton, notAllowedDisabledButtonStyle } from '../../components/inputs/IconButton';
 import { Link, useNavigate } from 'react-router-dom';
 import { SelectMenu } from '../../components/inputs/SelectMenu';
 import { Button, grayButtonStyle, redButtonStyle } from '../../components/inputs/Button';
@@ -37,7 +37,7 @@ const leftSidebarStyle = css`
   }
 `;
 
-export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile, clearFileErrors, clearFileStatus, selectFileErrors, selectFileStatuses, setActiveTool }) {
+export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile, clearFileErrors, clearFileStatus, selectFileErrors, selectFileStatuses, setActiveTool, showColorPicker = false }) {
   const dispatch = useDispatch();
   const leftSidebarSlice = useSelector((state) => state.leftSidebar);
   const showGrid = leftSidebarSlice.primitives.showGrid;
@@ -157,6 +157,8 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
             <span>{user}</span>
             <IconButton
               onClick={async () => {
+                // wait 100 ms to show active white circle css effect
+                await wait(100);
                 const confirm = window.confirm(`Are you sure you want to unshare this file with ${user}?`);
                 if (confirm) {
                   const sharedWith = file.sharedWith.filter((u) => u !== user);
@@ -325,6 +327,24 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
       border-radius: 4px;`}></div>
   );
 
+  let publishedPageButton;
+
+  if (file.publishedAt) {
+    publishedPageButton = (
+      <Link to={`/${file.type}s/${file.id}`} title={`View published ${file.type}`} style={{ textDecoration: 'none' }}>
+        <IconButton>
+          <span className='icon-globe'></span>
+        </IconButton>
+      </Link>
+    );
+  } else {
+    publishedPageButton = (
+      <IconButton title='This file is not published' disabled style={notAllowedDisabledButtonStyle}>
+        <span className='icon-globe'></span>
+      </IconButton>
+    );
+  }
+
   return (
     <Fragment>
       <LeftSidebarDrawer
@@ -348,6 +368,11 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
           <IconButton active={activeTool === 'select' && !drawerOpen} onClick={() => setActiveTool('select')}>
             <span className='icon-cursor'></span>
           </IconButton>
+          {showColorPicker && (
+            <IconButton active={activeTool === 'color-picker' && !drawerOpen} onClick={() => setActiveTool('color-picker')}>
+              <span className='icon-color-picker'></span>
+            </IconButton>
+          )}
         </div>
         <div className='group'>
           <IconButton onClick={() => openDrawer('download')} title={`Download ${file.type}`}>
@@ -360,18 +385,12 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
             <span className='icon-settings'></span>
           </IconButton>
           {divider}
-          {file.publishedAt && (
-            <Link to={`/${file.type}s/${file.id}`} title={`View published ${file.type}`} style={{ textDecoration: 'none' }}>
-              <IconButton>
-                <span className='icon-globe'></span>
-              </IconButton>
-            </Link>
-          )}
           <Link to='/your-files' title='Go to your files' style={{ textDecoration: 'none' }}>
             <IconButton>
               <span className='icon-logo'></span>
             </IconButton>
           </Link>
+          {publishedPageButton}
         </div>
       </div>
     </Fragment>

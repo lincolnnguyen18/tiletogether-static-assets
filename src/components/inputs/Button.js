@@ -8,6 +8,7 @@ export const IconButtonStyle = css`
   display: flex;
   justify-content: center;
   align-items: center;
+  cursor: pointer;
 
   color: white;
   transition: color 0.1s ease-in-out;

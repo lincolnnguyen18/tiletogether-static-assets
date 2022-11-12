@@ -5,7 +5,6 @@ import { useSelector } from 'react-redux';
 import { useEffect } from 'react';
 import { FlexRow } from '../../components/layout/FlexRow';
 import { IconButton } from '../../components/inputs/IconButton';
-import { Text } from '../../components/Text';
 import { selectMapFile } from './mapEditorSlice';
 import { MapLayer } from './MapLayer';
 
@@ -59,14 +58,14 @@ const rightSidebarStyle = css`
 
 const tilesetsStyle = css`
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 5px;
   padding: 4px 8px;
   user-select: none;
   height: 300px;
   overflow-y: scroll;
   
   .tileset {
-    padding: 10px;
+    padding: 7px;
     background: #2D2D2D;
     border-radius: 7px;
     cursor: pointer;
@@ -77,6 +76,10 @@ const tilesetsStyle = css`
     
     &.selected {
       background: #73809A;
+    }
+    
+    span {
+      font-size: 12px;
     }
   }
 `;
@@ -118,11 +121,11 @@ export function RightSidebar () {
       </FlexRow>
       <FlexRow style={tilesetsStyle}>
         <div className={'tileset selected'}>
-          <Text>Bridges</Text>
+          <span>Bridges</span>
         </div>
         {['Dirt', 'Grass', 'Hills', 'Mountains', 'Rivers', 'Roads', 'Rocks', 'Sand', 'Shallow Water', 'Snow', 'Trees', 'Water'].map((tilesetName, index) => (
           <div className={'tileset'} key={index}>
-            <Text>{tilesetName}</Text>
+            <span>{tilesetName}</span>
           </div>
         ))}
       </FlexRow>

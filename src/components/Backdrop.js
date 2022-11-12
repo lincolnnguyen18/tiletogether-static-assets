@@ -16,7 +16,7 @@ const backdropOpenStyle = css`
   pointer-events: all;
 `;
 
-export function Backdrop ({ children, onClose, open, transitionDuration = 0.3, style }) {
+export function Backdrop ({ children, onClose, open, transitionDuration = 0.3, style, clickOnToClose = true }) {
   const modifiableBackdropStyle = css`
     transition: background ${transitionDuration}s ease;
   `;
@@ -24,7 +24,7 @@ export function Backdrop ({ children, onClose, open, transitionDuration = 0.3, s
   return (
     <div
       css={[backdropStyle, modifiableBackdropStyle, open && backdropOpenStyle, style]}
-      onClick={onClose}
+      onClick={clickOnToClose ? onClose : null}
     >
       {children}
     </div>

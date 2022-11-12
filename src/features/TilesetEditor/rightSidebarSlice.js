@@ -4,7 +4,7 @@ import { createSlice } from '@reduxjs/toolkit';
 const initialState = {
   primitives: {
     colors: [],
-    currentColor: '#ff0000',
+    brushColor: '#ff0000',
   },
 };
 
@@ -22,5 +22,7 @@ const tilesetRightSidebarSlice = createSlice({
 });
 
 export const { setTilesetRightSidebarPrimitives, assignTilesetRightSidebarPrimitives } = tilesetRightSidebarSlice.actions;
+
+export const selectTilesetRightSidebarPrimitives = (state) => state.tilesetRightSidebar.primitives;
 
 export const tilesetRightSidebarReducer = tilesetRightSidebarSlice.reducer;

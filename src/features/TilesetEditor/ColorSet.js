@@ -17,7 +17,7 @@ function Color ({ color }) {
   return (
     <div
       css={colorStyle}
-      onClick={() => dispatch(setTilesetRightSidebarPrimitives({ currentColor: color }))}
+      onClick={() => dispatch(setTilesetRightSidebarPrimitives({ brushColor: color }))}
     />
   );
 }
