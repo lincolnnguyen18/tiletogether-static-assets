@@ -50,6 +50,18 @@ export const asyncGetFileToView = createAsyncThunk(
   },
 );
 
+export const asyncCreateFile = createAsyncThunk(
+  'file/createFile',
+  async ({ file }, { rejectWithValue }) => {
+    try {
+      const response = await apiClient.post('/files', file);
+      return response.data;
+    } catch (err) {
+      return rejectWithValue(err.response.data.error);
+    }
+  },
+);
+
 export const asyncLikeFile = createAsyncThunk(
   'file/likeFile',
   async ({ id, liked }) => {

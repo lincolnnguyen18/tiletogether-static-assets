@@ -6,6 +6,9 @@ import { modalBodyStyle, modalheaderStyle } from '../../../components/Modal/Moda
 import { Icon } from '../../../components/Icon';
 import { Badge } from '../../../components/Badge';
 import { blackButtonStyle, Button } from '../../../components/inputs/Button';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { asyncCreateFile, selectFileErrors, selectFileStatuses } from '../../File/fileSlice';
 
 export function openNewFileModal (dispatch, type) {
   dispatch(setModalReactElements({
@@ -47,8 +50,21 @@ export function NewFileModalHeader ({ type }) {
 }
 
 export function NewFileModalBody ({ type }) {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const errors = useSelector(selectFileErrors);
+  const statuses = useSelector(selectFileStatuses);
+  const pending = statuses.createFile === 'pending';
+
   async function onNewFile (formData) {
-    console.log(formData, type);
+    formData.type = type;
+    const res = await dispatch(asyncCreateFile({ file: formData }));
+    // console.log(res);
+    if (res.type === asyncCreateFile.fulfilled.type) {
+      const { fileId } = res.payload;
+      dispatch(setModalPrimitives({ open: false }));
+      navigate(`/${type}s/${fileId}/edit`);
+    }
   }
 
   return (
@@ -67,26 +83,40 @@ export function NewFileModalBody ({ type }) {
         autoFocus
         style={whiteInputStyle}
         name='name'
+        error={errors.name}
+        disabled={pending}
       />
       <Textfield
         label='Tile dimension (width and height of a tile in pixels)'
         type='number'
         style={whiteInputStyle}
-        name='tiledimension'
+        name='tileDimension'
+        error={errors.tileDimension}
+        defaultValue={16}
+        disabled={pending}
       />
       <Textfield
         label={`Width (width of ${type} in tiles)`}
         type='number'
         style={whiteInputStyle}
         name='width'
+        error={errors.width}
+        defaultValue={30}
+        disabled={pending}
       />
       <Textfield
         label={`Height (width of ${type} in tiles)`}
         type='number'
         style={whiteInputStyle}
         name='height'
+        error={errors.height}
+        defaultValue={42}
+        disabled={pending}
       />
-      <Button style={blackButtonStyle}>
+      <Button
+        style={blackButtonStyle}
+        disabled={pending}
+      >
         <span>Create {type}</span>
       </Button>
     </form>

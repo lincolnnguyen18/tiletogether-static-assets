@@ -309,8 +309,12 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
       >Save changes</Button>
       <Button
         style={[redButtonStyle, { width: '100%' }]}
-        onClick={() => dispatch(setLeftSidebarPrimitives({ drawerPage: 'settings' }))}
+        onClick={async () => {
+          await wait(100);
+          dispatch(setLeftSidebarPrimitives({ drawerPage: 'settings' }));
+        }}
         disabled={patchingPending}
+        type='button'
       >Cancel</Button>
     </form>
   );
