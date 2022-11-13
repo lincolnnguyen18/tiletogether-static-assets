@@ -78,8 +78,6 @@ const mapEditorSlice = createSlice({
         state.file = null;
       })
       .addCase(asyncGetFileToEdit.fulfilled, (state, action) => {
-        const imageUrls = _.range(0, 30).map((i) => `/mock-layer-images/${i}.png`);
-
         const file = action.payload;
         // use cloneDeepWith to set all layers selected and expanded to false
         function customizer (value) {
@@ -89,11 +87,6 @@ const mapEditorSlice = createSlice({
               _.assign(value, { selected: false, expanded: true });
             } else {
               _.assign(value, { selected: false, expanded: false });
-            }
-
-            if (value.type === 'layer') {
-              const tilesetLayerUrl = _.sample(imageUrls);
-              _.assign(value, { tilesetLayerUrl, position: { x: 0, y: 0 } });
             }
           }
         }

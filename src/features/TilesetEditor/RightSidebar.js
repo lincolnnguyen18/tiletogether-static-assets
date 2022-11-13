@@ -7,7 +7,7 @@ import { FlexRow } from '../../components/layout/FlexRow';
 import { Slider } from '../../components/inputs/Slider';
 import { Text } from '../../components/Text';
 import { IconButton } from '../../components/inputs/IconButton';
-import { addNewTilesetLayer, deleteSelectedLayers } from './tilesetEditorSlice';
+import { addNewTilesetLayer, deleteSelectedLayers, selectTilesetEditorPrimitives, selectTilesetFile, setTilesetEditorPrimitives, updateLayer } from './tilesetEditorSlice';
 import { TilesetLayer } from './TilesetLayer';
 import { useEffect } from 'react';
 import { selectTilesetRightSidebarPrimitives, setTilesetRightSidebarPrimitives } from './rightSidebarSlice';
@@ -89,9 +89,18 @@ export function RightSidebar () {
   const dispatch = useDispatch();
   const primitives = useSelector(selectTilesetRightSidebarPrimitives);
   const { brushColor } = primitives;
-  const tilesetEditorSlice = useSelector((state) => state.tilesetEditor);
-  const file = tilesetEditorSlice.file;
+  const editorPrimitives = useSelector(selectTilesetEditorPrimitives);
+  const { lastSelectedLayer } = editorPrimitives;
+  const file = useSelector(selectTilesetFile);
   const rootLayer = file.rootLayer;
+
+  function handleOpacityChange (e) {
+    const newOpacity = e.target.value / 100;
+    console.log('opacity change', newOpacity);
+    const newLayer = { ...lastSelectedLayer, opacity: newOpacity };
+    dispatch(updateLayer({ newLayer }));
+    dispatch(setTilesetEditorPrimitives({ lastSelectedLayer: newLayer }));
+  }
 
   function handleAddNewLayer () {
     dispatch(addNewTilesetLayer());
@@ -156,10 +165,15 @@ export function RightSidebar () {
             <span className='icon-trash'></span>
           </IconButton>
         </FlexRow>
-         <FlexRow gap={8}>
-          <Slider value={100} />
-          <Text>{100}%</Text>
-         </FlexRow>
+        {lastSelectedLayer && (
+          <FlexRow gap={8}>
+            <Slider
+              value={lastSelectedLayer.opacity * 100}
+              onChange={handleOpacityChange}
+            />
+            <Text>{Math.round(lastSelectedLayer.opacity * 100)}%</Text>
+          </FlexRow>
+        )}
       </FlexRow>
       <div className='layers'>
         <TilesetLayer layer={rootLayer} level={-1} />

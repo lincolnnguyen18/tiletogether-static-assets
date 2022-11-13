@@ -388,24 +388,18 @@ const tilesetEditorSlice = createSlice({
       })
       .addCase(asyncGetFileToEdit.fulfilled, (state, action) => {
         const file = action.payload;
+        file.rootLayer.isRootLayer = true;
         console.log(file);
         // use cloneDeepWith to set all layers selected and expanded to false
         function customizer (layer) {
           if (_.get(layer, '_id')) {
-            // TODO: figure out way to identify root layer more properly
-            if (layer.name === 'test_root_layer') {
+            if (layer.isRootLayer) {
               _.assign(layer, { selected: false, expanded: true });
             } else {
               _.assign(layer, { selected: false, expanded: false });
             }
-
-            if (layer.type === 'layer') {
-              _.assign(layer, { position: { x: 0, y: 0 } });
-            }
           }
         }
-
-        file.rootLayer.isRootLayer = true;
 
         state.file = _.cloneDeepWith(file, customizer);
       })

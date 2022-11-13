@@ -146,7 +146,7 @@ export function TilesetCanvas () {
     };
     const halfBrushSize = Math.floor(brushSize / 2);
     // logging halfBrushSize because a rare bug sometimes occurs where the brush size is 1 but nothing is being drawn or the brush outline is slightly larger than the actual brush size; trying to reproduce it and track down the cause; update: should be fixed now, when brush size was increased/decreased by a factor, forgot to floor so was not whole number sometimes
-    console.log('halfBrushSize', halfBrushSize);
+    // console.log('halfBrushSize', halfBrushSize);
 
     if (halfBrushSize < 0) {
       return;
@@ -183,7 +183,7 @@ export function TilesetCanvas () {
       layerCanvas.width = brushSize;
       layerCanvas.height = brushSize;
     }
-    console.log(layerCanvas);
+    // console.log(layerCanvas);
 
     const overflows = {
       left: Math.min(0, relativeMousePos.x - layerPosition.x - halfBrushSize),
@@ -520,7 +520,7 @@ export function TilesetCanvas () {
       const innerRingColor = 'white';
 
       // show circle outline if big brush; make its color the inverse of layers behind it using globalCompositeOperation
-      if (brushSize > 5) {
+      if (brushSize > 4) {
         newBrushOutline.push(
           <Circle
             x={flooredRelativeMousePos.x}
@@ -726,6 +726,7 @@ export function TilesetCanvas () {
             image={layerData[layer._id].canvas}
             x={layerData[layer._id].position.x}
             y={layerData[layer._id].position.y}
+            opacity={layer.opacity}
             visible={layer.visible}
             name={layer._id}
             onMouseDown={(e) => handleMouseDownLayer(e, layer)}
@@ -736,7 +737,7 @@ export function TilesetCanvas () {
 
     const newLayerElements = layers.map((layer) => layerToElement(layer)).reverse();
     setLayerElements(newLayerElements);
-    // console.log('rerendered');
+    console.log('rerendered');
   }, [layerData, layers, activeTool]);
 
   useEffect(() => {
