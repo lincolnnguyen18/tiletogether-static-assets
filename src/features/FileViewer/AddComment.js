@@ -7,7 +7,7 @@ import { Button, IconButtonStyle, whiteButtonStyle, blackButtonStyle } from '../
 import { useDispatch, useSelector } from 'react-redux';
 import { asyncPostComment } from '../File/fileSlice';
 
-export function AddComment () {
+export function AddComment ({ parentId, setReplying }) {
   const dispatch = useDispatch();
   const userButtonRef = useRef(null);
   const fileSlice = useSelector((state) => state.file);
@@ -34,19 +34,21 @@ export function AddComment () {
   `;
 
   const handleCommentSubmit = async () => {
-    dispatch(asyncPostComment({ content: comment, fileId }));
+    dispatch(asyncPostComment({ content: comment, fileId, parentId }));
+    setComment('');
   };
 
   return (
     <FlexColumn>
-      <FlexRow>
-        <div css={[verticalSectionStyle, { marginRight: '10px' }]}>
-          {comments.length} Comments
-        </div>
-        <div css={verticalSectionStyle}>
-          Sort By
-        </div>
-      </FlexRow>
+      { !parentId &&
+        <FlexRow> <div css={[verticalSectionStyle, { marginRight: '10px' }]}>
+            {comments.length} Comments
+          </div>
+          <div css={verticalSectionStyle}>
+            Sort By
+          </div>
+          </FlexRow>
+        }
       <FlexRow style={{ width: '100%' }}>
         <div
           css={[IconButtonStyle, verticalSectionStyle, { marginLeft: '0px', width: '100%' }]}
@@ -59,19 +61,19 @@ export function AddComment () {
             />
             <input
               name='content'
-              placeholder='Add comment ...'
+              placeholder={parentId ? 'Add a reply' : 'Add comment ...'}
               value={comment}
               onChange={(e) => setComment(e.target.value)}
             />
             <FlexRow style={{ marginRight: 'auto' }}>
-              <Button css={[blackButtonStyle, { marginRight: '10px' }]} onClick={() => { setComment(''); }}>
+              <Button css={[blackButtonStyle, { marginRight: '10px' }]} onClick={() => { setComment(''); setReplying(false); }}>
                 Cancel</Button>
-              <Button css={whiteButtonStyle} onClick={handleCommentSubmit}>Comment</Button>
+              <Button css={whiteButtonStyle} onClick={handleCommentSubmit}>{parentId ? 'Reply' : 'Comment'}</Button>
             </FlexRow>
           </FlexRow>
         </div>
       </FlexRow>
-      <hr color='gray'/>
+    {!parentId && <hr color='gray'/>}
     </FlexColumn>
   );
 }
