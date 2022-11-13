@@ -86,6 +86,7 @@ const tilesetEditorSlice = createSlice({
         name: `Layer ${highestNumber + 1}`,
         type: 'layer',
         selected: true,
+        opacity: 1,
         layers: [],
       };
 
@@ -140,6 +141,8 @@ const tilesetEditorSlice = createSlice({
     },
     updateLayer: (state, action) => {
       const { newLayer } = action.payload;
+
+      if (!state.file) return;
 
       // use cloneDeepWith to avoid mutating state
       function customizer (layer) {
@@ -389,7 +392,6 @@ const tilesetEditorSlice = createSlice({
       .addCase(asyncGetFileToEdit.fulfilled, (state, action) => {
         const file = action.payload;
         file.rootLayer.isRootLayer = true;
-        console.log(file);
         // use cloneDeepWith to set all layers selected and expanded to false
         function customizer (layer) {
           if (_.get(layer, '_id')) {

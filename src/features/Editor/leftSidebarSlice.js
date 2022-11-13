@@ -21,4 +21,6 @@ const leftSidebarSlice = createSlice({
 
 export const { setLeftSidebarPrimitives } = leftSidebarSlice.actions;
 
+export const selectLeftSidebarPrimitives = (state) => state.leftSidebar.primitives;
+
 export const leftSidebarReducer = leftSidebarSlice.reducer;

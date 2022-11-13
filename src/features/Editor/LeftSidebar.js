@@ -95,22 +95,12 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
   `;
 
   const editTextStyle = css`
-    color: white;
-    display: flex;
-    justify-content: space-between;
-    border-radius: 4px;
-    align-items: center;
-    cursor: pointer;
-    user-select: none;
-
     // truncate span to ellipsis with width of 270px
-    h4 {
-      display: inline-block;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      width: 215px;
-    }
+    display: inline-block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 215px;
   `;
 
   const sharedWithStyle = css`
@@ -188,16 +178,32 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
     <Fragment>
       <FlexColumn gap={4}>
         <span>{_.capitalize(file.type)} name</span>
-        <FlexRow css={editTextStyle}>
-          <h4>{file.name}</h4>
-          <IconButton color='white' onClick={async () => {
-            await wait(170);
-            dispatch(setLeftSidebarPrimitives({ drawerPage: 'renameFile' }));
-          }}>
-            <span className='icon-pencil'></span>
-          </IconButton>
+        <FlexRow>
+          <h4 css={editTextStyle}>{file.name}</h4>
         </FlexRow>
       </FlexColumn>
+      <FlexColumn gap={4}>
+        <span>Tile dimension</span>
+        <h4>{file.tileDimension} px</h4>
+      </FlexColumn>
+      <FlexColumn gap={4}>
+        <span>Width</span>
+        <h4>{file.width} tiles</h4>
+      </FlexColumn>
+      <FlexColumn gap={4}>
+        <span>Height</span>
+        <h4>{file.height} tiles</h4>
+      </FlexColumn>
+      <Button
+        style={[grayButtonStyle, css`width: fit-content;`]}
+        onClick={async () => {
+          await wait(170);
+          dispatch(setLeftSidebarPrimitives({ drawerPage: 'editProperties' }));
+        }}
+        disabled={patchingPending}
+      >
+        Edit properties
+      </Button>
       <Checkbox
         label='View grid lines'
         name='gridLines'
@@ -237,7 +243,7 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
 
   useEffect(() => {
     if (statuses.patchFile === 'fulfilled') {
-      if (drawerPage === 'renameFile') {
+      if (drawerPage === 'editProperties') {
         dispatch(setLeftSidebarPrimitives({ drawerPage: 'settings' }));
       } else if (drawerPage === 'sharedWith') {
         dispatch(setLeftSidebarPrimitives({ drawerPage: 'share' }));
@@ -254,7 +260,7 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
     dispatch(clearFileErrors());
   }, [drawerPage]);
 
-  const renameFilePage = (
+  const editPropertiesPage = (
     <form
       onSubmit={(e) => {
         e.preventDefault();
@@ -272,11 +278,35 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
         defaultValue={file.name}
         error={errors.name}
       />
+      <Textfield
+        label='Tile dimension (width and height of a tile in pixels)'
+        type='number'
+        defaultValue={file.tileDimension}
+        style={whiteInputStyle}
+        name='tileDimension'
+        error={errors.tileDimension}
+      />
+      <Textfield
+        label={`Width (width of ${file.type} in tiles)`}
+        type='number'
+        defaultValue={file.width}
+        style={whiteInputStyle}
+        name='width'
+        error={errors.width}
+      />
+      <Textfield
+        label={`Height (height of ${file.type} in tiles)`}
+        type='number'
+        defaultValue={file.height}
+        style={whiteInputStyle}
+        name='height'
+        error={errors.height}
+      />
       <Button
         style={[grayButtonStyle, { width: '100%' }]}
         type='submit'
         disabled={patchingPending}
-      >Rename</Button>
+      >Save changes</Button>
       <Button
         style={[redButtonStyle, { width: '100%' }]}
         onClick={() => dispatch(setLeftSidebarPrimitives({ drawerPage: 'settings' }))}
@@ -354,7 +384,7 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
         {drawerPage === 'download' && downloadPage}
         {drawerPage === 'share' && sharePage}
         {drawerPage === 'settings' && settingsPage}
-        {drawerPage === 'renameFile' && renameFilePage}
+        {drawerPage === 'editProperties' && editPropertiesPage}
         {drawerPage === 'sharedWith' && sharedWithPage}
       </LeftSidebarDrawer>
       <div css={leftSidebarStyle}>

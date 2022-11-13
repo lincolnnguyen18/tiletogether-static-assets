@@ -58,14 +58,14 @@ const rightSidebarStyle = css`
 
 const tilesetsStyle = css`
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 7px;
   padding: 4px 8px;
   user-select: none;
   height: 300px;
   overflow-y: scroll;
   
   .tileset {
-    padding: 7px;
+    padding: 8px;
     background: #2D2D2D;
     border-radius: 7px;
     cursor: pointer;
@@ -79,7 +79,7 @@ const tilesetsStyle = css`
     }
     
     span {
-      font-size: 12px;
+      font-size: 14px;
     }
   }
 `;

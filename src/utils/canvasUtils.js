@@ -36,7 +36,7 @@ export function getImageColors (imageData) {
 function initializeFreqReadCanvas () {
   // using a global canvas for frequent reads to stop console warnings
   if (window.freqReadCtx == null) {
-    const canvas = document.getElementById('frequent-read-canvas');
+    const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
     window.freqReadCanvas = canvas;
     window.freqReadCtx = ctx;

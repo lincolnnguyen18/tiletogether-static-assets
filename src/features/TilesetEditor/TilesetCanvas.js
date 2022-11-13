@@ -8,6 +8,7 @@ import { isCompletelyTransparent, rgbToHex, trimPng } from '../../utils/canvasUt
 import { onLayerPosition, emitLayerPosition } from './tilesetEditorSocketApi';
 import { usePrevious } from '../../utils/stateUtils';
 import { selectTilesetRightSidebarPrimitives, setTilesetRightSidebarPrimitives } from './rightSidebarSlice';
+import { selectLeftSidebarPrimitives } from '../Editor/leftSidebarSlice';
 
 const virtualCanvasesStyle = css`
   position: absolute;
@@ -44,10 +45,29 @@ export function getLayerFromId (layers, id) {
   return traverse(layers);
 }
 
+export function KonvaCheckerboardImage ({ width, height, tileDimension }) {
+  if (window.checkerboardCanvas == null || window.checkerboardCanvas.width !== width * tileDimension || window.checkerboardCanvas.height !== height * tileDimension) {
+    const canvas = document.createElement('canvas');
+    canvas.width = width * tileDimension;
+    canvas.height = height * tileDimension;
+    const ctx = canvas.getContext('2d');
+    for (let x = 0; x < width; x++) {
+      for (let y = 0; y < height; y++) {
+        ctx.fillStyle = (x + y) % 2 === 0 ? '#fff' : '#eee';
+        ctx.fillRect(x * tileDimension, y * tileDimension, tileDimension, tileDimension);
+      }
+    }
+    window.checkerboardCanvas = canvas;
+  }
+  return <Image image={window.checkerboardCanvas} />;
+}
+
 export function TilesetCanvas () {
   const [canvasSize, setCanvasSize] = useState({ width: window.innerWidth - 56 - 270, height: window.innerHeight });
   const primitives = useSelector(selectTilesetEditorPrimitives);
   const rightSidebarPrimitives = useSelector(selectTilesetRightSidebarPrimitives);
+  const leftSidebarPrimitives = useSelector(selectLeftSidebarPrimitives);
+  const { showGrid } = leftSidebarPrimitives;
   const lastSelectedLayer = useSelector(selectLastSelectedLayer);
   const file = useSelector(selectTilesetFile);
   const { activeTool } = primitives;
@@ -279,7 +299,12 @@ export function TilesetCanvas () {
         } else {
           const circle = new Path2D();
           const params = [brushRect.x + halfBrushSize, brushRect.y + halfBrushSize, halfBrushSize, 0, 2 * Math.PI];
-          circle.arc(...params);
+          try {
+            circle.arc(...params);
+          } catch (e) {
+            console.log('error', e);
+            console.log('params', params);
+          }
           ctx.fill(circle);
         }
       } else {
@@ -331,7 +356,12 @@ export function TilesetCanvas () {
           // make sure there is no aliasing at edges of circle using svg filter
           const circle = new Path2D();
           const params = [relativeMousePos.x - layerPosition.x, relativeMousePos.y - layerPosition.y, halfBrushSize, 0, 2 * Math.PI];
-          circle.arc(...params);
+          try {
+            circle.arc(...params);
+          } catch (e) {
+            console.log('error', e);
+            console.log('params', params);
+          }
           ctx.fill(circle);
         }
       }
@@ -617,6 +647,8 @@ export function TilesetCanvas () {
     }
     traverse(file.rootLayer);
 
+    console.log(file);
+
     async function loadImages () {
       await Promise.all(Object.keys(layerIdToImageUrl).map(async (layerId) => {
         const imageUrl = layerIdToImageUrl[layerId];
@@ -737,7 +769,7 @@ export function TilesetCanvas () {
 
     const newLayerElements = layers.map((layer) => layerToElement(layer)).reverse();
     setLayerElements(newLayerElements);
-    console.log('rerendered');
+    // console.log('rerendered');
   }, [layerData, layers, activeTool]);
 
   useEffect(() => {
@@ -893,6 +925,7 @@ export function TilesetCanvas () {
     const hoverLayerId = e.target.attrs.name;
     if (e.target.image !== undefined && activeTool === 'select' && !dragging) {
       const hoveredLayer = layerData[hoverLayerId];
+      if (!hoveredLayer) return;
       const alreadySelected = selectedRects.find((rect) => rect.key === hoveredLayer._id) !== undefined;
       if (alreadySelected) return;
       setHoveredRect(
@@ -1013,6 +1046,7 @@ export function TilesetCanvas () {
         style={{ position: 'absolute', top: 0, left: 56, cursor: cursorStyle }}
       >
         <Layer imageSmoothingEnabled={false}>
+          {showGrid && <KonvaCheckerboardImage width={file.width} height={file.height} tileDimension={file.tileDimension} />}
           {layerElements}
           {hoveredRect}
           {selectedRects}

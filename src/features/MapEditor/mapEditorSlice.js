@@ -17,7 +17,7 @@ const initialState = {
 };
 
 export const asyncGetFileToEdit = createAsyncThunk(
-  'tilesetEditor/getFileToEdit',
+  'mapEditor/getFileToEdit',
   async ({ id }) => {
     const response = await apiClient.get(`/files/${id}/edit`);
     return response.data.file;

@@ -75,13 +75,13 @@ export function NewFileModalBody ({ type }) {
         name='tiledimension'
       />
       <Textfield
-        label={`Width (width of ${type} in number of tiles)`}
+        label={`Width (width of ${type} in tiles)`}
         type='number'
         style={whiteInputStyle}
         name='width'
       />
       <Textfield
-        label={`Height (width of ${type} in number of tiles)`}
+        label={`Height (width of ${type} in tiles)`}
         type='number'
         style={whiteInputStyle}
         name='height'

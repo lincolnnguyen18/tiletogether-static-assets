@@ -32,7 +32,7 @@ const colorPickerStyle = css`
       color: black;
       border: 1px solid #ccc;
       width: 80px;
-      height: 38px;
+      height: 36px;
       font-size: 16px;
       border-radius: 4px;
       outline: none;
@@ -96,7 +96,7 @@ export function RightSidebar () {
 
   function handleOpacityChange (e) {
     const newOpacity = e.target.value / 100;
-    console.log('opacity change', newOpacity);
+    // console.log('opacity change', newOpacity);
     const newLayer = { ...lastSelectedLayer, opacity: newOpacity };
     dispatch(updateLayer({ newLayer }));
     dispatch(setTilesetEditorPrimitives({ lastSelectedLayer: newLayer }));
@@ -138,15 +138,15 @@ export function RightSidebar () {
           <span>Current color</span>
         </div>
       </div>
+      <Divider />
       <div css={colorPickerStyle}>
         <HexColorPicker
-          color={brushColor}
-          onChange={(color) => dispatch(setTilesetRightSidebarPrimitives({ brushColor: color }))}
+          color={brushColor.toUpperCase()}
+          onChange={(color) => dispatch(setTilesetRightSidebarPrimitives({ brushColor: color.toUpperCase() }))}
         />
         <HexColorInput
-          color={brushColor}
-          onChange={(color) => dispatch(setTilesetRightSidebarPrimitives({ brushColor: color }))}
-          prefixed
+          color={brushColor.toUpperCase()}
+          onChange={(color) => dispatch(setTilesetRightSidebarPrimitives({ brushColor: color.toUpperCase() }))}
         />
       </div>
       <Divider />
