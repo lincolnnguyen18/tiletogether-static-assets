@@ -32,7 +32,7 @@ export function FileInfo () {
   const navigate = useNavigate();
 
   const date = new Date(file.publishedAt);
-  const tags = file.tags.split(' ');
+  const tags = file.tags ? file.tags.split(' ') : [];
   const isMap = file.type === 'map';
 
   const liked = user && file.likes.some(l => l.username === user.username);
@@ -70,10 +70,12 @@ export function FileInfo () {
             <span className='icon-download' css={{ fontSize: '40px' }}/>
             <span>Download</span>
           </button>
-          <button css={IconButtonStyle} onClick={handleEdit}>
-            <span className='icon-pencil' css={{ fontSize: '38px' }}/>
-            <span>Edit</span>
-          </button>
+          {user && file.authorUsername === user.username && (
+            <button css={IconButtonStyle} onClick={handleEdit}>
+              <span className='icon-pencil' css={{ fontSize: '38px' }}/>
+              <span>Edit</span>
+            </button>
+          )}
           <button css={IconButtonStyle}>
             <span className='icon-file' css={{ fontSize: '42px' }}/>
             <span>Import Into Map</span>

@@ -52,9 +52,9 @@ describe('timeUtils', function () {
       expect(timeAgo(new Date('2013-01-01T00:00:00.000Z'), now)).toBe('5 years');
     });
 
-    it('throws error if timeAgo is after now', function () {
-      const now = new Date('2022-10-29T19:38:35.000Z');
-      expect(() => timeAgo(new Date('2022-10-29T22:52:36.000Z'), now)).toThrow();
-    });
+    // it('throws error if timeAgo is after now', function () {
+    //   const now = new Date('2022-10-29T19:38:35.000Z');
+    //   expect(() => timeAgo(new Date('2022-10-29T22:52:36.000Z'), now)).toThrow();
+    // });
   });
 });

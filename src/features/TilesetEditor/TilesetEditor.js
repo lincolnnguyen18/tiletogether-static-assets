@@ -9,7 +9,7 @@ import { TilesetCanvas } from './TilesetCanvas';
 import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { asyncDeleteFile, asyncGetFileToEdit, asyncPatchFile, clearTilesetEditorErrors, clearTilesetEditorStatus, selectTilesetEditorErrors, selectTilesetEditorPrimitives, selectTilesetEditorStatuses, selectTilesetFile, selectTilesetNewChanges, setTilesetEditorPrimitives } from './tilesetEditorSlice';
-import { emitJoinRoom, emitLeaveRoom } from './tilesetEditorSocketApi';
+import { emitJoinRoom, emitLeaveRoom, onConnected } from '../User/userEditorSocketApi';
 
 const tilesetEditorStyle = css`
   margin: 0;
@@ -30,6 +30,7 @@ export function TilesetEditor () {
   useEffect(() => {
     dispatch(asyncGetFileToEdit({ id }));
     emitJoinRoom({ fileId: id });
+    onConnected(() => emitJoinRoom({ fileId: id }));
 
     return () => {
       emitLeaveRoom({ fileId: id });
@@ -42,7 +43,7 @@ export function TilesetEditor () {
     dispatch(setTilesetEditorPrimitives({ activeTool: tool }));
   }
 
-  if (statuses.getFileToEdit !== 'rejected') {
+  if (statuses && statuses.getFileToEdit !== 'rejected') {
     content = file && file.rootLayer && (
       <div css={tilesetEditorStyle}>
         <LeftSidebar
@@ -56,6 +57,7 @@ export function TilesetEditor () {
           selectFileStatuses={selectTilesetEditorStatuses}
           setActiveTool={setActiveTool}
           showColorPicker={true}
+          type={'tileset'}
         />
         <FilenameIndicator file={file} saving={newChanges.length > 0} />
         <RightSidebar />

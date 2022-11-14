@@ -7,17 +7,18 @@ import { FlexRow } from '../../components/layout/FlexRow';
 import { Slider } from '../../components/inputs/Slider';
 import { Text } from '../../components/Text';
 import { IconButton } from '../../components/inputs/IconButton';
-import { addNewTilesetLayer, deleteSelectedLayers } from './tilesetEditorSlice';
+import { addNewChanges, addNewTilesetLayer, deleteSelectedLayers, selectTilesetEditorPrimitives, selectTilesetFile, setTilesetEditorPrimitives, updateLayer } from './tilesetEditorSlice';
 import { TilesetLayer } from './TilesetLayer';
 import { useEffect } from 'react';
 import { selectTilesetRightSidebarPrimitives, setTilesetRightSidebarPrimitives } from './rightSidebarSlice';
 import { HexColorInput, HexColorPicker } from 'react-colorful';
+import { selectLeftSidebarPrimitives } from '../Editor/leftSidebarSlice';
 
 const colorPickerStyle = css`
   display: flex;
   flex-direction: column;
   width: 100%;
-  gap: 8px;
+  gap: 14px;
 
   .react-colorful {
     width: 200px;
@@ -32,7 +33,7 @@ const colorPickerStyle = css`
       color: black;
       border: 1px solid #ccc;
       width: 80px;
-      height: 38px;
+      height: 36px;
       font-size: 16px;
       border-radius: 4px;
       outline: none;
@@ -89,9 +90,21 @@ export function RightSidebar () {
   const dispatch = useDispatch();
   const primitives = useSelector(selectTilesetRightSidebarPrimitives);
   const { brushColor } = primitives;
-  const tilesetEditorSlice = useSelector((state) => state.tilesetEditor);
-  const file = tilesetEditorSlice.file;
+  const editorPrimitives = useSelector(selectTilesetEditorPrimitives);
+  const { lastSelectedLayer } = editorPrimitives;
+  const file = useSelector(selectTilesetFile);
   const rootLayer = file.rootLayer;
+  const leftSideBarPrimitives = useSelector(selectLeftSidebarPrimitives);
+  const { drawerOpen } = leftSideBarPrimitives;
+
+  function handleOpacityChange (e) {
+    const newOpacity = e.target.value / 100;
+    // console.log('opacity change', newOpacity);
+    const newLayer = { ...lastSelectedLayer, opacity: newOpacity };
+    dispatch(updateLayer({ newLayer }));
+    dispatch(addNewChanges({ layerId: lastSelectedLayer._id, newChanges: ['treeData'] }));
+    dispatch(setTilesetEditorPrimitives({ lastSelectedLayer: newLayer }));
+  }
 
   function handleAddNewLayer () {
     dispatch(addNewTilesetLayer());
@@ -107,7 +120,7 @@ export function RightSidebar () {
       handleAddNewLayer();
     }
     // listen for delete or backspace to delete the selected layer
-    if (e.key === 'Delete' || e.key === 'Backspace') {
+    if ((e.key === 'Delete' || e.key === 'Backspace') && !drawerOpen) {
       handleDeleteSelectedLayers();
     }
   }
@@ -117,7 +130,7 @@ export function RightSidebar () {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
+  }, [drawerOpen]);
 
   return (
     <div css={rightSidebarStyle}>
@@ -129,15 +142,15 @@ export function RightSidebar () {
           <span>Current color</span>
         </div>
       </div>
+      <Divider />
       <div css={colorPickerStyle}>
         <HexColorPicker
-          color={brushColor}
-          onChange={(color) => dispatch(setTilesetRightSidebarPrimitives({ brushColor: color }))}
+          color={brushColor.toUpperCase()}
+          onChange={(color) => dispatch(setTilesetRightSidebarPrimitives({ brushColor: color.toUpperCase() }))}
         />
         <HexColorInput
-          color={brushColor}
-          onChange={(color) => dispatch(setTilesetRightSidebarPrimitives({ brushColor: color }))}
-          prefixed
+          color={brushColor.toUpperCase()}
+          onChange={(color) => dispatch(setTilesetRightSidebarPrimitives({ brushColor: color.toUpperCase() }))}
         />
       </div>
       <Divider />
@@ -156,10 +169,15 @@ export function RightSidebar () {
             <span className='icon-trash'></span>
           </IconButton>
         </FlexRow>
-         <FlexRow gap={8}>
-          <Slider value={100} />
-          <Text>{100}%</Text>
-         </FlexRow>
+        {lastSelectedLayer && (
+          <FlexRow gap={8}>
+            <Slider
+              value={lastSelectedLayer.opacity * 100}
+              onChange={handleOpacityChange}
+            />
+            <Text>{Math.round(lastSelectedLayer.opacity * 100)}%</Text>
+          </FlexRow>
+        )}
       </FlexRow>
       <div className='layers'>
         <TilesetLayer layer={rootLayer} level={-1} />

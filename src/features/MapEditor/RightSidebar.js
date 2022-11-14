@@ -2,7 +2,6 @@
 import { css, jsx } from '@emotion/react';
 import { Icon } from '../../components/Icon';
 import { useSelector } from 'react-redux';
-import { useEffect } from 'react';
 import { FlexRow } from '../../components/layout/FlexRow';
 import { IconButton } from '../../components/inputs/IconButton';
 import { selectMapFile } from './mapEditorSlice';
@@ -58,14 +57,14 @@ const rightSidebarStyle = css`
 
 const tilesetsStyle = css`
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 7px;
   padding: 4px 8px;
   user-select: none;
   height: 300px;
   overflow-y: scroll;
   
   .tileset {
-    padding: 7px;
+    padding: 8px;
     background: #2D2D2D;
     border-radius: 7px;
     cursor: pointer;
@@ -79,7 +78,7 @@ const tilesetsStyle = css`
     }
     
     span {
-      font-size: 12px;
+      font-size: 14px;
     }
   }
 `;
@@ -97,9 +96,9 @@ export function RightSidebar () {
   const file = useSelector(selectMapFile);
   const rootLayer = file.rootLayer;
 
-  useEffect(() => {
-    console.log(rootLayer);
-  }, [file]);
+  // useEffect(() => {
+  //   console.log(rootLayer);
+  // }, [file]);
 
   return (
     <div css={rightSidebarStyle}>

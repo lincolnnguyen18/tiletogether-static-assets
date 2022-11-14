@@ -42,6 +42,7 @@ export function MapEditor () {
           selectFileErrors={selectMapEditorErrors}
           selectFileStatuses={selectMapEditorStatuses}
           setActiveTool={setActiveTool}
+          type={'map'}
         />
         <FilenameIndicator file={file} />
         <RightSidebar />

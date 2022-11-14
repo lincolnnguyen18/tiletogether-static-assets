@@ -80,10 +80,10 @@ export function FileViewer () {
     content = (
       <Fragment>
         <Navbar />
-        {file && file.likes && files && files.length > 0 && (
+        {file && file.likes && files && (
           <div css={fileViewerStyle}>
             <div css={leftSideStyle}>
-              <img src='/mock-data/file-image.png' css={canvasStyle} />
+              <img src={file.imageUrl} css={canvasStyle} />
               <FileInfo />
               <AddComment />
               <CommentSection />
@@ -92,7 +92,7 @@ export function FileViewer () {
               {files.map((file, index) => (
                 <File
                   key={index}
-                  imageUrl='/mock-data/file-image.png'
+                  imageUrl={file.imageUrl}
                   title={file.name}
                   subtext={getSubtext(user && user.username === file.username
                     ? 'your-files'

@@ -24,8 +24,8 @@ function App () {
   const user = userSlice.primitives.user;
 
   useEffect(() => {
-    apiClient.get('/health').then((response) => {
-      console.log(response);
+    apiClient.get('/health').then((_) => {
+      // console.log(response);
     }, (error) => {
       console.log(error);
     });

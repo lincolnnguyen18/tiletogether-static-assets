@@ -50,6 +50,18 @@ export const asyncGetFileToView = createAsyncThunk(
   },
 );
 
+export const asyncCreateFile = createAsyncThunk(
+  'file/createFile',
+  async ({ file }, { rejectWithValue }) => {
+    try {
+      const response = await apiClient.post('/files', file);
+      return response.data;
+    } catch (err) {
+      return rejectWithValue(err.response.data.error);
+    }
+  },
+);
+
 export const asyncLikeFile = createAsyncThunk(
   'file/likeFile',
   async ({ id, liked }) => {
@@ -109,6 +121,7 @@ const fileSlice = createSlice({
         }
       })
       .addCase(asyncGetFiles.fulfilled, (state, action) => {
+        // console.log(action.payload);
         if (notPresent(action.meta.arg.loadMore)) {
           state.files = action.payload;
           state.primitives.page = 2;
@@ -121,9 +134,11 @@ const fileSlice = createSlice({
         }
       })
       .addCase(asyncPostComment.fulfilled, (state, action) => {
-        state.file = action.payload.data.file;
+        // only update file comments
+        state.file.comments = action.payload.data.file.comments;
       })
       .addCase(asyncGetFileToView.fulfilled, (state, action) => {
+        // console.log(action.payload);
         state.file = action.payload;
       })
       .addCase(asyncGetFileToView.pending, (state) => {
