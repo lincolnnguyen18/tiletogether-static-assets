@@ -5,12 +5,13 @@ import { getActionName } from '../../utils/stringUtils';
 
 const initialState = {
   file: null,
+  mapImage: null,
   primitives: {
     // draw, erase, select
     activeTool: 'select',
-    dragStart: null,
-    dragging: false,
     lastSelectedLayer: null,
+    lastSelectedTileset: null,
+    selectedTileIndex: 1,
   },
   statuses: {},
   errors: {},
@@ -51,6 +52,9 @@ const mapEditorSlice = createSlice({
     setMapEditorPrimitives (state, action) {
       state.primitives = _.merge(state.primitives, action.payload);
     },
+    setMapImage (state, action) {
+      state.mapImage = action.payload;
+    },
     updateLayer: (state, action) => {
       const { newLayer } = action.payload;
 
@@ -63,6 +67,11 @@ const mapEditorSlice = createSlice({
       }
 
       state.file.rootLayer = _.cloneDeepWith(state.file.rootLayer, customizer);
+    },
+    clearSelects: (state) => {
+      state.file.rootLayer.layers.forEach(l => {
+        l.selected = false;
+      });
     },
     clearMapEditorErrors: state => {
       state.errors = {};
@@ -108,6 +117,7 @@ const mapEditorSlice = createSlice({
         _.merge(state.file, pickedFile);
         // replace the sharedWith field
         state.file.sharedWith = action.payload.sharedWith;
+        state.file.rootLayer = action.payload.rootLayer;
       })
       .addMatcher(isPending, (state, action) => {
         state.errors = {};
@@ -126,6 +136,8 @@ const mapEditorSlice = createSlice({
 
 export const {
   setMapEditorPrimitives,
+  setMapImage,
+  clearSelects,
   clearMapEditorErrors,
   clearMapEditorStatus,
   updateLayer,
@@ -133,7 +145,10 @@ export const {
 
 export const selectMapEditorPrimitives = (state) => state.mapEditor.primitives;
 export const selectMapFile = (state) => state.mapEditor.file;
+export const selectMapImage = (state) => state.mapEditor.mapImage;
 export const selectLastSelectedLayer = state => state.mapEditor.primitives.lastSelectedLayer;
+export const selectLastSelectedTileSet = state => state.mapEditor.primitives.lastSelectedTileset;
+export const selectTileIndex = state => state.mapEditor.primitives.selectedTileIndex;
 export const selectMapEditorStatuses = (state) => state.mapEditor.statuses;
 export const selectMapEditorErrors = (state) => state.mapEditor.errors;
 

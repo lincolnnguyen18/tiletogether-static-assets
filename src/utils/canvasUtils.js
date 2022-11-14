@@ -1,3 +1,5 @@
+import _ from 'lodash';
+
 export function getPointsBetweenTwoCoordinates (x1, y1, x2, y2) {
   const points = [];
   const dx = x2 - x1;
@@ -157,4 +159,22 @@ export function getRgbaStrOpacity (rgbaStr) {
 
 export function removeRgbaOpacity (rgbaStr) {
   return rgbaStr.replace(/,\s*[\d.]+\)/, ')');
+}
+
+const minScale = 1;
+const maxScale = 10;
+const scaleStep = 0.1;
+const moveStep = 20;
+
+export function getScale (original, event) {
+  const factor = event.wheelDelta > 0 ? 1 + scaleStep : 1 - scaleStep;
+  return _.clamp(original * factor, minScale, maxScale);
+}
+
+export function getPositionAfterMove (original, event, axis) {
+  const delta = event.wheelDelta > 0 ? moveStep : -moveStep;
+  return {
+    x: axis === 'Horizontal' ? original.x - delta : original.x,
+    y: axis === 'Vertical' ? original.y - delta : original.y,
+  };
 }

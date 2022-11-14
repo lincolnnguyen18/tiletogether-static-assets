@@ -146,7 +146,6 @@ export function TilesetCanvas () {
     };
     const halfBrushSize = Math.floor(brushSize / 2);
     // logging halfBrushSize because a rare bug sometimes occurs where the brush size is 1 but nothing is being drawn or the brush outline is slightly larger than the actual brush size; trying to reproduce it and track down the cause; update: should be fixed now, when brush size was increased/decreased by a factor, forgot to floor so was not whole number sometimes
-    console.log('halfBrushSize', halfBrushSize);
 
     if (halfBrushSize < 0) {
       return;
@@ -183,7 +182,6 @@ export function TilesetCanvas () {
       layerCanvas.width = brushSize;
       layerCanvas.height = brushSize;
     }
-    console.log(layerCanvas);
 
     const overflows = {
       left: Math.min(0, relativeMousePos.x - layerPosition.x - halfBrushSize),

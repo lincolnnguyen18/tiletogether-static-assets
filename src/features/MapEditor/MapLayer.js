@@ -2,7 +2,7 @@
 import { css, jsx } from '@emotion/react';
 import { useDispatch, useSelector } from 'react-redux';
 import _ from 'lodash';
-import { selectMapEditorPrimitives, updateLayer } from './mapEditorSlice';
+import { clearSelects, selectLastSelectedLayer, selectMapEditorPrimitives, setMapEditorPrimitives, updateLayer } from './mapEditorSlice';
 
 const layerStyle = css`
   user-select: none;
@@ -13,9 +13,18 @@ const layerStyle = css`
 export function MapLayer ({ layer, parentSelected, level }) {
   const dispatch = useDispatch();
   const primitives = useSelector(selectMapEditorPrimitives);
+  const lastSelectedLayer = useSelector(selectLastSelectedLayer);
   const dragging = primitives.dragging;
 
   let { name, selected, expanded, type } = layer;
+
+  // #region User Input Handles
+  function setLayerSelected (layer) {
+    if (!layer) return;
+    const newLayer = _.cloneDeep(layer);
+    newLayer.selected = !newLayer.selected;
+    dispatch(updateLayer({ newLayer }));
+  }
 
   function handleToggleExpand (e, layer) {
     e.stopPropagation();
@@ -26,6 +35,22 @@ export function MapLayer ({ layer, parentSelected, level }) {
 
   if (parentSelected) selected = true;
 
+  function handleDragStart (_, layer) {
+    if (layer.isRootLayer) return;
+    if (lastSelectedLayer && layer._id === lastSelectedLayer._id) return;
+
+    dispatch(clearSelects());
+    setLayerSelected(layer);
+    dispatch(setMapEditorPrimitives({ dragging: true, lastSelectedLayer: null }));
+  }
+
+  function handleDragEnd (_) {
+    // if (dragging && layer._id !== lastSelectedLayer._id)
+    dispatch(setMapEditorPrimitives({ dragging: false, lastSelectedLayer: layer }));
+  }
+  // #endregion
+
+  //  #region CSS
   const subLayerStyle = css`
     display: ${expanded ? 'flex' : 'none'};
     flex-direction: column;
@@ -87,6 +112,7 @@ export function MapLayer ({ layer, parentSelected, level }) {
       ${getHoverBackground()};
     }
   `;
+  // #endregion
 
   return layer && (
     <div css={layerStyle}>
@@ -94,6 +120,8 @@ export function MapLayer ({ layer, parentSelected, level }) {
         <div
           css={layerNameStyle}
           draggable={false}
+          onMouseDown={e => handleDragStart(e, layer)}
+          onMouseUp={e => handleDragEnd(e, layer)}
           id={`explorer-${layer._id}`}
         >
           <Arrow />

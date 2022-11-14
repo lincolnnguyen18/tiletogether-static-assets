@@ -1,13 +1,15 @@
 /** @jsx jsx */
 import { css, jsx } from '@emotion/react';
 import { Icon } from '../../components/Icon';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useEffect } from 'react';
 import { FlexRow } from '../../components/layout/FlexRow';
 import { IconButton } from '../../components/inputs/IconButton';
-import { selectMapFile } from './mapEditorSlice';
+import { selectLastSelectedTileSet, selectMapFile, setMapEditorPrimitives } from './mapEditorSlice';
 import { MapLayer } from './MapLayer';
+import { TilesetSelector } from './TilesetSelector';
 
+// #region CSS
 const rightSidebarStyle = css`
   background: #3F3F3F;
   width: 270px;
@@ -83,6 +85,7 @@ const tilesetsStyle = css`
     }
   }
 `;
+// #endregion
 
 export function Divider () {
   const dividerStyle = css`
@@ -94,12 +97,18 @@ export function Divider () {
 }
 
 export function RightSidebar () {
+  const dispatch = useDispatch();
+
   const file = useSelector(selectMapFile);
+  const selectedTileSet = useSelector(selectLastSelectedTileSet);
+
   const rootLayer = file.rootLayer;
 
   useEffect(() => {
-    console.log(rootLayer);
-  }, [file]);
+    if (!selectedTileSet && file.tilesets.length > 0) {
+      dispatch(setMapEditorPrimitives({ lastSelectedTileset: file.tilesets[0] }));
+    }
+  });
 
   return (
     <div css={rightSidebarStyle}>
@@ -121,13 +130,14 @@ export function RightSidebar () {
       </FlexRow>
       <FlexRow style={tilesetsStyle}>
         <div className={'tileset selected'}>
-          <span>Bridges</span>
+          {selectedTileSet && <span>{selectedTileSet.name}</span>}
         </div>
-        {['Dirt', 'Grass', 'Hills', 'Mountains', 'Rivers', 'Roads', 'Rocks', 'Sand', 'Shallow Water', 'Snow', 'Trees', 'Water'].map((tilesetName, index) => (
-          <div className={'tileset'} key={index}>
-            <span>{tilesetName}</span>
-          </div>
-        ))}
+        {file.tilesets.map((tileset, index) => tileset === selectedTileSet
+          ? null
+          : <div className={'tileset'} key={index} onClick={() => dispatch(setMapEditorPrimitives({ lastSelectedTileset: tileset }))}>
+            <span>{tileset.name}</span>
+          </div>)
+        }
       </FlexRow>
       <Divider />
       <div className='header'>
@@ -138,7 +148,7 @@ export function RightSidebar () {
       </div>
       <Divider />
       <div className='selected-tiles'>
-        <canvas></canvas>
+        <TilesetSelector />
       </div>
       <Divider />
       <div className='header'>

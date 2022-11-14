@@ -13,6 +13,7 @@ rules: {
   '@emotion/jsx-import': 'error',
   'react/no-unknown-property': [ 'error', { ignore: [ 'css' ] } ],
   'react/prop-types': 'off',
+  "react/react-in-jsx-scope": "off",
   'semi': [ 'error', 'always' ],
   'comma-dangle': [ 'error', 'always-multiline' ],
   'quotes': [ 'error', 'single' ],

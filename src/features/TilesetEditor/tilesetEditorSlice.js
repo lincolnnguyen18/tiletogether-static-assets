@@ -388,7 +388,6 @@ const tilesetEditorSlice = createSlice({
       })
       .addCase(asyncGetFileToEdit.fulfilled, (state, action) => {
         const file = action.payload;
-        console.log(file);
         // use cloneDeepWith to set all layers selected and expanded to false
         function customizer (layer) {
           if (_.get(layer, '_id')) {
