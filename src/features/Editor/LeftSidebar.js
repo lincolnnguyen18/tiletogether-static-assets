@@ -15,6 +15,7 @@ import _ from 'lodash';
 import { defaultFlexColumnStyle, FlexColumn } from '../../components/layout/FlexColumn';
 import { FlexRow } from '../../components/layout/FlexRow';
 import { wait } from '../../utils/timeUtils';
+import { selectTilesetEditorPrimitives, setTilesetEditorPrimitives } from '../TilesetEditor/tilesetEditorSlice';
 
 const leftSidebarStyle = css`
   background: #3F3F3F;
@@ -37,12 +38,13 @@ const leftSidebarStyle = css`
   }
 `;
 
-export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile, clearFileErrors, clearFileStatus, selectFileErrors, selectFileStatuses, setActiveTool, showColorPicker = false }) {
+export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile, clearFileErrors, clearFileStatus, selectFileErrors, selectFileStatuses, setActiveTool, type }) {
   const dispatch = useDispatch();
   const leftSidebarSlice = useSelector((state) => state.leftSidebar);
   const showGrid = leftSidebarSlice.primitives.showGrid;
   const drawerOpen = leftSidebarSlice.primitives.drawerOpen;
   const drawerPage = leftSidebarSlice.primitives.drawerPage;
+  const tilesetEditorPrimitives = useSelector(selectTilesetEditorPrimitives);
 
   const statuses = useSelector(selectFileStatuses);
   const errors = useSelector(selectFileErrors);
@@ -61,15 +63,33 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
     dispatch(setLeftSidebarPrimitives({ drawerOpen: false }));
   }
 
+  const downloadItems = { PNG: 'png' };
+  if (type === 'map') {
+    downloadItems['Tiled JSON (.tmj)'] = 'tmj';
+  }
+
   const downloadPage = (
     <Fragment>
-      <SelectMenu
-        label='Download file as'
-        items={{ PNG: 'png', 'Tiled JSON (.tmj)': 'tmj' }}
-        name='type'
-        defaultValue='tmj'
-      />
-      <Button style={grayButtonStyle}>Download</Button>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          const formData = Object.fromEntries(new FormData(e.target));
+          dispatch(setTilesetEditorPrimitives({ downloadFormat: formData.type }));
+        }}
+        css={defaultFlexColumnStyle}
+      >
+        <SelectMenu
+          label='Download file as'
+          items={downloadItems}
+          name='type'
+          defaultValue='tmj'
+        />
+        <Button
+          style={grayButtonStyle}
+          type={'submit'}
+          disabled={tilesetEditorPrimitives.downloadFormat != null}
+        >Download</Button>
+      </form>
     </Fragment>
   );
 
@@ -402,7 +422,7 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
           <IconButton active={activeTool === 'select' && !drawerOpen} onClick={() => setActiveTool('select')}>
             <span className='icon-cursor'></span>
           </IconButton>
-          {showColorPicker && (
+          {type === 'tileset' && (
             <IconButton active={activeTool === 'color-picker' && !drawerOpen} onClick={() => setActiveTool('color-picker')}>
               <span className='icon-color-picker'></span>
             </IconButton>

@@ -32,7 +32,7 @@ export function FileInfo () {
   const navigate = useNavigate();
 
   const date = new Date(file.publishedAt);
-  const tags = file.tags.split(' ');
+  const tags = file.tags ? file.tags.split(' ') : [];
   const isMap = file.type === 'map';
 
   const liked = user && file.likes.some(l => l.username === user.username);

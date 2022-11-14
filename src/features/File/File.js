@@ -24,8 +24,9 @@ const imageStyle = css`
   image-rendering: -o-crisp-edges;
   image-rendering: crisp-edges;
   -ms-interpolation-mode: nearest-neighbor;
-  margin: 8px;
   user-select: none;
+  padding: 8px;
+  box-sizing: border-box;
 `;
 
 const fileInfoContainerStyle = css`

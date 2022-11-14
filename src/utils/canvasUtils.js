@@ -33,13 +33,22 @@ export function getImageColors (imageData) {
   return Array.from(colors);
 }
 
-function initializeFreqReadCanvas () {
+export function initializeFreqReadCanvas () {
   // using a global canvas for frequent reads to stop console warnings
   if (window.freqReadCtx == null) {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
     window.freqReadCanvas = canvas;
     window.freqReadCtx = ctx;
+  }
+}
+
+export function initializeAElement () {
+  if (window.aElement == null) {
+    const aElement = document.createElement('a');
+    aElement.style.display = 'none';
+    document.body.appendChild(aElement);
+    window.aElement = aElement;
   }
 }
 

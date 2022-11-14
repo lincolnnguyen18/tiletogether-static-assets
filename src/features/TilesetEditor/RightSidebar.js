@@ -12,12 +12,13 @@ import { TilesetLayer } from './TilesetLayer';
 import { useEffect } from 'react';
 import { selectTilesetRightSidebarPrimitives, setTilesetRightSidebarPrimitives } from './rightSidebarSlice';
 import { HexColorInput, HexColorPicker } from 'react-colorful';
+import { selectLeftSidebarPrimitives } from '../Editor/leftSidebarSlice';
 
 const colorPickerStyle = css`
   display: flex;
   flex-direction: column;
   width: 100%;
-  gap: 8px;
+  gap: 14px;
 
   .react-colorful {
     width: 200px;
@@ -93,6 +94,8 @@ export function RightSidebar () {
   const { lastSelectedLayer } = editorPrimitives;
   const file = useSelector(selectTilesetFile);
   const rootLayer = file.rootLayer;
+  const leftSideBarPrimitives = useSelector(selectLeftSidebarPrimitives);
+  const { drawerOpen } = leftSideBarPrimitives;
 
   function handleOpacityChange (e) {
     const newOpacity = e.target.value / 100;
@@ -117,7 +120,7 @@ export function RightSidebar () {
       handleAddNewLayer();
     }
     // listen for delete or backspace to delete the selected layer
-    if (e.key === 'Delete' || e.key === 'Backspace') {
+    if ((e.key === 'Delete' || e.key === 'Backspace') && !drawerOpen) {
       handleDeleteSelectedLayers();
     }
   }
@@ -127,7 +130,7 @@ export function RightSidebar () {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
+  }, [drawerOpen]);
 
   return (
     <div css={rightSidebarStyle}>

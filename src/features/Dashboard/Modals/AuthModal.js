@@ -6,8 +6,9 @@ import { blackButtonStyle, Button } from '../../../components/inputs/Button';
 import { useDispatch, useSelector } from 'react-redux';
 import { useState } from 'react';
 import { asyncGetUser, asyncPostUser, selectUserStatuses } from '../../User/userSlice';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { modalBodyStyle } from '../../../components/Modal/Modal';
+import { asyncGetFiles } from '../../File/fileSlice';
 
 export function openAuthModal (dispatch, type) {
   dispatch(setModalReactElements({
@@ -33,6 +34,7 @@ export function AuthModalHeader ({ type }) {
 export function AuthModalBody ({ type }) {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const location = useLocation();
   const userStatuses = useSelector(selectUserStatuses);
   const [errors, setErrors] = useState({});
 
@@ -54,6 +56,8 @@ export function AuthModalBody ({ type }) {
       setErrors({ login: 'Invalid email or password' });
     } else {
       dispatch(setModalPrimitives({ open: false }));
+      // reload files if user logs in
+      dispatch(asyncGetFiles({ location }));
     }
   }
 

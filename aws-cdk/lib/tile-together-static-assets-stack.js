@@ -34,6 +34,10 @@ class TileTogetherStaticAssetsStack extends Stack {
           httpStatus: 404,
           responsePagePath: '/index.html',
         },
+        {
+          httpStatus: 403,
+          responsePagePath: '/index.html',
+        },
       ],
       defaultBehavior: {
         origin: new S3Origin(staticAssetsBucket, { originAccessIdentity }),

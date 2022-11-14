@@ -4,11 +4,11 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { addNewChanges, addNewTilesetLayer, asyncSaveChanges, clearChanges, deleteLayerById, selectLastSelectedLayer, selectTilesetEditorPrimitives, selectTilesetFile, selectTilesetNewChanges, setTilesetEditorPrimitives, updateAllLayers, updateLayer, updateLayersUpToRoot } from './tilesetEditorSlice';
 import { Circle, Group, Image, Layer, Rect, Stage } from 'react-konva';
-import { isCompletelyTransparent, rgbToHex, trimPng } from '../../utils/canvasUtils';
+import { initializeAElement, initializeFreqReadCanvas, isCompletelyTransparent, rgbToHex, trimPng } from '../../utils/canvasUtils';
 import { onLayerPosition, emitLayerPosition, onChangesSaved } from './tilesetEditorSocketApi';
-import { usePrevious } from '../../utils/stateUtils';
 import { selectTilesetRightSidebarPrimitives, setTilesetRightSidebarPrimitives } from './rightSidebarSlice';
-import { selectLeftSidebarPrimitives } from '../Editor/leftSidebarSlice';
+import { selectLeftSidebarPrimitives, setLeftSidebarPrimitives } from '../Editor/leftSidebarSlice';
+import { usePrevious } from '../../utils/stateUtils';
 
 const virtualCanvasesStyle = css`
   position: absolute;
@@ -62,6 +62,31 @@ export function KonvaCheckerboardImage ({ width, height, tileDimension }) {
   return <Image image={window.checkerboardCanvas} />;
 }
 
+export function downloadFileAsCanvas ({ file, layerData }) {
+  initializeFreqReadCanvas();
+  const canvas = window.freqReadCanvas;
+  const ctx = window.freqReadCtx;
+  canvas.width = file.width * file.tileDimension;
+  canvas.height = file.height * file.tileDimension;
+
+  function traverse (layer) {
+    if (layer.type === 'layer') {
+      const { canvas, position } = layerData[layer._id];
+      if (canvas) {
+        // reverse drawing z-index with globalCompositeOperation
+        ctx.globalCompositeOperation = 'destination-over';
+        ctx.drawImage(canvas, position.x, position.y);
+      }
+    }
+    if (layer.layers) {
+      layer.layers.forEach(traverse);
+    }
+  }
+  traverse(file.rootLayer);
+  ctx.globalCompositeOperation = 'source-over';
+  return canvas;
+}
+
 export function TilesetCanvas () {
   const [canvasSize, setCanvasSize] = useState({ width: window.innerWidth - 56 - 270, height: window.innerHeight });
   const primitives = useSelector(selectTilesetEditorPrimitives);
@@ -70,7 +95,7 @@ export function TilesetCanvas () {
   const { showGrid } = leftSidebarPrimitives;
   const lastSelectedLayer = useSelector(selectLastSelectedLayer);
   const file = useSelector(selectTilesetFile);
-  const { activeTool } = primitives;
+  const { activeTool, downloadFormat } = primitives;
   const { brushColor } = rightSidebarPrimitives;
   const layers = file.rootLayer.layers;
   const dispatch = useDispatch();
@@ -95,7 +120,7 @@ export function TilesetCanvas () {
 
   async function handlePaste (e) {
     e.preventDefault();
-    console.log('paste');
+    // console.log('paste');
     // check if it's a png
     if (e.clipboardData.items[0].type === 'image/png') {
       const mousePosition = stageRef.current.getPointerPosition();
@@ -134,6 +159,27 @@ export function TilesetCanvas () {
       setPastingImage(null);
     }
   }, [pastingImage]);
+
+  useEffect(() => {
+    if (!downloadFormat || !file.rootLayer) return;
+    // console.log('downloadFormat', downloadFormat);
+
+    // download canvas as png
+    initializeAElement();
+    const canvas = downloadFileAsCanvas({ file, layerData });
+    const a = window.aElement;
+    a.href = canvas.toDataURL('image/png');
+    a.download = `${file.name}.${downloadFormat}`;
+    a.click();
+
+    // // open canvas in new tab
+    // const w = window.open();
+    // w.document.body.appendChild(canvas);
+    // w.document.close();
+
+    dispatch(setTilesetEditorPrimitives({ downloadFormat: null }));
+    dispatch(setLeftSidebarPrimitives({ drawerOpen: false }));
+  }, [downloadFormat]);
 
   useEffect(() => {
     onChangesSaved(() => {
@@ -228,7 +274,8 @@ export function TilesetCanvas () {
       return;
     }
 
-    let layerPosition = layer?.position;
+    let layerPosition = layer ? { x: layer.position.x, y: layer.position.y } : null;
+    // console.log(layerPosition);
     if (!layerPosition) {
       // set layer position to mouse position if it doesn't exist
       layerPosition = {
@@ -364,6 +411,7 @@ export function TilesetCanvas () {
         ...layer,
         position: layerPosition,
       };
+      // console.log(_.cloneDeep(newLayerData));
       setLayerData(newLayerData);
       stageRef.current.draw();
       dispatch(addNewChanges({ layerId, newChanges: ['canvas', 'position'] }));

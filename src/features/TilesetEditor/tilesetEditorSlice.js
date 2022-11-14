@@ -4,6 +4,7 @@ import { apiClient } from '../../app/apiClient';
 import { getActionName } from '../../utils/stringUtils';
 import ObjectID from 'bson-objectid';
 import { emitLayerUpdates } from './tilesetEditorSocketApi';
+import { downloadFileAsCanvas } from './TilesetCanvas';
 
 const initialState = {
   file: null,
@@ -17,6 +18,8 @@ const initialState = {
     dragging: false,
     lastSelectedLayer: null,
     savingChanges: false,
+    // downloadFormat is null or 'png'/'tmj' to indicate which format is being downloaded
+    downloadFormat: null,
   },
   newChanges: {},
   statuses: {},
@@ -93,7 +96,10 @@ export const asyncSaveChanges = createAsyncThunk(
     // console.log(newRootLayer);
 
     // console.log('layerIds', layerIds);
-    emitLayerUpdates({ newRootLayer, canvasUpdates, layerIds });
+    const newFileCanvas = downloadFileAsCanvas({ file, layerData });
+    const newFileBlob = await new Promise((resolve) => newFileCanvas.toBlob(resolve));
+    const newImage = await newFileBlob.arrayBuffer();
+    emitLayerUpdates({ newRootLayer, canvasUpdates, layerIds, newImage });
   },
 );
 

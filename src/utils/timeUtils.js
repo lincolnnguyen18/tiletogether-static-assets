@@ -7,7 +7,8 @@ function pluralize (count, singular) {
 }
 
 export function timeAgo (date, currentTime = new Date()) {
-  if (currentTime < date) throw new Error('timeAgo date must be in the past');
+  // if (currentTime < date) throw new Error('timeAgo date must be in the past');
+  if (currentTime < date) currentTime = date;
 
   const seconds = Math.floor((currentTime - date) / 1000);
   const minutes = Math.floor(seconds / 60);

@@ -57,6 +57,7 @@ export function TilesetEditor () {
           selectFileStatuses={selectTilesetEditorStatuses}
           setActiveTool={setActiveTool}
           showColorPicker={true}
+          type={'tileset'}
         />
         <FilenameIndicator file={file} saving={newChanges.length > 0} />
         <RightSidebar />

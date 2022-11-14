@@ -11,19 +11,19 @@ const root = createRoot(container);
 
 root.render(
   // when needed, comment when developing, uncomment when committing
-  <React.StrictMode>
-    <BrowserRouter>
-      <Provider store={store}>
-        <App />
-      </Provider>
-    </BrowserRouter>
-  </React.StrictMode>,
+  // <React.StrictMode>
+  //   <BrowserRouter>
+  //     <Provider store={store}>
+  //       <App />
+  //     </Provider>
+  //   </BrowserRouter>
+  // </React.StrictMode>,
 
   // when needed, uncomment when developing, comment when committing
   // using strictmode causes double render which can sometimes be a problem
-  // <BrowserRouter>
-  //   <Provider store={store}>
-  //     <App />
-  //   </Provider>
-  // </BrowserRouter>,
+  <BrowserRouter>
+    <Provider store={store}>
+      <App />
+    </Provider>
+  </BrowserRouter>,
 );

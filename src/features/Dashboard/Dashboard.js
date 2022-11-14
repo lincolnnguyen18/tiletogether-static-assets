@@ -15,7 +15,7 @@ import { asyncGetFiles, selectFileStatuses } from '../File/fileSlice';
 import { Button, transparentButtonStyle, whiteButtonStyle } from '../../components/inputs/Button';
 import { timeAgo } from '../../utils/timeUtils';
 import { File } from '../File/File';
-import { selectUser, selectUserStatuses } from '../User/userSlice';
+import { selectUserStatuses } from '../User/userSlice';
 
 const gridStyle = css`
   padding: 0 20px 8px 20px;
@@ -148,12 +148,6 @@ export function Dashboard () {
   const files = fileSlice.files;
   const fileStatuses = useSelector(selectFileStatuses);
   const noMoreFiles = fileSlice.primitives.noMoreFiles;
-  const user = useSelector(selectUser);
-
-  // reload files if user logs in or out
-  useEffect(() => {
-    dispatch(asyncGetFiles({ location }));
-  }, [user]);
 
   useEffect(() => {
     dispatch(setDashboardPrimitives({ sidebarOpen: false }));
@@ -186,7 +180,7 @@ export function Dashboard () {
             {files.map((file, index) => (
               <File
                 key={index}
-                imageUrl='/mock-data/file-image.png'
+                imageUrl={file.imageUrl}
                 title={file.name}
                 subtext={getSubtext(currentPage, file)}
                 liked={userSlice.primitives.user && file.likes && file.likes.find(like => like.username === userSlice.primitives.user.username) != null}

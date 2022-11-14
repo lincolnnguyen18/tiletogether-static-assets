@@ -9,8 +9,8 @@ export function emitLayerImage ({ layerId, color, brushSize, brushType, params }
   socketClient.emit('layerImage', { layerId, color, brushSize, brushType, params });
 }
 
-export function emitLayerUpdates ({ newRootLayer, canvasUpdates, layerIds }) {
-  socketClient.emit('layerUpdates', { newRootLayer, canvasUpdates, layerIds });
+export function emitLayerUpdates ({ newRootLayer, canvasUpdates, layerIds, newImage }) {
+  socketClient.emit('layerUpdates', { newRootLayer, canvasUpdates, layerIds, newImage });
 }
 
 // Event listeners
