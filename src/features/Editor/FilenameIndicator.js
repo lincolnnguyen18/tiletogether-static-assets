@@ -1,11 +1,13 @@
 /** @jsx jsx */
 import { css, jsx } from '@emotion/react';
+import { useSelector } from 'react-redux';
+import { selectTilesetNewChanges } from '../TilesetEditor/tilesetEditorSlice';
 
 const filenameIndicatorStyle = css`
   position: absolute;
   background: #3F3F3F;
   color: #D4D4D4;
-  padding: 8px;
+  padding-left: 8px;
   border-radius: 4px;
   top: 18px;
   left: 50%;
@@ -16,12 +18,26 @@ const filenameIndicatorStyle = css`
   align-items: center;
   gap: 8px;
   pointer-events: none;
+  
+  .text {
+    padding: 8px 0;
+  }
 `;
 
 export function FilenameIndicator ({ file }) {
+  const newChanges = useSelector(selectTilesetNewChanges);
+  const hasChanges = newChanges && Object.keys(newChanges).length > 0;
+
+  const savedIconStyle = css`
+    font-size: 28px;
+    padding-right: 4px;
+    color: ${hasChanges ? '#a6a6a6' : '#20dc20'};
+  `;
+
   return (
     <div css={filenameIndicatorStyle}>
-      <span>{`Editing ${file.type} "${file.name}"`}</span>
+      <span className='text'>{`Editing ${file.type} "${file.name}"`}</span>
+      <span className='icon-check2' css={savedIconStyle} />
     </div>
   );
 }

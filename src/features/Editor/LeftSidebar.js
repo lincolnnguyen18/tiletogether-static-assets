@@ -324,7 +324,7 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
       onSubmit={(e) => {
         e.preventDefault();
         const formData = Object.fromEntries(new FormData(e.target));
-        console.log(formData);
+        // console.log(formData);
         const sharedWith = [...file.sharedWith, formData.username];
         dispatch(asyncPatchFile({ id: file.id, updates: { sharedWith } }));
       }}

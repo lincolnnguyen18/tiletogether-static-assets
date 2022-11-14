@@ -7,7 +7,7 @@ import { FlexRow } from '../../components/layout/FlexRow';
 import { Slider } from '../../components/inputs/Slider';
 import { Text } from '../../components/Text';
 import { IconButton } from '../../components/inputs/IconButton';
-import { addNewTilesetLayer, deleteSelectedLayers, selectTilesetEditorPrimitives, selectTilesetFile, setTilesetEditorPrimitives, updateLayer } from './tilesetEditorSlice';
+import { addNewChanges, addNewTilesetLayer, deleteSelectedLayers, selectTilesetEditorPrimitives, selectTilesetFile, setTilesetEditorPrimitives, updateLayer } from './tilesetEditorSlice';
 import { TilesetLayer } from './TilesetLayer';
 import { useEffect } from 'react';
 import { selectTilesetRightSidebarPrimitives, setTilesetRightSidebarPrimitives } from './rightSidebarSlice';
@@ -99,6 +99,7 @@ export function RightSidebar () {
     // console.log('opacity change', newOpacity);
     const newLayer = { ...lastSelectedLayer, opacity: newOpacity };
     dispatch(updateLayer({ newLayer }));
+    dispatch(addNewChanges({ layerId: lastSelectedLayer._id, newChanges: ['treeData'] }));
     dispatch(setTilesetEditorPrimitives({ lastSelectedLayer: newLayer }));
   }
 

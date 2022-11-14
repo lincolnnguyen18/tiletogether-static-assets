@@ -3,6 +3,7 @@ import { createAsyncThunk, createSlice, isFulfilled, isPending, isRejected } fro
 import { apiClient } from '../../app/apiClient';
 import { getActionName } from '../../utils/stringUtils';
 import ObjectID from 'bson-objectid';
+import { emitLayerUpdates } from './tilesetEditorSocketApi';
 
 const initialState = {
   file: null,
@@ -15,8 +16,9 @@ const initialState = {
     dragStart: null,
     dragging: false,
     lastSelectedLayer: null,
+    savingChanges: false,
   },
-  newChanges: [],
+  newChanges: {},
   statuses: {},
   errors: {},
 };
@@ -25,7 +27,7 @@ export const asyncGetFileToEdit = createAsyncThunk(
   'tilesetEditor/getFileToEdit',
   async ({ id }) => {
     const response = await apiClient.get(`/files/${id}/edit`);
-    return response.data.file;
+    return response.data;
   },
 );
 
@@ -46,6 +48,52 @@ export const asyncDeleteFile = createAsyncThunk(
   async ({ id }) => {
     const response = await apiClient.delete(`/files/${id}`);
     return response.data.file;
+  },
+);
+
+export const asyncSaveChanges = createAsyncThunk(
+  'tilesetEditor/saveChanges',
+  async ({ layerData, newChanges, file }) => {
+    const rootLayer = file.rootLayer;
+    // console.log('newChanges', newChanges);
+    // console.log('file', file);
+    const changedLayerIds = Object.keys(newChanges);
+    const canvasUpdates = {};
+
+    for (let i = 0; i < changedLayerIds.length; i++) {
+      const layerId = changedLayerIds[i];
+      // console.log('layerId', layerId, updates);
+
+      if (newChanges[layerId].canvas) {
+        // console.log(`updating canvas data for layer ${layerId}`);
+        const canvas = layerData[layerId].canvas;
+        const blob = await new Promise((resolve) => canvas.toBlob(resolve));
+        canvasUpdates[layerId] = await blob.arrayBuffer();
+      }
+    }
+
+    // update rootLayer with newChanges
+    const layerIds = [];
+    function traverse (layer) {
+      // console.log(layer);
+      if (layer.type === 'layer' && !layerIds.includes(layer._id)) {
+        layerIds.push(layer._id);
+      }
+      if (newChanges[layer._id] && newChanges[layer._id].position) {
+        // console.log('updating position', layerData[layer._id].position);
+        return { ...layer, position: layerData[layer._id].position };
+      }
+      if (layer.layers) {
+        for (const child of layer.layers) {
+          traverse(child);
+        }
+      }
+    }
+    const newRootLayer = _.cloneDeepWith(rootLayer, traverse);
+    // console.log(newRootLayer);
+
+    // console.log('layerIds', layerIds);
+    emitLayerUpdates({ newRootLayer, canvasUpdates, layerIds });
   },
 );
 
@@ -88,6 +136,7 @@ const tilesetEditorSlice = createSlice({
         selected: true,
         opacity: 1,
         layers: [],
+        isNew: true,
       };
 
       // if last selected layer is null, add layer to beginning of rootLayer's layers array
@@ -160,6 +209,11 @@ const tilesetEditorSlice = createSlice({
       function customizer (layer) {
         if (layer.selected) {
           selectedLayers.push(layer);
+          if (state.newChanges[layer._id]) {
+            state.newChanges[layer._id].deleted = true;
+          } else {
+            state.newChanges[layer._id] = { deleted: true };
+          }
         }
       }
       _.cloneDeepWith(state.file.rootLayer, customizer);
@@ -185,6 +239,7 @@ const tilesetEditorSlice = createSlice({
     },
     deleteLayerById: (state, action) => {
       const { id } = action.payload;
+      state.newChanges[id] = { deleted: true };
 
       // use cloneDeepWith to avoid mutating state
       function traverse (layer) {
@@ -293,7 +348,7 @@ const tilesetEditorSlice = createSlice({
         // get all selected layers
         const selectedLayer = _.filter(layer.layers, { selected: true });
         if (selectedLayer.length > 0) {
-          // checck if moveToLayer is selectedLayer or a child of selectedLayer, if so, return
+          // check if moveToLayer is selectedLayer or a child of selectedLayer, if so, return
           if (moveToLayer._id === selectedLayer[0]._id) {
             invalid = true;
             return;
@@ -346,15 +401,26 @@ const tilesetEditorSlice = createSlice({
         }
       }
       traverse2(state.file.rootLayer);
-      // apppend 'moveSelectedLayers' to state.newChanges array
-      state.newChanges.push('moveSelectedLayers');
+
+      selectedLayers.forEach((layer) => {
+        if (state.newChanges[layer._id]) {
+          state.newChanges[layer._id].deleted = true;
+        } else {
+          state.newChanges[layer._id] = { deleted: true };
+        }
+      });
     },
-    addNewChange: (state, action) => {
-      const { newChange } = action.payload;
-      state.newChanges.push(newChange);
+    addNewChanges: (state, action) => {
+      const { layerId, newChanges } = action.payload;
+      if (!state.newChanges[layerId]) {
+        state.newChanges[layerId] = {};
+      }
+      newChanges.forEach((attribute) => {
+        state.newChanges[layerId][attribute] = true;
+      });
     },
-    clearNewChanges: (state) => {
-      state.newChanges = [];
+    clearChanges: (state) => {
+      state.newChanges = {};
     },
     updateLayersUpToRoot: (state, action) => {
       const { fromLayer, newAttributes } = action.payload;
@@ -390,7 +456,9 @@ const tilesetEditorSlice = createSlice({
         state.file = null;
       })
       .addCase(asyncGetFileToEdit.fulfilled, (state, action) => {
-        const file = action.payload;
+        const { file, signedUrls } = action.payload;
+        // console.log('file', file);
+        // console.log('signedUrls', signedUrls);
         file.rootLayer.isRootLayer = true;
         // use cloneDeepWith to set all layers selected and expanded to false
         function customizer (layer) {
@@ -399,6 +467,9 @@ const tilesetEditorSlice = createSlice({
               _.assign(layer, { selected: false, expanded: true });
             } else {
               _.assign(layer, { selected: false, expanded: false });
+            }
+            if (signedUrls[layer._id]) {
+              layer.tilesetLayerUrl = signedUrls[layer._id];
             }
           }
         }
@@ -447,8 +518,8 @@ export const {
   moveSelectedLayers,
   clearTilesetEditorErrors,
   clearTilesetEditorStatus,
-  addNewChange,
-  clearNewChanges,
+  addNewChanges,
+  clearChanges,
 } = tilesetEditorSlice.actions;
 
 export const tilesetEditorReducer = tilesetEditorSlice.reducer;

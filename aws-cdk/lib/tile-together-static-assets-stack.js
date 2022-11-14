@@ -14,6 +14,7 @@ class TileTogetherStaticAssetsStack extends Stack {
       websiteIndexDocument: 'index.html',
     });
 
+    // eslint-disable-next-line no-unused-vars
     const bucketDeployment = new BucketDeployment(this, 'tiletogether-static-assets-deployment', {
       sources: [Source.asset('./website/')],
       destinationBucket: staticAssetsBucket,
@@ -25,6 +26,7 @@ class TileTogetherStaticAssetsStack extends Stack {
 
     // create cloudfront distribution
     // make sure index.html is error page so that spa react app can handle routing
+    // eslint-disable-next-line no-unused-vars
     const distribution = new Distribution(this, 'tiletogether-static-assets-distribution', {
       defaultRootObject: 'index.html',
       errorResponses: [

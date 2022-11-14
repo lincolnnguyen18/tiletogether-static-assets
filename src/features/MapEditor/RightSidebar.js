@@ -2,7 +2,6 @@
 import { css, jsx } from '@emotion/react';
 import { Icon } from '../../components/Icon';
 import { useSelector } from 'react-redux';
-import { useEffect } from 'react';
 import { FlexRow } from '../../components/layout/FlexRow';
 import { IconButton } from '../../components/inputs/IconButton';
 import { selectMapFile } from './mapEditorSlice';
@@ -97,9 +96,9 @@ export function RightSidebar () {
   const file = useSelector(selectMapFile);
   const rootLayer = file.rootLayer;
 
-  useEffect(() => {
-    console.log(rootLayer);
-  }, [file]);
+  // useEffect(() => {
+  //   console.log(rootLayer);
+  // }, [file]);
 
   return (
     <div css={rightSidebarStyle}>

@@ -2,10 +2,10 @@
 import { css, jsx } from '@emotion/react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Fragment, useEffect, useRef, useState } from 'react';
-import { addNewChange, deleteLayerById, selectLastSelectedLayer, selectTilesetEditorPrimitives, selectTilesetFile, setTilesetEditorPrimitives, updateAllLayers, updateLayer, updateLayersUpToRoot } from './tilesetEditorSlice';
+import { addNewChanges, addNewTilesetLayer, asyncSaveChanges, clearChanges, deleteLayerById, selectLastSelectedLayer, selectTilesetEditorPrimitives, selectTilesetFile, selectTilesetNewChanges, setTilesetEditorPrimitives, updateAllLayers, updateLayer, updateLayersUpToRoot } from './tilesetEditorSlice';
 import { Circle, Group, Image, Layer, Rect, Stage } from 'react-konva';
 import { isCompletelyTransparent, rgbToHex, trimPng } from '../../utils/canvasUtils';
-import { onLayerPosition, emitLayerPosition } from './tilesetEditorSocketApi';
+import { onLayerPosition, emitLayerPosition, onChangesSaved } from './tilesetEditorSocketApi';
 import { usePrevious } from '../../utils/stateUtils';
 import { selectTilesetRightSidebarPrimitives, setTilesetRightSidebarPrimitives } from './rightSidebarSlice';
 import { selectLeftSidebarPrimitives } from '../Editor/leftSidebarSlice';
@@ -89,8 +89,63 @@ export function TilesetCanvas () {
   const [cursorStyle, setCursorStyle] = useState('default');
   const [brushSizeKeyWasDown, setBrushSizeKeyWasDown] = useState(false);
   const [points, setPoints] = useState([]);
-
+  const newChanges = useSelector(selectTilesetNewChanges);
   const stageRef = useRef(null);
+  const [pastingImage, setPastingImage] = useState(null);
+
+  async function handlePaste (e) {
+    e.preventDefault();
+    console.log('paste');
+    // check if it's a png
+    if (e.clipboardData.items[0].type === 'image/png') {
+      const mousePosition = stageRef.current.getPointerPosition();
+      const stagePosition = stageRef.current.position();
+      const stageScale = stageRef.current.scaleX();
+      const relativeMousePos = {
+        x: Math.floor((mousePosition.x - stagePosition.x) / stageScale),
+        y: Math.floor((mousePosition.y - stagePosition.y) / stageScale),
+      };
+
+      const blob = e.clipboardData.items[0].getAsFile();
+      const url = URL.createObjectURL(blob);
+      const img = new window.Image();
+      img.src = url;
+      await img.decode();
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      // const w = window.open();
+      // // open canvas in new tab
+      // w.document.body.appendChild(canvas);
+      // w.document.close();
+      dispatch(addNewTilesetLayer());
+      setPastingImage({ canvas, relativeMousePos });
+    }
+  }
+
+  useEffect(() => {
+    if (pastingImage != null) {
+      const { canvas, relativeMousePos } = pastingImage;
+      layerData[lastSelectedLayer._id] = { canvas, position: relativeMousePos };
+      setLayerData({ ...layerData });
+      dispatch(addNewChanges({ layerId: lastSelectedLayer._id, newChanges: ['canvas'] }));
+      setPastingImage(null);
+    }
+  }, [pastingImage]);
+
+  useEffect(() => {
+    onChangesSaved(() => {
+      console.log('changes saved');
+      dispatch(clearChanges());
+      dispatch(setTilesetEditorPrimitives({ savingChanges: false }));
+    });
+    document.addEventListener('paste', handlePaste);
+    return () => {
+      document.removeEventListener('paste', handlePaste);
+    };
+  }, []);
 
   useEffect(() => {
     onLayerPosition((data) => {
@@ -108,21 +163,6 @@ export function TilesetCanvas () {
       }
     });
   }, [layerData, hoverLayerId]);
-
-  // socketSendUnsavedChanges(() => {
-  //   console.log('sending unsaved changes');
-  // });
-
-  // useEffect(() => {
-  //   if (newChanges.length > 0) {
-  //     socketSendUnsavedChanges(() => {
-  //       console.log('sending unsaved changes');
-  //     });
-  //     dispatch(clearNewChanges());
-  //   } else {
-  //     console.log('no new changes');
-  //   }
-  // }, [newChanges, file]);
 
   function deletePrevLastSelectedLayerIfEmpty () {
     // check if last selected layer's canvas is completely transparent
@@ -166,6 +206,7 @@ export function TilesetCanvas () {
     };
     const halfBrushSize = Math.floor(brushSize / 2);
     // logging halfBrushSize because a rare bug sometimes occurs where the brush size is 1 but nothing is being drawn or the brush outline is slightly larger than the actual brush size; trying to reproduce it and track down the cause; update: should be fixed now, when brush size was increased/decreased by a factor, forgot to floor so was not whole number sometimes
+    // update; nvm, bug still happening sometimes, no idea why, will remove this when this is resolved
     // console.log('halfBrushSize', halfBrushSize);
 
     if (halfBrushSize < 0) {
@@ -299,12 +340,7 @@ export function TilesetCanvas () {
         } else {
           const circle = new Path2D();
           const params = [brushRect.x + halfBrushSize, brushRect.y + halfBrushSize, halfBrushSize, 0, 2 * Math.PI];
-          try {
-            circle.arc(...params);
-          } catch (e) {
-            console.log('error', e);
-            console.log('params', params);
-          }
+          circle.arc(...params);
           ctx.fill(circle);
         }
       } else {
@@ -330,6 +366,7 @@ export function TilesetCanvas () {
       };
       setLayerData(newLayerData);
       stageRef.current.draw();
+      dispatch(addNewChanges({ layerId, newChanges: ['canvas', 'position'] }));
     // else color pixel normally
     } else {
       const rectPos = {
@@ -356,12 +393,7 @@ export function TilesetCanvas () {
           // make sure there is no aliasing at edges of circle using svg filter
           const circle = new Path2D();
           const params = [relativeMousePos.x - layerPosition.x, relativeMousePos.y - layerPosition.y, halfBrushSize, 0, 2 * Math.PI];
-          try {
-            circle.arc(...params);
-          } catch (e) {
-            console.log('error', e);
-            console.log('params', params);
-          }
+          circle.arc(...params);
           ctx.fill(circle);
         }
       }
@@ -387,9 +419,6 @@ export function TilesetCanvas () {
         setPoints(points.slice(points.length - 7));
       }
 
-      // dispatch(addNewChange({ newChange: 'draw' }));
-      // emitLayerImage({ layerId, color: 'red', brushSize, brushType: 'circle', params });
-
       const newLayerData = { ...layerData };
       if (!layer) {
         layer = {
@@ -403,53 +432,7 @@ export function TilesetCanvas () {
 
       newLayerData[layerId] = layer;
       setLayerData(newLayerData);
-      // const inputCanvas = layerCanvas;
-
-    // TODO: activate trimPng when a shortcut pressed or activated from context menu maybe
-    //   // call trimPng on lastSelectedLayer's image if its width and height are at least n
-    //   if (lastSelectedLayer && layerData[lastSelectedLayer._id] &&
-    //     layer.canvas.width >= 100 && layer.canvas.height >= 100) {
-    //     // console.log('trimming', inputCanvas.width, inputCanvas.height);
-    //     const { trimmedImageData, overflows } = trimPng(inputCanvas);
-    //     // console.log('trimmed', trimmedImageData.width, trimmedImageData.height);
-    //     const canvas = document.createElement('canvas');
-    //     canvas.width = trimmedImageData.width;
-    //     canvas.height = trimmedImageData.height;
-    //     console.log('trimmedImageData', trimmedImageData.width, trimmedImageData.height);
-    //     ctx = canvas.getContext('2d');
-    //     ctx.putImageData(trimmedImageData, 0, 0);
-    //     newLayerData = { ...layerData };
-    //     // console.log(_.cloneDeep(newLayerData[lastSelectedLayer._id]));
-    //     newLayerData[lastSelectedLayer._id] = {
-    //       ...newLayerData[lastSelectedLayer._id],
-    //       canvas,
-    //       position: {
-    //         x: newLayerData[lastSelectedLayer._id].position.x + overflows.left,
-    //         y: newLayerData[lastSelectedLayer._id].position.y + overflows.top,
-    //       },
-    //     };
-    //     setLayerData(newLayerData);
-    //   } else if (lastSelectedLayer && layerData[lastSelectedLayer._id] &&
-    //   // else if only one of width or height are at least 1000, then just trim that dimension
-    //     (layer.canvas.width >= 100 || layer.canvas.height >= 100)) {
-    //     const { trimmedImageData, overflows } = trimPng(inputCanvas);
-    //     const canvas = document.createElement('canvas');
-    //     canvas.width = trimmedImageData.width;
-    //     canvas.height = trimmedImageData.height;
-    //     ctx = canvas.getContext('2d');
-    //     ctx.putImageData(trimmedImageData, 0, 0);
-    //     newLayerData = { ...layerData };
-    //     newLayerData[lastSelectedLayer._id] = {
-    //       ...newLayerData[lastSelectedLayer._id],
-    //       canvas,
-    //       position: {
-    //         x: newLayerData[lastSelectedLayer._id].position.x + overflows.left,
-    //         y: newLayerData[lastSelectedLayer._id].position.y + overflows.top,
-    //       },
-    //     };
-    //     setLayerData(newLayerData);
-    //     stageRef.current.draw();
-    //   }
+      dispatch(addNewChanges({ layerId, newChanges: ['canvas', 'position'] }));
     }
   }
 
@@ -457,7 +440,7 @@ export function TilesetCanvas () {
     setCanvasSize({ width: window.innerWidth - 56 - 270, height: window.innerHeight });
   }
 
-  function handleKeyDown (e) {
+  async function handleKeyDown (e) {
     if (e.key === 'Escape') {
       setSelectedRects([]);
       dispatch(updateAllLayers({ selected: false }));
@@ -501,6 +484,47 @@ export function TilesetCanvas () {
       dispatch(setTilesetEditorPrimitives({ activeTool: 'select' }));
     } else if (e.key === '4') {
       dispatch(setTilesetEditorPrimitives({ activeTool: 'color-picker' }));
+    // listen for ctrl or command + s to save
+    } else if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      e.preventDefault();
+      // console.log('saving');
+      if (primitives.savingChanges) {
+        console.log('already saving');
+        return;
+      }
+      if (Object.keys(newChanges).length === 0) {
+        console.log('no changes to save');
+        return;
+      }
+      console.log(newChanges);
+      await dispatch(asyncSaveChanges({ layerData, newChanges, file }));
+      dispatch(setTilesetEditorPrimitives({ savingChanges: true }));
+    // listen for shift + t; 'T', to trim selected layer
+    } else if (e.key === 'T') {
+      e.preventDefault();
+      if (!lastSelectedLayer) return;
+      const inputCanvas = layerData[lastSelectedLayer._id].canvas;
+      if (!inputCanvas) return;
+      console.log('trimming', inputCanvas.width, inputCanvas.height);
+      const { trimmedImageData, overflows } = trimPng(inputCanvas);
+      // console.log('trimmed', trimmedImageData.width, trimmedImageData.height);
+      const canvas = document.createElement('canvas');
+      canvas.width = trimmedImageData.width;
+      canvas.height = trimmedImageData.height;
+      console.log('trimmedImageData', trimmedImageData.width, trimmedImageData.height);
+      const ctx = canvas.getContext('2d');
+      ctx.putImageData(trimmedImageData, 0, 0);
+      const newLayerData = { ...layerData };
+      // console.log(_.cloneDeep(newLayerData[lastSelectedLayer._id]));
+      newLayerData[lastSelectedLayer._id] = {
+        ...newLayerData[lastSelectedLayer._id],
+        canvas,
+        position: {
+          x: newLayerData[lastSelectedLayer._id].position.x + overflows.left,
+          y: newLayerData[lastSelectedLayer._id].position.y + overflows.top,
+        },
+      };
+      setLayerData(newLayerData);
     }
   }
 
@@ -515,7 +539,7 @@ export function TilesetCanvas () {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [brushSize, brushSizeKeyWasDown, activeTool]);
+  }, [brushSize, brushSizeKeyWasDown, activeTool, layerData, file, newChanges, primitives.savingChanges, lastSelectedLayer]);
 
   useEffect(() => {
     window.addEventListener('keyup', handleKeyUp);
@@ -653,10 +677,18 @@ export function TilesetCanvas () {
       await Promise.all(Object.keys(layerIdToImageUrl).map(async (layerId) => {
         const imageUrl = layerIdToImageUrl[layerId];
         const image = new window.Image();
+        image.crossOrigin = 'Anonymous';
         image.src = imageUrl;
         await image.decode();
-        layerIdToImageUrl[layerId] = image;
+        const canvas = document.createElement('canvas');
+        canvas.width = image.width;
+        canvas.height = image.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(image, 0, 0);
+        layerIdToImageUrl[layerId] = ctx.getImageData(0, 0, image.width, image.height);
       }));
+
+      // console.log(layerIdToImageUrl);
 
       // not using virtualCanvases for now
       // const virtualCanvases = document.getElementById('virtual-canvases');
@@ -664,13 +696,13 @@ export function TilesetCanvas () {
       const newLayerData = {};
       Object.keys(layerIdToImageUrl).forEach((layerId) => {
         if (document.getElementById(layerId)) return;
-        const { trimmedImageData } = trimPng(layerIdToImageUrl[layerId]);
+        const image = layerIdToImageUrl[layerId];
         const canvas = document.createElement('canvas');
         canvas.id = `canvas-${layerId}`;
-        canvas.width = trimmedImageData.width;
-        canvas.height = trimmedImageData.height;
+        canvas.width = image.width;
+        canvas.height = image.height;
         const ctx = canvas.getContext('2d');
-        ctx.putImageData(trimmedImageData, 0, 0);
+        ctx.putImageData(image, 0, 0);
         // virtualCanvases.appendChild(canvas);
         newLayerData[layerId] = {};
         newLayerData[layerId].canvas = canvas;
@@ -681,6 +713,7 @@ export function TilesetCanvas () {
         function traverse (layer) {
           if (layer.type === 'layer') {
             newLayerData[layer._id].position = layer.position;
+            // console.log('position', layer.position);
           }
           layer.layers.forEach(traverse);
         }
@@ -979,7 +1012,7 @@ export function TilesetCanvas () {
         newLayerData[layerId] = newLayer;
         setLayerData(newLayerData);
 
-        dispatch(addNewChange({ newChange: 'moveLayer' }));
+        dispatch(addNewChanges({ layerId, newChanges: ['position'] }));
         emitLayerPosition({ layerId, position: newImagePosition });
       }
     } else if (dragging && ['draw', 'erase'].includes(activeTool) && lastSelectedLayer) {
@@ -999,6 +1032,7 @@ export function TilesetCanvas () {
     setHoveredRect(null);
     setHoverLayerId(null);
     setBrushOutline(null);
+    setPoints([]);
   };
 
   useEffect(() => {
@@ -1010,22 +1044,16 @@ export function TilesetCanvas () {
   }, [stageData.scale, activeTool, brushSize]);
 
   // check state of newChanges every n seconds
-  // const [triggerCheck, setTriggerCheck] = useState(false);
-  // useEffect(() => {
-  //   const interval = window.setInterval(() => {
-  //     setTriggerCheck(!triggerCheck);
-  //   }, 2000);
-  //   return () => window.clearInterval(interval);
-  // }, [triggerCheck]);
+  const [triggerCheck, setTriggerCheck] = useState(false);
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setTriggerCheck(!triggerCheck);
+    }, 2000);
+    return () => window.clearInterval(interval);
+  }, [triggerCheck]);
 
   // useEffect(() => {
-  //   if (newChanges.length > 0) {
-  //     // dispatch(asyncPatchFile({ id, file }));
-  //     console.log('new changes saved');
-  //   } else {
-  //     console.log('no new changes');
-  //   }
-  //   dispatch(clearNewChanges());
+  //   console.log(newChanges);
   // }, [triggerCheck]);
 
   return (
