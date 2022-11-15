@@ -4,7 +4,7 @@ import { wait } from '../utils/timeUtils';
 import { io } from 'socket.io-client';
 
 export const apiClient = axios.create({
-  baseURL: process.env.REACT_APP_SERVER_URL + '/api',
+  baseURL: process.env.REACT_APP_SERVER_URL,
   withCredentials: true,
 });
 

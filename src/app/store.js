@@ -8,6 +8,7 @@ import { leftSidebarReducer } from '../features/Editor/leftSidebarSlice';
 import { tilesetEditorReducer } from '../features/TilesetEditor/tilesetEditorSlice';
 import { tilesetRightSidebarReducer } from '../features/TilesetEditor/rightSidebarSlice';
 import { mapEditorReducer } from '../features/MapEditor/mapEditorSlice';
+import { mapRightSidebarReducer } from '../features/MapEditor/rightSidebarSlice';
 
 export const store = configureStore({
   reducer: {
@@ -20,6 +21,7 @@ export const store = configureStore({
     tilesetEditor: tilesetEditorReducer,
     mapEditor: mapEditorReducer,
     tilesetRightSidebar: tilesetRightSidebarReducer,
+    mapRightSidebar: mapRightSidebarReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

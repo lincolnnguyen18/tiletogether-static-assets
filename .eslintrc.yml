@@ -19,7 +19,7 @@ rules: {
   'default-case': 'error',
   # comment when developing, uncomment when committing
   'no-unused-vars': [ 'error', { 'vars': 'all', 'args': 'all', 'ignoreRestSiblings': false, 'argsIgnorePattern': '^_' } ],
-  # uncomment when developing, comment when committing
+#   uncomment when developing, comment when committing
 #  'spaced-comment': 'off',
 #  'no-unused-vars': 'off',
 }

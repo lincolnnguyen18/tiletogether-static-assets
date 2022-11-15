@@ -63,6 +63,8 @@ export function KonvaCheckerboardImage ({ width, height, tileDimension }) {
 }
 
 export function downloadFileAsCanvas ({ file, layerData }) {
+  if (!layerData) return;
+
   initializeFreqReadCanvas();
   const canvas = window.freqReadCanvas;
   const ctx = window.freqReadCtx;
@@ -95,7 +97,7 @@ export function TilesetCanvas () {
   const { showGrid } = leftSidebarPrimitives;
   const lastSelectedLayer = useSelector(selectLastSelectedLayer);
   const file = useSelector(selectTilesetFile);
-  const { activeTool, downloadFormat } = primitives;
+  const { activeTool, downloadFormat, reuploadingFileImage } = primitives;
   const { brushColor } = rightSidebarPrimitives;
   const layers = file.rootLayer.layers;
   const dispatch = useDispatch();
@@ -182,6 +184,15 @@ export function TilesetCanvas () {
   }, [downloadFormat]);
 
   useEffect(() => {
+    if (reuploadingFileImage) {
+      // console.log('reuploadingFileImage', reuploadingFileImage);
+      dispatch(addNewChanges({ layerId: 'all', newChanges: ['canvas'] }));
+      dispatch(asyncSaveChanges({ layerData, newChanges, file }));
+      dispatch(setTilesetEditorPrimitives({ reuploadingFileImage: false }));
+    }
+  }, [reuploadingFileImage]);
+
+  useEffect(() => {
     onChangesSaved(() => {
       console.log('changes saved');
       dispatch(clearChanges());
@@ -190,6 +201,7 @@ export function TilesetCanvas () {
     document.addEventListener('paste', handlePaste);
     return () => {
       document.removeEventListener('paste', handlePaste);
+      dispatch(setTilesetEditorPrimitives({ savingChanges: false, reuploadingFileImage: false }));
     };
   }, []);
 
@@ -719,7 +731,13 @@ export function TilesetCanvas () {
     }
     traverse(file.rootLayer);
 
-    console.log(file);
+    // console.log(file);
+    // console.log('layerIdToImageUrl', layerIdToImageUrl);
+
+    // if any values of layerIdToImageUrl are undefined, wait for them to be defined
+    if (Object.values(layerIdToImageUrl).some((value) => value === undefined)) {
+      return;
+    }
 
     async function loadImages () {
       await Promise.all(Object.keys(layerIdToImageUrl).map(async (layerId) => {
