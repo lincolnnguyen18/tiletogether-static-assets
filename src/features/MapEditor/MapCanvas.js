@@ -14,14 +14,14 @@ export function MapCanvas () {
   const file = useSelector(selectMapFile);
   const [canvasSize, setCanvasSize] = useState({ width: window.innerWidth - 56 - 270, height: window.innerHeight });
   const [stageData, setStageData] = useState({ scale: 2, position: { x: 0, y: 0 } });
-  const [cursorStyle, setCursorStyle] = useState('default');
+  const [cursorStyle, setCursorStyle] = useState('crosshair');
   const stageRef = useRef();
   const [dragging, setDragging] = useState(false);
   const lastSelectedLayer = useSelector(selectLastSelectedLayer);
   const brushCanvas = useSelector(selectBrushCanvas);
   const [brushOutline, setBrushOutline] = useState(null);
   const [layerData, setLayerData] = useState({ });
-  const [brushRelativePosition, setBrushRelativePosition] = useState(null);
+  const [relativeTilePosition, setRelativeTilePosition] = useState(null);
   const [layerElements, setLayerElements] = useState([]);
   const [hoveredRect, setHoveredRect] = useState(null);
   const [hoverLayerId, setHoverLayerId] = useState(null);
@@ -148,7 +148,7 @@ export function MapCanvas () {
     let layer = layerData[layerId];
     let layerPosition = layer ? { x: layer.position.x, y: layer.position.y } : null;
     if (!layerPosition) {
-      layerPosition = brushRelativePosition;
+      layerPosition = relativeTilePosition;
     }
     let layerCanvas = layer ? layer.canvas : null;
     // console.log('layerCanvas', layerCanvas);
@@ -162,10 +162,10 @@ export function MapCanvas () {
     console.log('layerPosition', layerPosition);
 
     const overflows = {
-      left: Math.min(0, brushRelativePosition.x - layerPosition.x),
-      right: Math.max(0, brushRelativePosition.x - layerPosition.x - layerCanvas.width / file.tileDimension),
-      top: Math.min(0, brushRelativePosition.y - layerPosition.y),
-      bottom: Math.max(0, brushRelativePosition.y - layerPosition.y - layerCanvas.height / file.tileDimension),
+      left: Math.min(0, relativeTilePosition.x - layerPosition.x),
+      right: Math.max(0, relativeTilePosition.x - layerPosition.x - layerCanvas.width / file.tileDimension),
+      top: Math.min(0, relativeTilePosition.y - layerPosition.y),
+      bottom: Math.max(0, relativeTilePosition.y - layerPosition.y - layerCanvas.height / file.tileDimension),
     };
     overflows.left *= -1;
     overflows.top *= -1;
@@ -185,8 +185,8 @@ export function MapCanvas () {
       newCtx.drawImage(layerCanvas, overflows.left, overflows.top);
 
       brushRect = {
-        x: brushRelativePosition.x - overflows.left,
-        y: brushRelativePosition.y - overflows.top,
+        x: relativeTilePosition.x - overflows.left,
+        y: relativeTilePosition.y - overflows.top,
         width: brushCanvas.width / file.tileDimension - overflows.left - overflows.right,
         height: brushCanvas.height / file.tileDimension - overflows.top - overflows.bottom,
       };
@@ -206,8 +206,8 @@ export function MapCanvas () {
       if (!layer) {
         layer = {
           position: {
-            x: brushRelativePosition.x * file.tileDimension,
-            y: brushRelativePosition.y * file.tileDimension,
+            x: relativeTilePosition.x * file.tileDimension,
+            y: relativeTilePosition.y * file.tileDimension,
           },
           canvas: layerCanvas,
         };
@@ -221,8 +221,8 @@ export function MapCanvas () {
       stageRef.current.draw();
     } else {
       brushRect = {
-        x: (brushRelativePosition.x - layerPosition.x) * file.tileDimension,
-        y: (brushRelativePosition.y - layerPosition.y) * file.tileDimension,
+        x: (relativeTilePosition.x - layerPosition.x) * file.tileDimension,
+        y: (relativeTilePosition.y - layerPosition.y) * file.tileDimension,
         width: brushCanvas.width,
         height: brushCanvas.height,
       };
@@ -240,8 +240,8 @@ export function MapCanvas () {
         newLayerData[layerId] = {
           canvas: layerCanvas,
           position: {
-            x: brushRelativePosition.x * file.tileDimension,
-            y: brushRelativePosition.y * file.tileDimension,
+            x: relativeTilePosition.x * file.tileDimension,
+            y: relativeTilePosition.y * file.tileDimension,
           },
         };
         // console.log('newLayerData', newLayerData);
@@ -300,27 +300,22 @@ export function MapCanvas () {
       };
       // floor relative mouse position with respect to file.tileDimension
       const tileDimension = file.tileDimension;
-      // const tilePosition = {
-      //   x: Math.floor(relativeMousePos.x / tileDimension) * tileDimension,
-      //   y: Math.floor(relativeMousePos.y / tileDimension) * tileDimension,
-      // };
-      // console.log(relativeMousePos);
-      // center brush outline on mouse but round it to the nearest tile
-      const brushOutlinePosition = {
-        x: Math.floor((relativeMousePos.x - brushCanvas.width / 2) / tileDimension) * tileDimension,
-        y: Math.floor((relativeMousePos.y - brushCanvas.height / 2) / tileDimension) * tileDimension,
+      const tilePosition = {
+        x: Math.floor(relativeMousePos.x / tileDimension) * tileDimension,
+        y: Math.floor(relativeMousePos.y / tileDimension) * tileDimension,
       };
-      const relativeBrushOutlinePosition = {
-        x: Math.floor((relativeMousePos.x - brushCanvas.width / 2) / tileDimension),
-        y: Math.floor((relativeMousePos.y - brushCanvas.height / 2) / tileDimension),
-      };
-      // console.log('relativeBrushOutlinePosition', relativeBrushOutlinePosition);
-      setBrushRelativePosition(relativeBrushOutlinePosition);
+      // center tilePosition with respect to brushCanvas
+      tilePosition.x -= Math.floor(Math.floor(brushCanvas.width / 2) / tileDimension) * tileDimension;
+      tilePosition.y -= Math.floor(Math.floor(brushCanvas.height / 2) / tileDimension) * tileDimension;
+      setRelativeTilePosition({
+        x: tilePosition.x / tileDimension,
+        y: tilePosition.y / tileDimension,
+      });
       if (activeTool === 'draw') {
         setBrushOutline([
           <Rect
-            x={brushOutlinePosition.x}
-            y={brushOutlinePosition.y}
+            x={tilePosition.x}
+            y={tilePosition.y}
             width={brushCanvas.width}
             height={brushCanvas.height}
             stroke='blue'
@@ -332,8 +327,8 @@ export function MapCanvas () {
           />,
           <Image
             image={brushCanvas}
-            x={brushOutlinePosition.x}
-            y={brushOutlinePosition.y}
+            x={tilePosition.x}
+            y={tilePosition.y}
             width={brushCanvas.width}
             height={brushCanvas.height}
             opacity={1}
