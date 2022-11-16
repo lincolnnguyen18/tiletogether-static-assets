@@ -58,6 +58,7 @@ export function KonvaCheckerboardImage ({ width, height, tileDimension }) {
       }
     }
     window.checkerboardCanvas = canvas;
+    // console.log('rerendered checkerboard');
   }
   return <Image image={window.checkerboardCanvas} />;
 }
