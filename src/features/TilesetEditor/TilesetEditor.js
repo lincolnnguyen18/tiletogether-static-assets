@@ -37,6 +37,12 @@ export function TilesetEditor () {
     };
   }, []);
 
+  useEffect(() => {
+    if (file) {
+      console.log(file);
+    }
+  }, [file]);
+
   let content;
 
   function setActiveTool (tool) {

@@ -310,14 +310,22 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
         defaultValue={file.name}
         error={errors.name}
       />
-      <Textfield
-        label='Tile dimension (width and height of a tile in pixels)'
-        type='number'
-        defaultValue={file.tileDimension}
-        style={whiteInputStyle}
-        name='tileDimension'
-        error={errors.tileDimension}
-      />
+      {file && file.type === 'tileset'
+        ? (
+        <Textfield
+          label='Tile dimension (width and height of a tile in pixels)'
+          type='number'
+          defaultValue={file.tileDimension}
+          style={whiteInputStyle}
+          name='tileDimension'
+          error={errors.tileDimension}
+        />)
+        : (
+        <FlexColumn gap={4}>
+          <span>Tile dimension</span>
+          <h4>{file.tileDimension} px</h4>
+        </FlexColumn>
+          )}
       <Textfield
         label={`Width (width of ${file.type} in tiles)`}
         type='number'

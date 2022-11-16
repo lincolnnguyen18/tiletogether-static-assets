@@ -21,9 +21,9 @@ const layerStyle = css`
 
 export function TilesetLayer ({ layer, parentSelected, level }) {
   const dispatch = useDispatch();
-  const filePrimitives = useSelector(selectTilesetEditorPrimitives);
-  const dragging = filePrimitives.dragging;
-  const dragStart = filePrimitives.dragStart;
+  const primitives = useSelector(selectTilesetEditorPrimitives);
+  const dragging = primitives.dragging;
+  const dragStart = primitives.dragStart;
   const lastSelectedLayer = useSelector(selectLastSelectedLayer);
 
   let { name, selected, expanded } = layer;

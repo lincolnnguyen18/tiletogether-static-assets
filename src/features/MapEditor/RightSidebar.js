@@ -4,7 +4,7 @@ import { Icon } from '../../components/Icon';
 import { useDispatch, useSelector } from 'react-redux';
 import { FlexRow } from '../../components/layout/FlexRow';
 import { IconButton } from '../../components/inputs/IconButton';
-import { asyncPatchFile, selectMapEditorStatuses, selectMapFile } from './mapEditorSlice';
+import { addNewMapLayer, asyncPatchFile, selectMapEditorStatuses, selectMapFile } from './mapEditorSlice';
 import { MapLayer } from './MapLayer';
 import { openAddTilesetModal } from './AddTilesetModal';
 import { useEffect } from 'react';
@@ -88,7 +88,7 @@ export function Divider () {
 
 export function RightSidebar () {
   const file = useSelector(selectMapFile);
-  const { selectedTileset } = useSelector(selectMapRightSidebarPrimitives);
+  const { selectedTileset, drawerOpen } = useSelector(selectMapRightSidebarPrimitives);
   const { patchFile } = useSelector(selectMapEditorStatuses);
   const rootLayer = file.rootLayer;
   const dispatch = useDispatch();
@@ -98,14 +98,43 @@ export function RightSidebar () {
   }
 
   async function handleDeleteTileset (tilesetId) {
+    const confirm = window.confirm('Are you sure you want to remove this tileset from the map?');
+    if (!confirm) return;
     const newTilesets = file.tilesets.filter(t => t._id !== tilesetId);
     await dispatch(asyncPatchFile({ id: file.id, updates: { tilesets: newTilesets } }));
     dispatch(setMapRightSidebarPrimitives({ selectedTileset: null }));
   }
 
+  function handleAddNewLayer () {
+    dispatch(addNewMapLayer());
+  }
+
+  function handleDeleteSelectedLayers () {
+    console.log('delete selected layers');
+    // TODO: implement
+  }
+
   useEffect(() => {
     console.log(file.tilesets);
   }, [file.tilesets]);
+
+  function handleKeyDown (e) {
+    // listen for shift + c to create a new layer
+    if (e.key === 'C') {
+      handleAddNewLayer();
+    }
+    // listen for delete or backspace to delete the selected layer
+    if ((e.key === 'Delete' || e.key === 'Backspace') && !drawerOpen) {
+      handleDeleteSelectedLayers();
+    }
+  }
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [drawerOpen]);
 
   return (
     <div css={rightSidebarStyle}>
@@ -166,6 +195,16 @@ export function RightSidebar () {
         </Icon>
         <span>Layers</span>
       </div>
+      <FlexRow justify={'space-between'} gap={24} style={{ paddingRight: 12, paddingBottom: 6 }}>
+        <FlexRow>
+          <IconButton onClick={handleAddNewLayer}>
+            <span className='icon-plus'></span>
+          </IconButton>
+          <IconButton onClick={handleDeleteSelectedLayers}>
+            <span className='icon-trash'></span>
+          </IconButton>
+        </FlexRow>
+      </FlexRow>
       <div className='layers'>
         <MapLayer layer={rootLayer} level={-1} />
       </div>

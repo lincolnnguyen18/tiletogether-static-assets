@@ -144,7 +144,6 @@ const tilesetEditorSlice = createSlice({
         selected: true,
         opacity: 1,
         layers: [],
-        isNew: true,
       };
 
       // if last selected layer is null, add layer to beginning of rootLayer's layers array

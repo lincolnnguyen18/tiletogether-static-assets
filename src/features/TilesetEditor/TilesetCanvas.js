@@ -76,8 +76,10 @@ export function downloadFileAsCanvas ({ file, layerData }) {
     if (layer.type === 'layer') {
       const { canvas, position } = layerData[layer._id];
       if (canvas) {
+        const opacity = layer.opacity;
         // reverse drawing z-index with globalCompositeOperation
         ctx.globalCompositeOperation = 'destination-over';
+        ctx.globalAlpha = opacity;
         ctx.drawImage(canvas, position.x, position.y);
       }
     }
@@ -844,9 +846,7 @@ export function TilesetCanvas () {
       if (layer == null) return null;
       if (layer.type === 'group') {
         return (
-          <Group
-            key={layer._id}
-          >
+          <Group key={layer._id}>
             {layer.layers.map((layer) => layerToElement(layer)).reverse()}
           </Group>
         );
@@ -870,7 +870,7 @@ export function TilesetCanvas () {
     const newLayerElements = layers.map((layer) => layerToElement(layer)).reverse();
     setLayerElements(newLayerElements);
     // console.log('rerendered');
-  }, [layerData, layers, activeTool]);
+  }, [activeTool, layerData, layers]);
 
   useEffect(() => {
     // if switching to draw tool then deselect all layers except the last selected layer
