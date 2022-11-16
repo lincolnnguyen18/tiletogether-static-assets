@@ -15,7 +15,7 @@ const sidebarStyle = css`
     display: flex;
     flex-direction: column;
     opacity: 1;
-    transform: translateX(-100%);
+    transform: translateX(-120%);
     transition: transform 0.15s ease;
   }
 `;

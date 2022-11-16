@@ -1,11 +1,15 @@
 /** @jsx jsx */
 import { css, jsx } from '@emotion/react';
 import { Icon } from '../../components/Icon';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { FlexRow } from '../../components/layout/FlexRow';
 import { IconButton } from '../../components/inputs/IconButton';
-import { selectMapFile } from './mapEditorSlice';
+import { asyncPatchFile, selectMapEditorStatuses, selectMapFile } from './mapEditorSlice';
 import { MapLayer } from './MapLayer';
+import { openAddTilesetModal } from './AddTilesetModal';
+import { useEffect } from 'react';
+import { selectMapRightSidebarPrimitives, setMapRightSidebarPrimitives } from './rightSidebarSlice';
+import { TileSelector } from './TileSelector';
 
 const rightSidebarStyle = css`
   background: #3F3F3F;
@@ -41,12 +45,6 @@ const rightSidebarStyle = css`
     align-items: center;
     justify-content: center;
     padding: 0 8px;
-    
-    canvas {
-      background: #bfbfbf;
-      width: 100%;
-      height: 213px;
-    }
   }
   
   .layers {
@@ -58,10 +56,6 @@ const rightSidebarStyle = css`
 const tilesetsStyle = css`
   flex-wrap: wrap;
   gap: 7px;
-  padding: 4px 8px;
-  user-select: none;
-  height: 300px;
-  overflow-y: scroll;
   
   .tileset {
     padding: 8px;
@@ -94,11 +88,24 @@ export function Divider () {
 
 export function RightSidebar () {
   const file = useSelector(selectMapFile);
+  const { selectedTileset } = useSelector(selectMapRightSidebarPrimitives);
+  const { patchFile } = useSelector(selectMapEditorStatuses);
   const rootLayer = file.rootLayer;
+  const dispatch = useDispatch();
 
-  // useEffect(() => {
-  //   console.log(rootLayer);
-  // }, [file]);
+  function handleAddTileset () {
+    openAddTilesetModal(dispatch);
+  }
+
+  async function handleDeleteTileset (tilesetId) {
+    const newTilesets = file.tilesets.filter(t => t._id !== tilesetId);
+    await dispatch(asyncPatchFile({ id: file.id, updates: { tilesets: newTilesets } }));
+    dispatch(setMapRightSidebarPrimitives({ selectedTileset: null }));
+  }
+
+  useEffect(() => {
+    console.log(file.tilesets);
+  }, [file.tilesets]);
 
   return (
     <div css={rightSidebarStyle}>
@@ -110,24 +117,37 @@ export function RightSidebar () {
           <span>Tilesets</span>
         </FlexRow>
         <FlexRow gap={7}>
-          <IconButton>
+          <IconButton
+            onClick={handleAddTileset}
+            disabled={patchFile === 'pending'}
+          >
             <span className='icon-plus'></span>
           </IconButton>
-          <IconButton>
+          <IconButton
+            onClick={() => handleDeleteTileset(selectedTileset._id)}
+            disabled={patchFile === 'pending'}
+          >
             <span className='icon-trash'></span>
           </IconButton>
         </FlexRow>
       </FlexRow>
-      <FlexRow style={tilesetsStyle}>
-        <div className={'tileset selected'}>
-          <span>Bridges</span>
-        </div>
-        {['Dirt', 'Grass', 'Hills', 'Mountains', 'Rivers', 'Roads', 'Rocks', 'Sand', 'Shallow Water', 'Snow', 'Trees', 'Water'].map((tilesetName, index) => (
-          <div className={'tileset'} key={index}>
-            <span>{tilesetName}</span>
-          </div>
-        ))}
-      </FlexRow>
+      <div css={css`height: 300px; overflow-y: scroll; padding: 4px 8px; user-select: none;`}>
+        <FlexRow style={tilesetsStyle} align={'flex-start'}>
+          {file.tilesets.map((tileset, index) => (
+            <div
+              className={['tileset', selectedTileset?._id === tileset._id ? 'selected' : ''].join(' ')}
+              key={index}
+              onClick={() => {
+                // console.log(tileset);
+                dispatch(setMapRightSidebarPrimitives({ selectedTileset: tileset }));
+                // console.log(selectedTileset);
+              }}
+            >
+              <span>{tileset.name}</span>
+            </div>
+          ))}
+        </FlexRow>
+      </div>
       <Divider />
       <div className='header'>
         <Icon color='white'>
@@ -137,7 +157,7 @@ export function RightSidebar () {
       </div>
       <Divider />
       <div className='selected-tiles'>
-        <canvas></canvas>
+        <TileSelector />
       </div>
       <Divider />
       <div className='header'>

@@ -23,6 +23,12 @@ export function MapEditor () {
     dispatch(asyncGetFileToEdit({ id }));
   }, []);
 
+  useEffect(() => {
+    if (file) {
+      console.log(file);
+    }
+  }, [file]);
+
   let content;
 
   function setActiveTool (tool) {

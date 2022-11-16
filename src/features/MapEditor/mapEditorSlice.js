@@ -12,6 +12,7 @@ const initialState = {
     dragging: false,
     lastSelectedLayer: null,
   },
+  tilesetCanvases: {},
   statuses: {},
   errors: {},
 };
@@ -20,16 +21,74 @@ export const asyncGetFileToEdit = createAsyncThunk(
   'mapEditor/getFileToEdit',
   async ({ id }) => {
     const response = await apiClient.get(`/files/${id}/edit`);
-    return response.data.file;
+    let { file, signedUrls } = response.data;
+
+    file.rootLayer.isRootLayer = true;
+    // use cloneDeepWith to set all layers selected and expanded to false
+    function customizer (layer) {
+      if (_.get(layer, '_id')) {
+        if (layer.isRootLayer) {
+          _.assign(layer, { selected: false, expanded: true });
+        } else if (['layer', 'tileset'].includes(layer.type)) {
+          _.assign(layer, { selected: false, expanded: false });
+        }
+      }
+    }
+    file.rootLayer.isRootLayer = true;
+    file = _.cloneDeepWith(file, customizer);
+    const tilesetCanvases = {};
+
+    async function loadImages () {
+      // console.log('signedUrls', signedUrls);
+
+      for (const tileset of file.tilesets) {
+        const image = new window.Image();
+        image.src = signedUrls[tileset.file];
+        await image.decode();
+        const canvas = document.createElement('canvas');
+        canvas.width = image.width;
+        canvas.height = image.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(image, 0, 0);
+        tilesetCanvases[tileset.file] = canvas;
+      }
+    }
+    await loadImages();
+
+    return { file, tilesetCanvases };
   },
 );
 
 export const asyncPatchFile = createAsyncThunk(
   'mapEditor/patchFile',
-  async ({ id, updates }, { rejectWithValue }) => {
+  async ({ id, updates }, { rejectWithValue, getState }) => {
+    const { file } = getState().mapEditor;
+
+    const newTilesetCanvases = {};
+
     try {
       const response = await apiClient.patch(`/files/${id}`, updates);
-      return response.data.file;
+
+      // determine new tilesets
+      // console.log('file.tilesets', file.tilesets);
+      // console.log('data.file.tilesets', response.data.file.tilesets);
+      const newTilesets = _.differenceBy(response.data.file.tilesets, file.tilesets, 'file');
+      // console.log('newTilesets', newTilesets);
+
+      // get canvases
+      for (const tileset of newTilesets) {
+        const image = new window.Image();
+        image.src = tileset.imageUrl;
+        await image.decode();
+        const canvas = document.createElement('canvas');
+        canvas.width = image.width;
+        canvas.height = image.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(image, 0, 0);
+        newTilesetCanvases[tileset.file] = canvas;
+      }
+
+      return { newFile: response.data.file, newTilesetCanvases };
     } catch (err) {
       return rejectWithValue(err.response.data.error);
     }
@@ -78,29 +137,24 @@ const mapEditorSlice = createSlice({
         state.file = null;
       })
       .addCase(asyncGetFileToEdit.fulfilled, (state, action) => {
-        const file = action.payload;
-        // use cloneDeepWith to set all layers selected and expanded to false
-        function customizer (value) {
-          if (_.get(value, '_id')) {
-            // TODO: figure out way to identify root layer more properly
-            if (value.name === 'test_root_layer') {
-              _.assign(value, { selected: false, expanded: true });
-            } else {
-              _.assign(value, { selected: false, expanded: false });
-            }
-          }
-        }
-
-        file.rootLayer.isRootLayer = true;
-
-        state.file = _.cloneDeepWith(file, customizer);
+        const { file, tilesetCanvases } = action.payload;
+        // console.log('file', file);
+        state.file = file;
+        state.tilesetCanvases = tilesetCanvases;
       })
       .addCase(asyncPatchFile.fulfilled, (state, action) => {
+        const { newFile, newTilesetCanvases } = action.payload;
+
         const fieldsToUpdate = Object.keys(action.meta.arg.updates);
-        const pickedFile = _.pick(action.payload, fieldsToUpdate);
+        const pickedFile = _.pick(newFile, fieldsToUpdate);
+        // console.log('pickedFile', pickedFile);
         _.merge(state.file, pickedFile);
         // replace the sharedWith field
-        state.file.sharedWith = action.payload.sharedWith;
+        state.file.sharedWith = newFile.sharedWith;
+
+        // replace the tilesets field
+        state.file.tilesets = newFile.tilesets;
+        state.tilesetCanvases = _.merge(state.tilesetCanvases, newTilesetCanvases);
       })
       .addMatcher(isPending, (state, action) => {
         state.errors = {};
@@ -127,6 +181,7 @@ export const {
 export const selectMapEditorPrimitives = (state) => state.mapEditor.primitives;
 export const selectMapFile = (state) => state.mapEditor.file;
 export const selectLastSelectedLayer = state => state.mapEditor.primitives.lastSelectedLayer;
+export const selectTilesetCanvases = state => state.mapEditor.tilesetCanvases;
 export const selectMapEditorStatuses = (state) => state.mapEditor.statuses;
 export const selectMapEditorErrors = (state) => state.mapEditor.errors;
 

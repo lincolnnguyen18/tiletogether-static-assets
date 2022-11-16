@@ -45,7 +45,7 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
   const drawerOpen = leftSidebarSlice.primitives.drawerOpen;
   const drawerPage = leftSidebarSlice.primitives.drawerPage;
   const tilesetEditorPrimitives = useSelector(selectTilesetEditorPrimitives);
-
+  const { downloadFormat, reuploadingFileImage } = tilesetEditorPrimitives;
   const statuses = useSelector(selectFileStatuses);
   const errors = useSelector(selectFileErrors);
   const navigate = useNavigate();
@@ -87,7 +87,7 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
         <Button
           style={grayButtonStyle}
           type={'submit'}
-          disabled={tilesetEditorPrimitives.downloadFormat != null}
+          disabled={downloadFormat != null}
         >Download</Button>
       </form>
     </Fragment>
@@ -225,7 +225,7 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
         Edit properties
       </Button>
       <Checkbox
-        label='View grid lines'
+        label='View tile grid'
         name='gridLines'
         checked={showGrid}
         onChange={(e) => dispatch(setLeftSidebarPrimitives({ showGrid: e.target.checked }))}
@@ -282,10 +282,22 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
 
   const editPropertiesPage = (
     <form
-      onSubmit={(e) => {
+      onSubmit={async (e) => {
         e.preventDefault();
         const formData = Object.fromEntries(new FormData(e.target));
         dispatch(asyncPatchFile({ id: file.id, updates: formData }));
+        console.log(formData);
+        if (formData.width !== file.width ||
+          formData.height !== file.height ||
+          formData.tileDimension !== file.tileDimension
+        ) {
+          // console.log('sending new file image');
+          if (reuploadingFileImage) {
+            // console.log('already reuploading file image');
+            return;
+          }
+          dispatch(setTilesetEditorPrimitives({ fileImageChanged: true }));
+        }
       }}
       css={defaultFlexColumnStyle}
     >

@@ -20,6 +20,8 @@ const initialState = {
     savingChanges: false,
     // downloadFormat is null or 'png'/'tmj' to indicate which format is being downloaded
     downloadFormat: null,
+    fileImageChanged: false,
+    reuploadingFileImage: false,
   },
   newChanges: {},
   statuses: {},
@@ -471,7 +473,7 @@ const tilesetEditorSlice = createSlice({
           if (_.get(layer, '_id')) {
             if (layer.isRootLayer) {
               _.assign(layer, { selected: false, expanded: true });
-            } else {
+            } else if (['group', 'layer'].includes(layer.type)) {
               _.assign(layer, { selected: false, expanded: false });
             }
             if (signedUrls[layer._id]) {
@@ -488,6 +490,10 @@ const tilesetEditorSlice = createSlice({
         _.merge(state.file, pickedFile);
         // replace the sharedWith field
         state.file.sharedWith = action.payload.sharedWith;
+        if (state.primitives.fileImageChanged) {
+          state.primitives.fileImageChanged = false;
+          state.primitives.reuploadingFileImage = true;
+        }
       })
       .addMatcher(isPending, (state, action) => {
         state.errors = {};

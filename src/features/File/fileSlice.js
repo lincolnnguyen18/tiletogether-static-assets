@@ -154,6 +154,7 @@ const fileSlice = createSlice({
       })
       .addMatcher(isRejected, (state, action) => {
         state.statuses[getActionName(action)] = 'rejected';
+        // console.log(action.payload, getActionName(action));
         state.errors = action.payload;
       });
   },
