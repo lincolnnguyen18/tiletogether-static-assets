@@ -83,6 +83,9 @@ export function MapCanvas () {
   }
 
   function handleStageMouseMove (e) {
+    if (['draw', 'erase'].includes(activeTool)) {
+      setCursorStyle('crosshair');
+    }
     updateBrushOutline();
 
     const hoverLayerId = e.target.attrs.name;
@@ -140,16 +143,17 @@ export function MapCanvas () {
       y: Math.floor((mousePosition.y - stagePosition.y) / stageScale),
     };
     // get relativeMousePos in tiles (file.tileDimension)
-    const relativeMousePosInTiles = {
-      x: Math.floor(relativeMousePos.x / file.tileDimension),
-      y: Math.floor(relativeMousePos.y / file.tileDimension),
-    };
+    // const relativeMousePosInTiles = {
+    //   x: Math.floor(relativeMousePos.x / file.tileDimension),
+    //   y: Math.floor(relativeMousePos.y / file.tileDimension),
+    // };
 
     let layer = layerData[layerId];
     let layerPosition = layer ? { x: layer.position.x, y: layer.position.y } : null;
     if (!layerPosition) {
       layerPosition = relativeTilePosition;
     }
+    if (!layerPosition) return;
     let layerCanvas = layer ? layer.canvas : null;
     // console.log('layerCanvas', layerCanvas);
     if (!layerCanvas && brushCanvas) {
@@ -158,37 +162,45 @@ export function MapCanvas () {
       layerCanvas.height = brushCanvas.height;
     }
 
-    console.log('relativeMousePosInTiles', relativeMousePosInTiles);
-    console.log('layerPosition', layerPosition);
+    // console.log('relativeTilePosition', relativeTilePosition);
+    // console.log('layerPosition', layerPosition);
+
+    const relativeLayerPosition = {
+      x: layerPosition.x / file.tileDimension,
+      y: layerPosition.y / file.tileDimension,
+    };
 
     const overflows = {
-      left: Math.min(0, relativeTilePosition.x - layerPosition.x),
-      right: Math.max(0, relativeTilePosition.x - layerPosition.x - layerCanvas.width / file.tileDimension),
-      top: Math.min(0, relativeTilePosition.y - layerPosition.y),
-      bottom: Math.max(0, relativeTilePosition.y - layerPosition.y - layerCanvas.height / file.tileDimension),
+      left: Math.min(0, relativeTilePosition.x - relativeLayerPosition.x),
+      right: Math.max(0, (relativeTilePosition.x + brushCanvas.width / file.tileDimension) - (relativeLayerPosition.x + layerCanvas.width / file.tileDimension)),
+      top: Math.min(0, relativeTilePosition.y - relativeLayerPosition.y),
+      bottom: Math.max(0, (relativeTilePosition.y + brushCanvas.height / file.tileDimension) - (relativeLayerPosition.y + layerCanvas.height / file.tileDimension)),
     };
     overflows.left *= -1;
     overflows.top *= -1;
 
     let brushRect;
-    console.log('overflows', overflows);
+    // console.log('overflows', overflows);
 
     if ((overflows.left > 0 || overflows.right > 0 || overflows.top > 0 || overflows.bottom > 0) && e.evt.shiftKey && activeTool === 'draw') {
+      // console.log('overflow');
       const newCanvas = document.createElement('canvas');
       const newCtx = newCanvas.getContext('2d');
-      const ctx = layerCanvas.getContext('2d', { desynchronized: true });
-      const newCanvasWidth = layerCanvas.width + overflows.left + overflows.right;
-      const newCanvasHeight = layerCanvas.height + overflows.top + overflows.bottom;
+      const ctx = layerCanvas.getContext('2d');
+      const newCanvasWidth = layerCanvas.width + (overflows.left + overflows.right) * file.tileDimension;
+      const newCanvasHeight = layerCanvas.height + (overflows.top + overflows.bottom) * file.tileDimension;
+      // console.log('newCanvasWidth', newCanvasWidth);
+      // console.log('newCanvasHeight', newCanvasHeight);
 
       newCanvas.width = newCanvasWidth;
       newCanvas.height = newCanvasHeight;
-      newCtx.drawImage(layerCanvas, overflows.left, overflows.top);
+      newCtx.drawImage(layerCanvas, overflows.left * file.tileDimension, overflows.top * file.tileDimension);
 
       brushRect = {
-        x: relativeTilePosition.x - overflows.left,
-        y: relativeTilePosition.y - overflows.top,
-        width: brushCanvas.width / file.tileDimension - overflows.left - overflows.right,
-        height: brushCanvas.height / file.tileDimension - overflows.top - overflows.bottom,
+        y: (relativeTilePosition.y + overflows.top - relativeLayerPosition.y) * file.tileDimension,
+        x: (relativeTilePosition.x + overflows.left - relativeLayerPosition.x) * file.tileDimension,
+        width: brushCanvas.width,
+        height: brushCanvas.height,
       };
       console.log('brushRect', brushRect);
 
@@ -196,30 +208,29 @@ export function MapCanvas () {
       layer.canvas.height = newCanvasHeight;
       ctx.drawImage(newCanvas, 0, 0);
 
+      // clear tiles below brush
+      ctx.clearRect(brushRect.x, brushRect.y, brushRect.width, brushRect.height);
+
       if (activeTool === 'draw') {
-        ctx.drawImage(brushCanvas, brushRect.x * file.tileDimension, brushRect.y * file.tileDimension);
-      } else if (activeTool === 'eraser') {
-        ctx.clearRect(brushRect.x * file.tileDimension, brushRect.y * file.tileDimension, brushRect.width * file.tileDimension, brushRect.height * file.tileDimension);
+        ctx.drawImage(brushCanvas, brushRect.x, brushRect.y);
       }
+
+      // determine new layer position
+      const newLayerPosition = {
+        x: Math.min(layerPosition.x, relativeTilePosition.x * file.tileDimension),
+        y: Math.min(layerPosition.y, relativeTilePosition.y * file.tileDimension),
+      };
+      // console.log('newLayerPosition', newLayerPosition);
 
       const newLayerData = { ...layerData };
-      if (!layer) {
-        layer = {
-          position: {
-            x: relativeTilePosition.x * file.tileDimension,
-            y: relativeTilePosition.y * file.tileDimension,
-          },
-          canvas: layerCanvas,
-        };
-      }
-
       newLayerData[layerId] = {
-        ...layer,
-        position: layerPosition,
+        ...newLayerData[layerId],
+        position: newLayerPosition,
+        canvas: layerCanvas,
       };
       setLayerData(newLayerData);
       stageRef.current.draw();
-    } else {
+    } else if (!layer || layer.canvas == null) {
       brushRect = {
         x: (relativeTilePosition.x - layerPosition.x) * file.tileDimension,
         y: (relativeTilePosition.y - layerPosition.y) * file.tileDimension,
@@ -229,10 +240,9 @@ export function MapCanvas () {
       console.log('brushRect', brushRect);
 
       const ctx = layerCanvas.getContext('2d', { desynchronized: true });
+      ctx.clearRect(brushRect.x, brushRect.y, brushRect.width, brushRect.height);
       if (activeTool === 'draw') {
         ctx.drawImage(brushCanvas, brushRect.x, brushRect.y);
-      } else if (activeTool === 'eraser') {
-        ctx.clearRect(brushRect.x, brushRect.y, brushRect.width, brushRect.height);
       }
 
       const newLayerData = { ...layerData };
@@ -248,6 +258,28 @@ export function MapCanvas () {
       }
 
       // update layerData
+      setLayerData(newLayerData);
+    } else {
+      console.log('drawing on old canvas');
+      brushRect = {
+        x: (relativeTilePosition.x - relativeLayerPosition.x) * file.tileDimension,
+        y: (relativeTilePosition.y - relativeLayerPosition.y) * file.tileDimension,
+        width: brushCanvas.width,
+        height: brushCanvas.height,
+      };
+      console.log('brushRect', brushRect);
+
+      const ctx = layerCanvas.getContext('2d', { desynchronized: true });
+      ctx.clearRect(brushRect.x, brushRect.y, brushRect.width, brushRect.height);
+      if (activeTool === 'draw') {
+        ctx.drawImage(brushCanvas, brushRect.x, brushRect.y);
+      }
+
+      const newLayerData = { ...layerData };
+      newLayerData[layerId] = {
+        ...layer,
+        canvas: layerCanvas,
+      };
       setLayerData(newLayerData);
     }
   }
@@ -311,31 +343,51 @@ export function MapCanvas () {
         x: tilePosition.x / tileDimension,
         y: tilePosition.y / tileDimension,
       });
-      if (activeTool === 'draw') {
-        setBrushOutline([
+      if (['draw', 'erase'].includes(activeTool)) {
+        const newBrushOutline = [];
+        const outerStrokeColor = 'black';
+        const innerStrokeColor = 'white';
+        newBrushOutline.push(
           <Rect
             x={tilePosition.x}
             y={tilePosition.y}
             width={brushCanvas.width}
             height={brushCanvas.height}
-            stroke='blue'
-            strokeWidth={2 / stageData.scale}
+            stroke={outerStrokeColor}
+            strokeWidth={1 / stageData.scale}
             dash={[10 / stageData.scale, 10 / stageData.scale]}
-            opacity={1}
-            listening={false}
-            key={2}
-          />,
-          <Image
-            image={brushCanvas}
-            x={tilePosition.x}
-            y={tilePosition.y}
-            width={brushCanvas.width}
-            height={brushCanvas.height}
-            opacity={1}
             listening={false}
             key={1}
           />,
-        ]);
+        );
+        newBrushOutline.push(
+          <Rect
+            x={tilePosition.x + 2 / stageData.scale}
+            y={tilePosition.y + 2 / stageData.scale}
+            width={brushCanvas.width - 4 / stageData.scale}
+            height={brushCanvas.height - 4 / stageData.scale}
+            stroke={innerStrokeColor}
+            strokeWidth={1 / stageData.scale}
+            dash={[10 / stageData.scale, 10 / stageData.scale]}
+            listening={false}
+            key={2}
+          />,
+        );
+        if (activeTool === 'draw') {
+          newBrushOutline.push(
+            <Image
+              image={brushCanvas}
+              x={tilePosition.x}
+              y={tilePosition.y}
+              width={brushCanvas.width}
+              height={brushCanvas.height}
+              opacity={1}
+              listening={false}
+              key={3}
+            />,
+          );
+        }
+        setBrushOutline(newBrushOutline);
       } else {
         setBrushOutline(null);
       }
@@ -347,13 +399,10 @@ export function MapCanvas () {
   useEffect(() => {
     if (['erase', 'draw'].includes(activeTool)) {
       setCursorStyle('crosshair');
+      updateBrushOutline();
     } else {
       setCursorStyle('default');
-    }
-    if (activeTool !== 'draw') {
       setBrushOutline(null);
-    } else {
-      updateBrushOutline();
     }
   }, [activeTool]);
 

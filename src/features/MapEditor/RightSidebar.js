@@ -4,7 +4,7 @@ import { Icon } from '../../components/Icon';
 import { useDispatch, useSelector } from 'react-redux';
 import { FlexRow } from '../../components/layout/FlexRow';
 import { IconButton } from '../../components/inputs/IconButton';
-import { addNewMapLayer, asyncPatchFile, selectMapEditorStatuses, selectMapFile } from './mapEditorSlice';
+import { addNewMapLayer, asyncPatchFile, deleteSelectedLayers, selectMapEditorStatuses, selectMapFile } from './mapEditorSlice';
 import { MapLayer } from './MapLayer';
 import { openAddTilesetModal } from './AddTilesetModal';
 import { useEffect } from 'react';
@@ -110,8 +110,7 @@ export function RightSidebar () {
   }
 
   function handleDeleteSelectedLayers () {
-    console.log('delete selected layers');
-    // TODO: implement
+    dispatch(deleteSelectedLayers());
   }
 
   useEffect(() => {

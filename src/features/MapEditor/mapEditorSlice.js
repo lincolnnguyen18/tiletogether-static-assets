@@ -346,6 +346,40 @@ const mapEditorSlice = createSlice({
 
       traverse(state.file.rootLayer);
     },
+    deleteSelectedLayers: (state) => {
+      // get selected layers
+      const selectedLayers = [];
+      function customizer (layer) {
+        if (layer.selected) {
+          selectedLayers.push(layer);
+          if (state.newChanges[layer._id]) {
+            state.newChanges[layer._id].deleted = true;
+          } else {
+            state.newChanges[layer._id] = { deleted: true };
+          }
+        }
+      }
+      _.cloneDeepWith(state.file.rootLayer, customizer);
+
+      // if selectedLayers includes lastSelectedLayer, set lastSelectedLayer to null
+      if (selectedLayers.some(layer => layer._id === state.primitives.lastSelectedLayer._id)) {
+        state.primitives.lastSelectedLayer = null;
+      }
+
+      // use cloneDeepWith to avoid mutating state
+      function traverse (layer) {
+        // if a group's layers is in selectedLayers, filter it out
+        if (layer.type === 'group') {
+          selectedLayers.forEach(selectedLayer => {
+            layer.layers = layer.layers.filter(layer => layer._id !== selectedLayer._id);
+          });
+
+          traverse(layer.layers);
+        }
+      }
+
+      state.file.rootLayer = _.cloneDeepWith(state.file.rootLayer, traverse);
+    },
     clearMapEditorErrors: state => {
       state.errors = {};
     },
@@ -400,6 +434,7 @@ export const {
   clearMapEditorStatus,
   updateLayer,
   updateAllLayers,
+  deleteSelectedLayers,
   updateAllLayersBetween,
   updateLayersUpToRoot,
   updateLayerAndItsChildren,
