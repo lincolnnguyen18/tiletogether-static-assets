@@ -114,6 +114,35 @@ export function MapCanvas () {
       setHoveredRect(null);
       setHoverLayerId(null);
     }
+
+    if (activeTool === 'select' && dragging) {
+      const layerId = lastSelectedLayer._id;
+      const mousePosition = stageRef.current.getPointerPosition();
+      const stagePosition = stageRef.current.position();
+      const stageScale = stageRef.current.scaleX();
+      const relativeMousePos = {
+        x: Math.floor((mousePosition.x - stagePosition.x) / stageScale),
+        y: Math.floor((mousePosition.y - stagePosition.y) / stageScale),
+      };
+      // round to nearest tile
+      relativeMousePos.x = Math.floor(relativeMousePos.x / file.tileDimension) * file.tileDimension;
+      relativeMousePos.y = Math.floor(relativeMousePos.y / file.tileDimension) * file.tileDimension;
+      const layer = layerData[layerId];
+
+      if (dragging) {
+        const newLayer = {
+          ...layer,
+          position: {
+            x: relativeMousePos.x - dragStartPosition.x,
+            y: relativeMousePos.y - dragStartPosition.y,
+          },
+        };
+        setLayerData({
+          ...layerData,
+          [layerId]: newLayer,
+        });
+      }
+    }
   }
 
   const handleStageMouseUp = () => {
@@ -354,8 +383,8 @@ export function MapCanvas () {
             width={brushCanvas.width}
             height={brushCanvas.height}
             stroke={outerStrokeColor}
-            strokeWidth={1 / stageData.scale}
-            dash={[10 / stageData.scale, 10 / stageData.scale]}
+            strokeWidth={2 / stageData.scale}
+            // dash={[10 / stageData.scale, 10 / stageData.scale]}
             listening={false}
             key={1}
           />,
@@ -367,8 +396,8 @@ export function MapCanvas () {
             width={brushCanvas.width - 4 / stageData.scale}
             height={brushCanvas.height - 4 / stageData.scale}
             stroke={innerStrokeColor}
-            strokeWidth={1 / stageData.scale}
-            dash={[10 / stageData.scale, 10 / stageData.scale]}
+            strokeWidth={2 / stageData.scale}
+            // dash={[10 / stageData.scale, 10 / stageData.scale]}
             listening={false}
             key={2}
           />,
@@ -457,6 +486,8 @@ export function MapCanvas () {
       // console.log(layerData);
       relativeMousePos.x -= layerData[layer._id].position.x;
       relativeMousePos.y -= layerData[layer._id].position.y;
+      relativeMousePos.x = Math.floor(relativeMousePos.x / file.tileDimension) * file.tileDimension;
+      relativeMousePos.y = Math.floor(relativeMousePos.y / file.tileDimension) * file.tileDimension;
       setDragStartPosition(relativeMousePos);
 
       if (lastSelectedLayer && layer._id === lastSelectedLayer._id) return;
