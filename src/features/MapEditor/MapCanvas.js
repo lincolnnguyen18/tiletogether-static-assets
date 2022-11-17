@@ -6,6 +6,7 @@ import { KonvaCheckerboardImage } from '../TilesetEditor/TilesetCanvas';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectLeftSidebarPrimitives } from '../Editor/leftSidebarSlice';
 import { selectBrushCanvas, selectLastSelectedLayer, selectMapEditorPrimitives, selectMapFile, setMapEditorPrimitives, updateAllLayers, updateLayer, updateLayersUpToRoot } from './mapEditorSlice';
+import { trimPng } from '../../utils/canvasUtils';
 
 export function MapCanvas () {
   const { showGrid } = useSelector(selectLeftSidebarPrimitives);
@@ -209,6 +210,7 @@ export function MapCanvas () {
     // console.log('overflows', overflows);
 
     if ((overflows.left > 0 || overflows.right > 0 || overflows.top > 0 || overflows.bottom > 0) && e.evt.shiftKey && activeTool === 'draw') {
+      setDragging(true);
       // console.log('overflow');
       const newCanvas = document.createElement('canvas');
       const newCtx = newCanvas.getContext('2d');
@@ -257,6 +259,7 @@ export function MapCanvas () {
       setLayerData(newLayerData);
       stageRef.current.draw();
     } else if (!layer || layer.canvas == null) {
+      setDragging(true);
       brushRect = {
         x: (relativeTilePosition.x - layerPosition.x) * file.tileDimension,
         y: (relativeTilePosition.y - layerPosition.y) * file.tileDimension,
@@ -286,6 +289,7 @@ export function MapCanvas () {
       // update layerData
       setLayerData(newLayerData);
     } else {
+      setDragging(true);
       // console.log('drawing on old canvas');
       brushRect = {
         x: (relativeTilePosition.x - relativeLayerPosition.x) * file.tileDimension,
@@ -467,7 +471,7 @@ export function MapCanvas () {
 
   function handleMouseDownLayer (e, layer) {
     // console.log('layer', layer);
-    if (activeTool === 'select' || activeTool === 'erase' || (
+    if (activeTool === 'select' || (
       activeTool === 'draw' && !e.evt.shiftKey &&
       // don't focus on this layer if a new blank layer is being selected
       (!lastSelectedLayer || layerData[lastSelectedLayer._id] !== undefined)
@@ -511,6 +515,10 @@ export function MapCanvas () {
     }
   }
 
+  // useEffect(() => {
+  //   console.log('lastSelectedLayer', lastSelectedLayer);
+  // }, [lastSelectedLayer]);
+
   async function handleKeyDown (e) {
     if (e.key === '1') {
       dispatch(setMapEditorPrimitives({ activeTool: 'draw' }));
@@ -518,6 +526,34 @@ export function MapCanvas () {
       dispatch(setMapEditorPrimitives({ activeTool: 'erase' }));
     } else if (e.key === '3') {
       dispatch(setMapEditorPrimitives({ activeTool: 'select' }));
+    } else if (e.key === 'T') {
+      // console.log('trim');
+      e.preventDefault();
+      // console.log(lastSelectedLayer);
+      if (!lastSelectedLayer) return;
+      const inputCanvas = layerData[lastSelectedLayer._id].canvas;
+      if (!inputCanvas) return;
+      // console.log('trimming', inputCanvas.width, inputCanvas.height);
+      const { trimmedImageData, overflows } = trimPng(inputCanvas);
+      // console.log('trimmed', trimmedImageData.width, trimmedImageData.height);
+      // console.log('overflows', overflows);
+      const canvas = document.createElement('canvas');
+      canvas.width = trimmedImageData.width;
+      canvas.height = trimmedImageData.height;
+      // console.log('trimmedImageData', trimmedImageData.width, trimmedImageData.height);
+      const ctx = canvas.getContext('2d');
+      ctx.putImageData(trimmedImageData, 0, 0);
+      const newLayerData = { ...layerData };
+      // console.log(_.cloneDeep(newLayerData[lastSelectedLayer._id]));
+      newLayerData[lastSelectedLayer._id] = {
+        ...newLayerData[lastSelectedLayer._id],
+        canvas,
+        position: {
+          x: newLayerData[lastSelectedLayer._id].position.x + overflows.left,
+          y: newLayerData[lastSelectedLayer._id].position.y + overflows.top,
+        },
+      };
+      setLayerData(newLayerData);
     }
   }
 
@@ -528,7 +564,7 @@ export function MapCanvas () {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('resize', handleResize);
     };
-  }, []);
+  }, [lastSelectedLayer, layerData]);
 
   function handleResize () {
     setCanvasSize({ width: window.innerWidth - 56 - 270, height: window.innerHeight });

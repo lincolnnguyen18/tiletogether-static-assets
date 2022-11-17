@@ -568,13 +568,14 @@ export function TilesetCanvas () {
       if (!lastSelectedLayer) return;
       const inputCanvas = layerData[lastSelectedLayer._id].canvas;
       if (!inputCanvas) return;
-      console.log('trimming', inputCanvas.width, inputCanvas.height);
+      // console.log('trimming', inputCanvas.width, inputCanvas.height);
       const { trimmedImageData, overflows } = trimPng(inputCanvas);
       // console.log('trimmed', trimmedImageData.width, trimmedImageData.height);
+      // console.log('overflows', overflows);
       const canvas = document.createElement('canvas');
       canvas.width = trimmedImageData.width;
       canvas.height = trimmedImageData.height;
-      console.log('trimmedImageData', trimmedImageData.width, trimmedImageData.height);
+      // console.log('trimmedImageData', trimmedImageData.width, trimmedImageData.height);
       const ctx = canvas.getContext('2d');
       ctx.putImageData(trimmedImageData, 0, 0);
       const newLayerData = { ...layerData };
@@ -1059,7 +1060,7 @@ export function TilesetCanvas () {
       const layer = layerData[layerId];
 
       if (dragging) {
-        // center the layer on the mouse
+        // center the layer on the mouse}
         const newImagePosition = {
           x: relativeMousePos.x - dragStartPosition.x,
           y: relativeMousePos.y - dragStartPosition.y,
