@@ -27,10 +27,28 @@ export function TileSelector () {
   const [selectedTileRange, setSelectedTileRange] = useState(null);
   const dispatch = useDispatch();
   const [selectedTilesetCanvas, setSelectedTilesetCanvas] = useState(null);
+  const [tileIndices, setTileIndices] = useState(null);
 
   useEffect(() => {
     setSelectedTilesetCanvas(selectedTileset && tilesetCanvases[selectedTileset.file]);
   }, [selectedTileset, tilesetCanvases]);
+
+  useEffect(() => {
+    if (selectedTilesetCanvas) {
+      // build 2d array for tile indices from 0 to last tile
+      const tileIndices = [];
+      let index = 0;
+      for (let i = 0; i < selectedTilesetCanvas.height / file.tileDimension; i++) {
+        const newRow = [];
+        for (let j = 0; j < selectedTilesetCanvas.width / file.tileDimension; j++) {
+          newRow.push(index);
+          index++;
+        }
+        tileIndices.push(newRow);
+      }
+      setTileIndices(tileIndices);
+    }
+  }, [selectedTilesetCanvas]);
 
   useEffect(() => {
     // console.log('selectedTileset', selectedTileset);
@@ -271,6 +289,34 @@ export function TileSelector () {
         height: file.tileDimension,
       };
     }
+
+    console.log('selectedRect2', selectedRect2);
+
+    let startTileX = selectedTileRange.start.tileX;
+    let startTileY = selectedTileRange.start.tileY;
+    let endTileX = selectedTileRange.end.tileX;
+    let endTileY = selectedTileRange.end.tileY;
+
+    // if width or height is negative, subtraact its difference from start and add its difference to end
+    if (selectedRect2.width < 0) {
+      startTileX -= Math.abs(selectedRect2.width / file.tileDimension);
+      endTileX += Math.abs(selectedRect2.width / file.tileDimension);
+    }
+    if (selectedRect2.height < 0) {
+      startTileY -= Math.abs(selectedRect2.height / file.tileDimension);
+      endTileY += Math.abs(selectedRect2.height / file.tileDimension);
+    }
+
+    console.log('startTile', `${startTileY}, ${startTileX}`);
+    console.log('endTile', `${endTileY}, ${endTileX}`);
+
+    const selectedTileIndices = [];
+    for (let i = startTileY; i <= endTileY; i++) {
+      for (let j = startTileX; j <= endTileX; j++) {
+        selectedTileIndices.push(tileIndices[i][j]);
+      }
+    }
+    console.log('selectedTileIndices', selectedTileIndices);
 
     setMouseDown(false);
     setSelectedTileRange(null);
