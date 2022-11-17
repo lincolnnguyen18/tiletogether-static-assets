@@ -24,11 +24,11 @@ export function MapEditor () {
     dispatch(asyncGetFileToEdit({ id }));
   }, []);
 
-  // useEffect(() => {
-  //   if (file) {
-  //     console.log(file);
-  //   }
-  // }, [file]);
+  useEffect(() => {
+    if (file) {
+      console.log(file);
+    }
+  }, [file]);
 
   let content;
 

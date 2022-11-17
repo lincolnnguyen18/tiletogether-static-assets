@@ -2,7 +2,7 @@
 import { css, jsx } from '@emotion/react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useEffect, useRef, useState } from 'react';
-import { selectMapRightSidebarPrimitives, setMapRightSidebarPrimitives } from './rightSidebarSlice';
+import { selectMapRightSidebarPrimitives } from './rightSidebarSlice';
 import { Image, Layer, Rect, Stage } from 'react-konva';
 import { selectMapFile, selectTilesetCanvases, setBrushCanvas } from './mapEditorSlice';
 import { KonvaCheckerboardImage } from '../TilesetEditor/TilesetCanvas';
@@ -31,12 +31,6 @@ export function TileSelector () {
   useEffect(() => {
     setSelectedTilesetCanvas(selectedTileset && tilesetCanvases[selectedTileset.file]);
   }, [selectedTileset, tilesetCanvases]);
-
-  useEffect(() => {
-    if (file.tilesets.length > 0 && selectedTileset == null) {
-      dispatch(setMapRightSidebarPrimitives({ selectedTileset: file.tilesets[0] }));
-    }
-  }, [file.tilesets]);
 
   useEffect(() => {
     // console.log('selectedTileset', selectedTileset);
@@ -101,7 +95,10 @@ export function TileSelector () {
   }
 
   useEffect(() => {
-    if (!file || !selectedTileset) return;
+    if (!file || !selectedTileset) {
+      setGridLines(null);
+      return;
+    }
     const tileDimension = file.tileDimension;
     const stageScale = stageData.scale;
     const tilesetCanvas = selectedTilesetCanvas;
@@ -235,7 +232,7 @@ export function TileSelector () {
       setPreviousSelectionDirection(null);
       setSelectedRect(null);
       setSelectedTilesHighlight(null);
-      console.log('cleared');
+      // console.log('cleared');
       dispatch(setBrushCanvas(null));
       return;
     }

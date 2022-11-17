@@ -8,7 +8,7 @@ import { addNewMapLayer, asyncPatchFile, deleteSelectedLayers, selectMapEditorSt
 import { MapLayer } from './MapLayer';
 import { openAddTilesetModal } from './AddTilesetModal';
 import { useEffect } from 'react';
-import { selectMapRightSidebarPrimitives, setMapRightSidebarPrimitives } from './rightSidebarSlice';
+import { assignMapRightSidebarPrimitives, selectMapRightSidebarPrimitives, setMapRightSidebarPrimitives } from './rightSidebarSlice';
 import { TileSelector } from './TileSelector';
 
 const rightSidebarStyle = css`
@@ -97,12 +97,13 @@ export function RightSidebar () {
     openAddTilesetModal(dispatch);
   }
 
-  async function handleDeleteTileset (tilesetId) {
+  async function handleDeleteTileset (fileId) {
     const confirm = window.confirm('Are you sure you want to remove this tileset from the map?');
     if (!confirm) return;
-    const newTilesets = file.tilesets.filter(t => t._id !== tilesetId);
+    const newTilesets = file.tilesets.filter(t => t.file !== fileId);
+    if (newTilesets.length === file.tilesets.length) return;
     await dispatch(asyncPatchFile({ id: file.id, updates: { tilesets: newTilesets } }));
-    dispatch(setMapRightSidebarPrimitives({ selectedTileset: null }));
+    dispatch(assignMapRightSidebarPrimitives({ selectedTileset: null }));
   }
 
   function handleAddNewLayer () {
@@ -112,10 +113,6 @@ export function RightSidebar () {
   function handleDeleteSelectedLayers () {
     dispatch(deleteSelectedLayers());
   }
-
-  useEffect(() => {
-    console.log(file.tilesets);
-  }, [file.tilesets]);
 
   function handleKeyDown (e) {
     // listen for shift + c to create a new layer
@@ -127,6 +124,17 @@ export function RightSidebar () {
       handleDeleteSelectedLayers();
     }
   }
+
+  // useEffect(() => {
+  //   console.log(file.tilesets);
+  // }, [file.tilesets]);
+
+  useEffect(() => {
+    // console.log(selectedTileset);
+    if (!selectedTileset && file.tilesets.length) {
+      dispatch(assignMapRightSidebarPrimitives({ selectedTileset: file.tilesets[file.tilesets.length - 1] }));
+    }
+  }, [selectedTileset, file.tilesets]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -152,7 +160,7 @@ export function RightSidebar () {
             <span className='icon-plus'></span>
           </IconButton>
           <IconButton
-            onClick={() => handleDeleteTileset(selectedTileset._id)}
+            onClick={() => handleDeleteTileset(selectedTileset.file)}
             disabled={patchFile === 'pending'}
           >
             <span className='icon-trash'></span>
@@ -163,13 +171,15 @@ export function RightSidebar () {
         <FlexRow style={tilesetsStyle} align={'flex-start'}>
           {file.tilesets.map((tileset, index) => (
             <div
-              className={['tileset', selectedTileset?._id === tileset._id ? 'selected' : ''].join(' ')}
+              className={['tileset', selectedTileset?.file === tileset.file ? 'selected' : ''].join(' ')}
               key={index}
               onClick={() => {
+                if (patchFile === 'pending') return;
                 // console.log(tileset);
                 dispatch(setMapRightSidebarPrimitives({ selectedTileset: tileset }));
                 // console.log(selectedTileset);
               }}
+              style={{ pointerEvents: patchFile === 'pending' ? 'none' : 'auto' }}
             >
               <span>{tileset.name}</span>
             </div>

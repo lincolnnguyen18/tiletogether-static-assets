@@ -83,6 +83,7 @@ export const asyncPatchFile = createAsyncThunk(
       for (const tileset of newTilesets) {
         const image = new window.Image();
         image.src = tileset.imageUrl;
+        image.crossOrigin = 'Anonymous';
         await image.decode();
         const canvas = document.createElement('canvas');
         canvas.width = image.width;

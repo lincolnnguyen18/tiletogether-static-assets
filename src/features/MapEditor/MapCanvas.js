@@ -6,7 +6,6 @@ import { KonvaCheckerboardImage } from '../TilesetEditor/TilesetCanvas';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectLeftSidebarPrimitives } from '../Editor/leftSidebarSlice';
 import { selectBrushCanvas, selectLastSelectedLayer, selectMapEditorPrimitives, selectMapFile, setMapEditorPrimitives, updateAllLayers, updateLayer, updateLayersUpToRoot } from './mapEditorSlice';
-import { setTilesetEditorPrimitives } from '../TilesetEditor/tilesetEditorSlice';
 
 export function MapCanvas () {
   const { showGrid } = useSelector(selectLeftSidebarPrimitives);
@@ -137,11 +136,21 @@ export function MapCanvas () {
             y: relativeMousePos.y - dragStartPosition.y,
           },
         };
+
+        // if new position is same as old position then don't update
+        if (window.lastPosition && window.lastPosition.x === newLayer.position.x && window.lastPosition.y === newLayer.position.y) {
+          // console.log('same position');
+          return;
+        }
+        window.lastPosition = newLayer.position;
+
         setLayerData({
           ...layerData,
           [layerId]: newLayer,
         });
       }
+    } else if (dragging && ['draw', 'erase'].includes(activeTool) && lastSelectedLayer) {
+      paintTilesetOnCanvas(lastSelectedLayer._id, e);
     }
   }
 
@@ -152,32 +161,20 @@ export function MapCanvas () {
 
   function handleStageMouseDown (e) {
     if (lastSelectedLayer && (
-      activeTool === 'draw' || activeTool === 'eraser'
+      activeTool === 'draw' || activeTool === 'erase'
     )) {
       // console.log('updateLayer');
       paintTilesetOnCanvas(lastSelectedLayer._id, e);
     } else if (e.target.attrs.name === undefined && activeTool === 'select') {
       // clear selection if click on stage
       dispatch(updateAllLayers({ selected: false }));
-      dispatch(setTilesetEditorPrimitives({ lastSelectedLayer: null }));
+      dispatch(setMapEditorPrimitives({ lastSelectedLayer: null }));
     }
   }
 
   function paintTilesetOnCanvas (layerId, e) {
-    const mousePosition = stageRef.current.getPointerPosition();
-    const stagePosition = stageRef.current.position();
-    const stageScale = stageRef.current.scaleX();
-    const relativeMousePos = {
-      x: Math.floor((mousePosition.x - stagePosition.x) / stageScale),
-      y: Math.floor((mousePosition.y - stagePosition.y) / stageScale),
-    };
-    // get relativeMousePos in tiles (file.tileDimension)
-    // const relativeMousePosInTiles = {
-    //   x: Math.floor(relativeMousePos.x / file.tileDimension),
-    //   y: Math.floor(relativeMousePos.y / file.tileDimension),
-    // };
-
-    let layer = layerData[layerId];
+    const layer = layerData[layerId];
+    // console.log('paintTilesetOnCanvas layer', layer);
     let layerPosition = layer ? { x: layer.position.x, y: layer.position.y } : null;
     if (!layerPosition) {
       layerPosition = relativeTilePosition;
@@ -231,7 +228,7 @@ export function MapCanvas () {
         width: brushCanvas.width,
         height: brushCanvas.height,
       };
-      console.log('brushRect', brushRect);
+      // console.log('brushRect', brushRect);
 
       layer.canvas.width = newCanvasWidth;
       layer.canvas.height = newCanvasHeight;
@@ -266,7 +263,7 @@ export function MapCanvas () {
         width: brushCanvas.width,
         height: brushCanvas.height,
       };
-      console.log('brushRect', brushRect);
+      // console.log('brushRect', brushRect);
 
       const ctx = layerCanvas.getContext('2d', { desynchronized: true });
       ctx.clearRect(brushRect.x, brushRect.y, brushRect.width, brushRect.height);
@@ -289,14 +286,14 @@ export function MapCanvas () {
       // update layerData
       setLayerData(newLayerData);
     } else {
-      console.log('drawing on old canvas');
+      // console.log('drawing on old canvas');
       brushRect = {
         x: (relativeTilePosition.x - relativeLayerPosition.x) * file.tileDimension,
         y: (relativeTilePosition.y - relativeLayerPosition.y) * file.tileDimension,
         width: brushCanvas.width,
         height: brushCanvas.height,
       };
-      console.log('brushRect', brushRect);
+      // console.log('brushRect', brushRect);
 
       const ctx = layerCanvas.getContext('2d', { desynchronized: true });
       ctx.clearRect(brushRect.x, brushRect.y, brushRect.width, brushRect.height);
@@ -475,6 +472,7 @@ export function MapCanvas () {
       // don't focus on this layer if a new blank layer is being selected
       (!lastSelectedLayer || layerData[lastSelectedLayer._id] !== undefined)
     )) {
+      // console.log('focus on layer', layer._id);
       setDragging(true);
       const mousePosition = stageRef.current.getPointerPosition();
       const stagePosition = stageRef.current.position();
@@ -490,11 +488,16 @@ export function MapCanvas () {
       relativeMousePos.y = Math.floor(relativeMousePos.y / file.tileDimension) * file.tileDimension;
       setDragStartPosition(relativeMousePos);
 
-      if (lastSelectedLayer && layer._id === lastSelectedLayer._id) return;
+      if (lastSelectedLayer && layer._id === lastSelectedLayer._id) {
+        // console.log('layer already selected');
+        return;
+      }
+      // console.log('focus on layer again', layer._id);
       // if shift and command and ctrl not pressed then clear all selected layers
       if (!e.evt.shiftKey && !e.evt.ctrlKey && !e.evt.metaKey) {
         dispatch(updateAllLayers({ selected: false }));
         dispatch(setMapEditorPrimitives({ lastSelectedLayer: null }));
+        // console.log('clear all selected layers');
       }
       const newLayer = { ...layer, selected: true };
       dispatch(updateLayer({ newLayer }));
