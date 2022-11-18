@@ -3,6 +3,16 @@ import { createAsyncThunk, createSlice, isFulfilled, isPending, isRejected } fro
 import { apiClient } from '../../app/apiClient';
 import { getActionName } from '../../utils/stringUtils';
 import ObjectID from 'bson-objectid';
+import { getFirstAndLastGuids } from '../../utils/mapUtils';
+
+export function getCurrentGuids ({ firstGuids, file, tilesetCanvases }) {
+  return file.tilesets.map(tileset => [firstGuids[tileset.file], firstGuids[tileset.file] + tilesetCanvases[tileset.file].width / file.tileDimension * tilesetCanvases[tileset.file].height / file.tileDimension - 1]);
+  // const currentGuids = {};
+  // file.tilesets.forEach(tileset => {
+  //   currentGuids[tileset.file] = [firstGuids[tileset.file], firstGuids[tileset.file] + tilesetCanvases[tileset.file].width / file.tileDimension * tilesetCanvases[tileset.file].height / file.tileDimension - 1];
+  // });
+  // return currentGuids;
+}
 
 const initialState = {
   file: null,
@@ -12,8 +22,13 @@ const initialState = {
     dragStart: null,
     dragging: false,
     lastSelectedLayer: null,
+    brushTileset: null,
+    brushTileIndices: null,
   },
+  layerData: {},
   tilesetCanvases: {},
+  firstGuids: {},
+  layerTiles: {},
   brushCanvas: null,
   newChanges: {},
   statuses: {},
@@ -115,8 +130,18 @@ const mapEditorSlice = createSlice({
     setBrushCanvas (state, action) {
       state.brushCanvas = action.payload;
     },
+    updateLayerTiles (state, action) {
+      const { layerId, tiles } = action.payload;
+      state.layerTiles[layerId] = tiles;
+    },
+    assignLayerTiles (state, action) {
+      state.layerTiles = action.payload;
+    },
     setMapEditorPrimitives (state, action) {
       state.primitives = _.merge(state.primitives, action.payload);
+    },
+    assignMapEditorPrimitives (state, action) {
+      state.primitives = _.assign(state.primitives, action.payload);
     },
     addNewMapLayer (state) {
       // TODO: add new layer at appropriate position; for now just add to start of rootLayer's layers
@@ -388,6 +413,31 @@ const mapEditorSlice = createSlice({
       const { status } = action.payload;
       state.statuses[status] = null;
     },
+    setLayerData: (state, action) => {
+      state.layerData = action.payload;
+    },
+    eraseTileInLayer: (state, action) => {
+      let { layerId, y, x } = action.payload;
+      const canvas = state.layerData[layerId].canvas;
+      const ctx = canvas.getContext('2d');
+      const tileDimension = state.file.tileDimension;
+      y *= tileDimension;
+      x *= tileDimension;
+      console.log(`erasing tile at ${x}, ${y} with tileDimension ${tileDimension}`);
+      ctx.clearRect(x, y, tileDimension, tileDimension);
+      const newLayerData = { ...state.layerData };
+      newLayerData[layerId].canvas = canvas;
+      state.layerData = newLayerData;
+    },
+    assignTilesetCanvases: (state, action) => {
+      state.tilesetCanvases = action.payload;
+    },
+    assignFirstGuids: (state, action) => {
+      state.firstGuids = action.payload;
+    },
+    downloadMapAsTmx: (state, action) => {
+      console.log('downloading map as tmx');
+    },
   },
   extraReducers (builder) {
     builder
@@ -397,11 +447,64 @@ const mapEditorSlice = createSlice({
       .addCase(asyncGetFileToEdit.fulfilled, (state, action) => {
         const { file, tilesetCanvases } = action.payload;
         // console.log('file', file);
+
+        // also calculate firstGid for each tileset
+        const newFirstGids = {};
+        let firstGid = 1;
+        for (const tileset of file.tilesets) {
+          newFirstGids[tileset.file] = firstGid;
+          const tileCount = tilesetCanvases[tileset.file].width / file.tileDimension * tilesetCanvases[tileset.file].height / file.tileDimension;
+          firstGid += tileCount;
+        }
+        const nameToGid = {};
+        for (const tileset of file.tilesets) {
+          nameToGid[tileset.name] = newFirstGids[tileset.file];
+        }
+        console.log('nameToGid', nameToGid);
+        state.firstGuids = newFirstGids;
+
         state.file = file;
         state.tilesetCanvases = tilesetCanvases;
       })
       .addCase(asyncPatchFile.fulfilled, (state, action) => {
         const { newFile, newTilesetCanvases } = action.payload;
+
+        // create array of first guids, last guids for tiles in order
+        // const currentGids = state.file.tilesets.map(tileset => [state.firstGuids[tileset.file], state.firstGuids[tileset.file] + state.tilesetCanvases[tileset.file].width / state.file.tileDimension * state.tilesetCanvases[tileset.file].height / state.file.tileDimension - 1]);
+
+        if (Object.keys(newTilesetCanvases).length > 0) {
+          // also calculate firstGid for each tileset
+          // do this by finding first Gid with enough space for new tileset
+          for (const tilesetFileId of Object.keys(newTilesetCanvases)) {
+            const currentGuids = getCurrentGuids({ firstGuids: state.firstGuids, file: state.file, tilesetCanvases: state.tilesetCanvases });
+            console.log('currentGuids', currentGuids);
+
+            // find first Gid with enough space for new tileset
+            // console.log('tileset', tilesetFileId);
+            // console.log('newTilesetCanvases', newTilesetCanvases);
+            // console.log('newTilesetCanvases[tileset.file]', newTilesetCanvases[tilesetFileId]);
+            const canvas = newTilesetCanvases[tilesetFileId];
+            // console.log('width', canvas.width);
+            // console.log('height', canvas.height);
+            const tileDimension = newFile.tileDimension;
+            const tileCount = newTilesetCanvases[tilesetFileId].width / tileDimension * newTilesetCanvases[tilesetFileId].height / tileDimension;
+            console.log('tileCount', tileCount);
+
+            const newGuidPair = getFirstAndLastGuids(currentGuids, tileCount);
+            console.log('newFirstGuid', newGuidPair);
+
+            // currentGuids: [[1, 15], [16, 99], [100, 179]]
+
+            state.firstGuids[tilesetFileId] = newGuidPair[0];
+            console.log('state.firstGuids', _.cloneDeep(state.firstGuids));
+          }
+          // let firstGid = 1;
+          // for (const tileset of newFile.tilesets) {
+          //   newFirstGids[tileset.file] = firstGid;
+          //   const tileCount = newTilesetCanvases[tileset.file].width / newFile.tileDimension * newTilesetCanvases[tileset.file].height / newFile.tileDimension;
+          //   firstGid += tileCount;
+          // }
+        }
 
         const fieldsToUpdate = Object.keys(action.meta.arg.updates);
         const pickedFile = _.pick(newFile, fieldsToUpdate);
@@ -431,6 +534,7 @@ const mapEditorSlice = createSlice({
 
 export const {
   setMapEditorPrimitives,
+  assignMapEditorPrimitives,
   clearMapEditorErrors,
   clearMapEditorStatus,
   updateLayer,
@@ -442,14 +546,24 @@ export const {
   moveSelectedLayers,
   addNewMapLayer,
   setBrushCanvas,
+  updateLayerTiles,
+  assignLayerTiles,
+  setLayerData,
+  eraseTileInLayer,
+  assignTilesetCanvases,
+  assignFirstGuids,
+  downloadMapAsTmx,
 } = mapEditorSlice.actions;
 
 export const selectMapEditorPrimitives = (state) => state.mapEditor.primitives;
 export const selectMapFile = (state) => state.mapEditor.file;
 export const selectBrushCanvas = (state) => state.mapEditor.brushCanvas;
+export const selectLayerTiles = (state) => state.mapEditor.layerTiles;
 export const selectLastSelectedLayer = state => state.mapEditor.primitives.lastSelectedLayer;
 export const selectTilesetCanvases = state => state.mapEditor.tilesetCanvases;
+export const selectFirstGuids = state => state.mapEditor.firstGuids;
 export const selectMapEditorStatuses = (state) => state.mapEditor.statuses;
 export const selectMapEditorErrors = (state) => state.mapEditor.errors;
+export const selectLayerData = (state) => state.mapEditor.layerData;
 
 export const mapEditorReducer = mapEditorSlice.reducer;

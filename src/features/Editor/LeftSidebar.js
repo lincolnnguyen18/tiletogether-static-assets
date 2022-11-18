@@ -16,6 +16,7 @@ import { defaultFlexColumnStyle, FlexColumn } from '../../components/layout/Flex
 import { FlexRow } from '../../components/layout/FlexRow';
 import { wait } from '../../utils/timeUtils';
 import { selectTilesetEditorPrimitives, setTilesetEditorPrimitives } from '../TilesetEditor/tilesetEditorSlice';
+import { downloadMapAsTmx } from '../MapEditor/mapEditorSlice';
 
 const leftSidebarStyle = css`
   background: #3F3F3F;
@@ -74,7 +75,15 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
         onSubmit={(e) => {
           e.preventDefault();
           const formData = Object.fromEntries(new FormData(e.target));
-          dispatch(setTilesetEditorPrimitives({ downloadFormat: formData.type }));
+          if (type === 'tileset') {
+            dispatch(setTilesetEditorPrimitives({ downloadFormat: formData.type }));
+          } else if (type === 'map') {
+            if (formData.type === 'tmj') {
+              dispatch(downloadMapAsTmx());
+            } else if (formData.type === 'png') {
+              console.log('download png');
+            }
+          }
         }}
         css={defaultFlexColumnStyle}
       >

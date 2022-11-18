@@ -5,12 +5,13 @@ import { useEffect, useRef, useState } from 'react';
 import { KonvaCheckerboardImage } from '../TilesetEditor/TilesetCanvas';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectLeftSidebarPrimitives } from '../Editor/leftSidebarSlice';
-import { selectBrushCanvas, selectLastSelectedLayer, selectMapEditorPrimitives, selectMapFile, setMapEditorPrimitives, updateAllLayers, updateLayer, updateLayersUpToRoot } from './mapEditorSlice';
+import { selectBrushCanvas, selectLastSelectedLayer, selectLayerData, selectLayerTiles, selectMapEditorPrimitives, selectMapFile, setLayerData, setMapEditorPrimitives, updateAllLayers, updateLayer, updateLayersUpToRoot, updateLayerTiles } from './mapEditorSlice';
 import { trimPng } from '../../utils/canvasUtils';
+import _ from 'lodash';
 
 export function MapCanvas () {
   const { showGrid } = useSelector(selectLeftSidebarPrimitives);
-  const { activeTool } = useSelector(selectMapEditorPrimitives);
+  const { activeTool, brushTileIndices } = useSelector(selectMapEditorPrimitives);
   const file = useSelector(selectMapFile);
   const [canvasSize, setCanvasSize] = useState({ width: window.innerWidth - 56 - 270, height: window.innerHeight });
   const [stageData, setStageData] = useState({ scale: 2, position: { x: 0, y: 0 } });
@@ -19,17 +20,24 @@ export function MapCanvas () {
   const [dragging, setDragging] = useState(false);
   const lastSelectedLayer = useSelector(selectLastSelectedLayer);
   const brushCanvas = useSelector(selectBrushCanvas);
+  const layerTiles = useSelector(selectLayerTiles);
   const [brushOutline, setBrushOutline] = useState(null);
-  const [layerData, setLayerData] = useState({ });
+  const layerData = useSelector(selectLayerData);
   const [relativeTilePosition, setRelativeTilePosition] = useState(null);
   const [layerElements, setLayerElements] = useState([]);
   const [hoveredRect, setHoveredRect] = useState(null);
   const [hoverLayerId, setHoverLayerId] = useState(null);
   const [selectedRects, setSelectedRects] = useState([]);
-  // eslint-disable-next-line no-unused-vars
   const [dragStartPosition, setDragStartPosition] = useState(null);
   const layers = file.rootLayer.layers;
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (!brushCanvas) {
+      console.log('no brush canvas');
+      setBrushOutline(null);
+    }
+  }, [brushCanvas]);
 
   function handleStageMouseWheel (e) {
     e.evt.preventDefault();
@@ -145,10 +153,10 @@ export function MapCanvas () {
         }
         window.lastPosition = newLayer.position;
 
-        setLayerData({
+        dispatch(setLayerData({
           ...layerData,
           [layerId]: newLayer,
-        });
+        }));
       }
     } else if (dragging && ['draw', 'erase'].includes(activeTool) && lastSelectedLayer) {
       paintTilesetOnCanvas(lastSelectedLayer._id, e);
@@ -175,6 +183,11 @@ export function MapCanvas () {
 
   function paintTilesetOnCanvas (layerId, e) {
     const layer = layerData[layerId];
+    // tiles: [new Schema({
+    //   index: { type: Number, required: true },
+    //   tileset: { type: Schema.Types.ObjectId, ref: 'File', required: true },
+    // })],
+    // const newTiles = [];
     // console.log('paintTilesetOnCanvas layer', layer);
     let layerPosition = layer ? { x: layer.position.x, y: layer.position.y } : null;
     if (!layerPosition) {
@@ -183,6 +196,9 @@ export function MapCanvas () {
     if (!layerPosition) return;
     let layerCanvas = layer ? layer.canvas : null;
     // console.log('layerCanvas', layerCanvas);
+    let newLayerTiles = layerTiles[layerId] ? _.cloneDeep(layerTiles[layerId]) : null;
+    // console.log('newLayerTiles', newLayerTiles);
+
     if (!layerCanvas && brushCanvas) {
       layerCanvas = document.createElement('canvas');
       layerCanvas.width = brushCanvas.width;
@@ -209,6 +225,7 @@ export function MapCanvas () {
     let brushRect;
     // console.log('overflows', overflows);
 
+    // if extending layer
     if ((overflows.left > 0 || overflows.right > 0 || overflows.top > 0 || overflows.bottom > 0) && e.evt.shiftKey && activeTool === 'draw') {
       setDragging(true);
       // console.log('overflow');
@@ -256,9 +273,59 @@ export function MapCanvas () {
         position: newLayerPosition,
         canvas: layerCanvas,
       };
-      setLayerData(newLayerData);
+      dispatch(setLayerData(newLayerData));
       stageRef.current.draw();
-    } else if (!layer || layer.canvas == null) {
+
+      // calculate new layer tiles and update
+      // console.log('extending layerTiles', newLayerTiles);
+      // console.log('brushTileIndices', brushTileIndices);
+
+      // calculate new width and height of layerTiles 2d array
+      const newLayerTilesWidth = newLayerTiles[0].length + overflows.left + overflows.right;
+      const newLayerTilesHeight = newLayerTiles.length + overflows.top + overflows.bottom;
+      // console.log('newLayerTilesWidth', newLayerTilesWidth);
+      // console.log('newLayerTilesHeight', newLayerTilesHeight);
+
+      // create new 2d array
+      const newLayerTiles2d = [];
+      for (let i = 0; i < newLayerTilesHeight; i++) {
+        newLayerTiles2d.push([]);
+        for (let j = 0; j < newLayerTilesWidth; j++) {
+          newLayerTiles2d[i].push(null);
+        }
+      }
+
+      // copy newLayerTiles into newLayerTiles2d
+      for (let i = 0; i < newLayerTiles.length; i++) {
+        for (let j = 0; j < newLayerTiles[i].length; j++) {
+          let newValue = newLayerTiles[i][j];
+          if (activeTool === 'erase') {
+            newValue = null;
+          }
+          newLayerTiles2d[i + overflows.top][j + overflows.left] = newValue;
+        }
+      }
+      // console.log('newLayerTiles2d', newLayerTiles2d);
+
+      const copyPosition = {
+        y: Math.max(0, relativeTilePosition.y - relativeLayerPosition.y),
+        x: Math.max(0, relativeTilePosition.x - relativeLayerPosition.x),
+      };
+      // console.log('copyPosition', copyPosition);
+
+      // copy brushTileIndices into new 2d array
+      for (let i = 0; i < brushTileIndices.length; i++) {
+        for (let j = 0; j < brushTileIndices[i].length; j++) {
+          newLayerTiles2d[i + copyPosition.y][j + copyPosition.x] = brushTileIndices[i][j];
+        }
+      }
+      // console.log('newLayerTiles2d', newLayerTiles2d);
+
+      // update layerTiles[layerId]
+      dispatch(updateLayerTiles({ layerId, tiles: newLayerTiles2d }));
+      console.log('extending layerTiles', newLayerTiles2d);
+    // if starting new layer
+    } else if ((!layer || layer.canvas == null) && activeTool === 'draw') {
       setDragging(true);
       brushRect = {
         x: (relativeTilePosition.x - layerPosition.x) * file.tileDimension,
@@ -287,8 +354,14 @@ export function MapCanvas () {
       }
 
       // update layerData
-      setLayerData(newLayerData);
-    } else {
+      dispatch(setLayerData(newLayerData));
+
+      // update layerTiles
+      newLayerTiles = brushTileIndices;
+      dispatch(updateLayerTiles({ layerId, tiles: newLayerTiles }));
+      console.log('starting layerTiles', newLayerTiles);
+    // if drawing inside existing layer
+    } else if (['draw', 'erase'].includes(activeTool)) {
       setDragging(true);
       // console.log('drawing on old canvas');
       brushRect = {
@@ -310,7 +383,41 @@ export function MapCanvas () {
         ...layer,
         canvas: layerCanvas,
       };
-      setLayerData(newLayerData);
+      dispatch(setLayerData(newLayerData));
+
+      // console.log('newLayerTiles', newLayerTiles);
+      // console.log('brushIndices', brushTileIndices);
+
+      const copyPosition = {
+        y: Math.max(0, relativeTilePosition.y - relativeLayerPosition.y),
+        x: Math.max(0, relativeTilePosition.x - relativeLayerPosition.x),
+      };
+
+      // copy brushTileIndices into layerTiles
+      try {
+        for (let i = 0; i < brushTileIndices.length; i++) {
+          for (let j = 0; j < brushTileIndices[i].length; j++) {
+            let newValue = brushTileIndices[i][j];
+            if (activeTool === 'erase') {
+              newValue = null;
+            }
+            // detect overflows and crop overflowed tiles from newValue
+            if (copyPosition.y + i < 0 || copyPosition.y + i >= newLayerTiles.length) {
+              continue;
+            }
+            if (copyPosition.x + j < 0 || copyPosition.x + j >= newLayerTiles[0].length) {
+              continue;
+            }
+            newLayerTiles[i + copyPosition.y][j + copyPosition.x] = newValue;
+            // console.log('updating (i, j)', i + copyPosition.y, j + copyPosition.x);
+            // console.log('taking from (i, j)', i, j);
+          }
+        }
+      } catch (e) {}
+
+      // update layerTiles
+      dispatch(updateLayerTiles({ layerId, tiles: newLayerTiles }));
+      console.log('drawing on old layerTiles', newLayerTiles);
     }
   }
 
@@ -379,10 +486,10 @@ export function MapCanvas () {
         const innerStrokeColor = 'white';
         newBrushOutline.push(
           <Rect
-            x={tilePosition.x}
-            y={tilePosition.y}
-            width={brushCanvas.width}
-            height={brushCanvas.height}
+            x={tilePosition.x - 2 / stageScale}
+            y={tilePosition.y - 2 / stageScale}
+            width={brushCanvas.width + 4 / stageScale}
+            height={brushCanvas.height + 4 / stageScale}
             stroke={outerStrokeColor}
             strokeWidth={2 / stageData.scale}
             // dash={[10 / stageData.scale, 10 / stageData.scale]}
@@ -392,10 +499,10 @@ export function MapCanvas () {
         );
         newBrushOutline.push(
           <Rect
-            x={tilePosition.x + 2 / stageData.scale}
-            y={tilePosition.y + 2 / stageData.scale}
-            width={brushCanvas.width - 4 / stageData.scale}
-            height={brushCanvas.height - 4 / stageData.scale}
+            x={tilePosition.x - 1 / stageScale}
+            y={tilePosition.y - 1 / stageScale}
+            width={brushCanvas.width + 2 / stageScale}
+            height={brushCanvas.height + 2 / stageScale}
             stroke={innerStrokeColor}
             strokeWidth={2 / stageData.scale}
             // dash={[10 / stageData.scale, 10 / stageData.scale]}
@@ -553,8 +660,12 @@ export function MapCanvas () {
           y: newLayerData[lastSelectedLayer._id].position.y + overflows.top,
         },
       };
-      setLayerData(newLayerData);
+      dispatch(setLayerData(newLayerData));
     }
+  }
+
+  function handleStageMouseLeave () {
+    setBrushOutline(null);
   }
 
   useEffect(() => {
@@ -583,6 +694,7 @@ export function MapCanvas () {
       onMouseMove={handleStageMouseMove}
       onMouseDown={handleStageMouseDown}
       onMouseUp={handleStageMouseUp}
+      onMouseLeave={handleStageMouseLeave}
       onContextMenu={e => e.evt.preventDefault()}
     >
       <Layer imageSmoothingEnabled={false}>

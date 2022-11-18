@@ -2,9 +2,8 @@
 import { css, jsx } from '@emotion/react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useEffect, useRef, useState } from 'react';
-import { selectMapRightSidebarPrimitives } from './rightSidebarSlice';
 import { Image, Layer, Rect, Stage } from 'react-konva';
-import { selectMapFile, selectTilesetCanvases, setBrushCanvas } from './mapEditorSlice';
+import { assignMapEditorPrimitives, selectFirstGuids, selectMapEditorPrimitives, selectMapFile, selectTilesetCanvases, setBrushCanvas } from './mapEditorSlice';
 import { KonvaCheckerboardImage } from '../TilesetEditor/TilesetCanvas';
 import _ from 'lodash';
 
@@ -15,32 +14,32 @@ const canvasStyle = css`
 `;
 
 export function TileSelector () {
-  const rightSidebarPrimitives = useSelector(selectMapRightSidebarPrimitives);
-  const { selectedTileset } = rightSidebarPrimitives;
+  const { brushTileset } = useSelector(selectMapEditorPrimitives);
   const tilesetCanvases = useSelector(selectTilesetCanvases);
   const file = useSelector(selectMapFile);
   const [stageData, setStageData] = useState({ scale: 2, position: { x: 0, y: 0 } });
   const stageRef = useRef(null);
-  // const selectedTilesetCanvas = selectedTileset && tilesetCanvases[selectedTileset.file];
+  // const brushTilesetCanvas = brushTileset && tilesetCanvases[brushTileset.file];
   const [gridLines, setGridLines] = useState(null);
   const [mouseDown, setMouseDown] = useState(false);
   const [selectedTileRange, setSelectedTileRange] = useState(null);
   const dispatch = useDispatch();
-  const [selectedTilesetCanvas, setSelectedTilesetCanvas] = useState(null);
+  const [brushTilesetCanvas, setSelectedTilesetCanvas] = useState(null);
+  const firstGuids = useSelector(selectFirstGuids);
   const [tileIndices, setTileIndices] = useState(null);
 
   useEffect(() => {
-    setSelectedTilesetCanvas(selectedTileset && tilesetCanvases[selectedTileset.file]);
-  }, [selectedTileset, tilesetCanvases]);
+    setSelectedTilesetCanvas(brushTileset && tilesetCanvases[brushTileset.file]);
+  }, [brushTileset, tilesetCanvases]);
 
   useEffect(() => {
-    if (selectedTilesetCanvas) {
+    if (brushTilesetCanvas) {
       // build 2d array for tile indices from 0 to last tile
       const tileIndices = [];
       let index = 0;
-      for (let i = 0; i < selectedTilesetCanvas.height / file.tileDimension; i++) {
+      for (let i = 0; i < brushTilesetCanvas.height / file.tileDimension; i++) {
         const newRow = [];
-        for (let j = 0; j < selectedTilesetCanvas.width / file.tileDimension; j++) {
+        for (let j = 0; j < brushTilesetCanvas.width / file.tileDimension; j++) {
           newRow.push(index);
           index++;
         }
@@ -48,21 +47,21 @@ export function TileSelector () {
       }
       setTileIndices(tileIndices);
     }
-  }, [selectedTilesetCanvas]);
+  }, [brushTilesetCanvas]);
 
   useEffect(() => {
-    // console.log('selectedTileset', selectedTileset);
+    // console.log('brushTileset', brushTileset);
     // reset stage position and scale
     setStageData({ scale: 2, position: { x: 0, y: 0 } });
     setSelectedTileRange(null);
     setSelectedTilesHighlight(null);
     setSelectionDirection(null);
     setPreviousSelectionDirection(null);
-  }, [selectedTileset]);
+  }, [brushTileset]);
 
   function handleStageMouseWheel (e) {
     e.evt.preventDefault();
-    if (!selectedTilesetCanvas) return;
+    if (!brushTilesetCanvas) return;
     // if deltaY is abnormally large then ignore it
     if (Math.abs(e.evt.deltaY) > 1000) return;
 
@@ -113,16 +112,16 @@ export function TileSelector () {
   }
 
   useEffect(() => {
-    if (!file || !selectedTileset) {
+    if (!file || !brushTileset) {
       setGridLines(null);
       return;
     }
     const tileDimension = file.tileDimension;
     const stageScale = stageData.scale;
-    const tilesetCanvas = selectedTilesetCanvas;
+    const tilesetCanvas = brushTilesetCanvas;
     const tilesetCanvasWidth = tilesetCanvas.width;
     const tilesetCanvasHeight = tilesetCanvas.height;
-    const gridMinZoomScale = 2;
+    const gridMinZoomScale = 0.7;
 
     const newGridLines = [];
     const lineColor = '#efefef';
@@ -153,7 +152,7 @@ export function TileSelector () {
       );
     }
     setGridLines(newGridLines);
-  }, [selectedTilesetCanvas, stageData.scale]);
+  }, [brushTilesetCanvas, stageData.scale]);
 
   const [selectionDirection, setSelectionDirection] = useState(null);
   const [previousSelectionDirection, setPreviousSelectionDirection] = useState(null);
@@ -163,7 +162,7 @@ export function TileSelector () {
     // return index of tile that mouse is over, null if mouse is outside of tileset
     const tileDimension = file.tileDimension;
     const stageScale = stageData.scale;
-    const tilesetCanvas = selectedTilesetCanvas;
+    const tilesetCanvas = brushTilesetCanvas;
     const tilesetCanvasWidth = tilesetCanvas.width;
     const tilesetCanvasHeight = tilesetCanvas.height;
     const mousePosition = stageRef.current.getPointerPosition();
@@ -241,9 +240,10 @@ export function TileSelector () {
   // }, [selectionDirection]);
 
   function handleStageMouseDown () {
-    // console.log('stage mousedown', e);
+    console.log('stage mousedown');
 
     const tileInfo = getMouseTileCoords();
+    // console.log('tileInfo', tileInfo);
     if (!tileInfo) {
       setSelectedTileRange(null);
       setSelectionDirection(null);
@@ -257,29 +257,59 @@ export function TileSelector () {
 
     setMouseDown(true);
     setSelectedTileRange({ start: tileInfo, end: tileInfo });
+    console.log('selectedTileRange', selectedTileRange);
   }
 
   function handleStageMouseMove () {
+    // console.log('stage mousemove');
     if (!mouseDown) return;
-    // console.log('stage mousemove', e);
     const tileInfo = getMouseTileCoords();
     // if outside of tileset, return
     if (!tileInfo || !selectedTileRange || !selectedRect) return;
     setSelectedTileRange({ start: selectedTileRange.start, end: tileInfo });
+
+    setSelectedTilesHighlight(
+      <Rect
+        x={selectedRect.x}
+        y={selectedRect.y}
+        width={selectedRect.width}
+        height={selectedRect.height}
+        fill={'rgba(0, 0, 255, 0.4)'}
+      />,
+    );
   }
 
   function handleStageMouseUp () {
     // console.log('stage mouseup', e);
-    if (!mouseDown || !selectedRect) return;
-    const tileInfo = getMouseTileCoords();
-    // console.log('tileInfo', tileInfo);
-    if (!tileInfo || !selectedTileRange) return;
+    if (!mouseDown) {
+      setMouseDown(false);
+      setSelectedTileRange(null);
+      setSelectionDirection(null);
+      setPreviousSelectionDirection(null);
+      setSelectedTilesHighlight(null);
+      return;
+    }
+    let tileInfo = getMouseTileCoords();
+    console.log('tileInfo', tileInfo);
+    if (!selectedTileRange) {
+      setMouseDown(false);
+      setSelectedTileRange(null);
+      setSelectionDirection(null);
+      setPreviousSelectionDirection(null);
+      setSelectedTilesHighlight(null);
+      return;
+    }
+
+    if (!tileInfo) {
+      // set tile info to last tile in selectedTileRange
+      tileInfo = { ...selectedTileRange.end };
+    }
 
     let selectedRect2 = selectedRect;
 
     // if start equals end
     if (_.isEqual(selectedTileRange.start, selectedTileRange.end)) {
-      // console.log('start equals end');
+      console.log('start equals end');
       setSelectedTileRange({ start: selectedTileRange.start, end: tileInfo });
       // console.log('selectedTileRange', selectedTileRange);
       selectedRect2 = {
@@ -288,9 +318,26 @@ export function TileSelector () {
         width: file.tileDimension,
         height: file.tileDimension,
       };
+    } else if (!selectedRect) {
+      setMouseDown(false);
+      setSelectedTileRange(null);
+      setSelectionDirection(null);
+      setPreviousSelectionDirection(null);
+      setSelectedTilesHighlight(null);
+      return;
     }
 
     console.log('selectedRect2', selectedRect2);
+
+    setSelectedTilesHighlight(
+      <Rect
+        x={selectedRect2.x}
+        y={selectedRect2.y}
+        width={selectedRect2.width}
+        height={selectedRect2.height}
+        fill={'rgba(0, 0, 255, 0.4)'}
+      />,
+    );
 
     let startTileX = selectedTileRange.start.tileX;
     let startTileY = selectedTileRange.start.tileY;
@@ -307,16 +354,20 @@ export function TileSelector () {
       endTileY += Math.abs(selectedRect2.height / file.tileDimension);
     }
 
-    console.log('startTile', `${startTileY}, ${startTileX}`);
-    console.log('endTile', `${endTileY}, ${endTileX}`);
+    // console.log('startTile', `${startTileY}, ${startTileX}`);
+    // console.log('endTile', `${endTileY}, ${endTileX}`);
 
     const selectedTileIndices = [];
+    if (!tileIndices) return;
     for (let i = startTileY; i <= endTileY; i++) {
+      const newRow = [];
       for (let j = startTileX; j <= endTileX; j++) {
-        selectedTileIndices.push(tileIndices[i][j]);
+        newRow.push(tileIndices[i][j] + firstGuids[brushTileset.file]);
       }
+      selectedTileIndices.push(newRow);
     }
-    console.log('selectedTileIndices', selectedTileIndices);
+    // console.log('selectedTileIndices', selectedTileIndices);
+    dispatch(assignMapEditorPrimitives({ brushTileIndices: selectedTileIndices }));
 
     setMouseDown(false);
     setSelectedTileRange(null);
@@ -325,7 +376,7 @@ export function TileSelector () {
 
     // get part of tileset canvas that is selected
     // console.log('new selection', selectedRect2);
-    const ctx = selectedTilesetCanvas.getContext('2d');
+    const ctx = brushTilesetCanvas.getContext('2d');
     const selectedImage = ctx.getImageData(selectedRect2.x, selectedRect2.y, selectedRect2.width, selectedRect2.height);
     const newCanvas = document.createElement('canvas');
     newCanvas.width = Math.abs(selectedRect2.width);
@@ -340,8 +391,12 @@ export function TileSelector () {
 
   // function handleStageMouseLeave () {
   //   // console.log('stage mouseleave', e);
+  //   // handleStageMouseUp();
   //   setMouseDown(false);
   //   setSelectedTileRange(null);
+  //   setSelectionDirection(null);
+  //   setPreviousSelectionDirection(null);
+  //   setSelectedTilesHighlight(null);
   // }
 
   const [selectedTilesHighlight, setSelectedTilesHighlight] = useState(null);
@@ -367,7 +422,7 @@ export function TileSelector () {
           y={selectedRect.y}
           width={selectedRect.width}
           height={selectedRect.height}
-          fill="rgba(0, 0, 255, 0.2)"
+          fill={'rgba(0, 0, 255, 0.2)'}
         />,
       );
     }
@@ -384,20 +439,21 @@ export function TileSelector () {
       scale={{ x: stageData.scale, y: stageData.scale }}
       onWheel={handleStageMouseWheel}
       onMouseDown={handleStageMouseDown}
+      // onTap={handleStageMouseDown && handleStageMouseUp}
       onMouseMove={handleStageMouseMove}
       onMouseUp={handleStageMouseUp}
       style={{ cursor: 'crosshair' }}
       // onMouseLeave={handleStageMouseLeave}
     >
       <Layer imageSmoothingEnabled={false}>
-        {selectedTilesetCanvas && file && (
+        {brushTilesetCanvas && file && (
           <KonvaCheckerboardImage
-            width={selectedTilesetCanvas.width / file.tileDimension}
-            height={selectedTilesetCanvas.height / file.tileDimension}
+            width={brushTilesetCanvas.width / file.tileDimension}
+            height={brushTilesetCanvas.height / file.tileDimension}
             tileDimension={file.tileDimension}
           />
         )}
-        <Image image={selectedTileset && tilesetCanvases[selectedTileset.file]} />
+        <Image image={brushTileset && tilesetCanvases[brushTileset.file]} />
         {selectedTilesHighlight}
         {gridLines}
       </Layer>
