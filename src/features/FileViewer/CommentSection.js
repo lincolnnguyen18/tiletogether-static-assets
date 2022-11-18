@@ -6,6 +6,7 @@ import { useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { timeAgo } from '../../utils/timeUtils';
 import { ReplyComment } from './ReplyComment';
+import { selectUser } from '../User/userSlice';
 
 export function CommentInfo ({ c }) {
   return (
@@ -30,9 +31,15 @@ export function CommentInfo ({ c }) {
 export function CommentSection () {
   const likeButtonRef = useRef(null);
   const fileSlice = useSelector((state) => state.file);
+  const user = useSelector(selectUser);
 
   if (fileSlice.file && fileSlice.file.comments) {
     const comments = fileSlice.file.comments.filter(comment => !comment.parentId);
+    if (fileSlice.sortCommentsBy === 'likes') {
+      comments.sort((a, b) => b.likeCount - a.likeCount);
+    } else {
+      comments.sort((a, b) => b.createdAt - a.createdAt);
+    }
     const replies = fileSlice.file.comments.filter(comment => comment.parentId);
 
     return fileSlice.file && (
@@ -44,7 +51,7 @@ export function CommentSection () {
               key={i}
             >
               <CommentInfo c={c}/>
-              <ReplyComment replies={replies}likeButtonRef={likeButtonRef} commentId={c._id}/>
+              <ReplyComment replies={replies}likeButtonRef={likeButtonRef} commentId={c._id} initialLikeCount={c.likeCount} initialLiked={user && c.likes.some(l => l.username === user.username) }/>
             </FlexColumn>,
           )}
         </FlexColumn>
