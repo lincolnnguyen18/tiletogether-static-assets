@@ -9,6 +9,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { asyncLikeFile, setFileLike } from '../File/fileSlice';
 import { selectUser } from '../User/userSlice';
+import { openAuthModal } from '../Dashboard/Modals/AuthModal';
 
 const verticalSectionStyle = css`
   color: white;
@@ -39,12 +40,16 @@ export function FileInfo () {
   const likes = file.likeCount;
 
   function handleLikeSubmit () {
-    likeFile({
-      dispatch,
-      id,
-      liked,
-      username: user.username,
-    });
+    if (user) {
+      likeFile({
+        dispatch,
+        id,
+        liked,
+        username: user.username,
+      });
+    } else {
+      openAuthModal(dispatch, 'login');
+    }
   }
 
   function handleEdit () {

@@ -4,14 +4,17 @@ import { FlexRow } from '../../components/layout/FlexRow';
 import { FlexColumn } from '../../components/layout/FlexColumn';
 import { useRef, useState } from 'react';
 import { Button, IconButtonStyle, whiteButtonStyle, blackButtonStyle } from '../../components/inputs/Button';
+import { selectUser } from '../User/userSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import { asyncPostComment } from '../File/fileSlice';
+import { openAuthModal } from '../Dashboard/Modals/AuthModal';
 
 export function AddComment ({ parentId, setReplying }) {
   const dispatch = useDispatch();
   const userButtonRef = useRef(null);
   const fileSlice = useSelector((state) => state.file);
   const comments = fileSlice.file.comments;
+  const user = useSelector(selectUser);
   const fileId = fileSlice.file.id || fileSlice.file._id;
   const [comment, setComment] = useState('');
 
@@ -34,8 +37,12 @@ export function AddComment ({ parentId, setReplying }) {
   `;
 
   const handleCommentSubmit = async () => {
-    dispatch(asyncPostComment({ content: comment, fileId, parentId }));
-    setComment('');
+    if (user) {
+      dispatch(asyncPostComment({ content: comment, fileId, parentId }));
+      setComment('');
+    } else {
+      openAuthModal(dispatch, 'login');
+    }
   };
 
   return (

@@ -7,6 +7,7 @@ import { useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { likeFile } from '../FileViewer/FileInfo';
 import { selectUser } from '../User/userSlice';
+import { openAuthModal } from '../Dashboard/Modals/AuthModal';
 
 const fileStyle = css`
   width: 100%;
@@ -116,12 +117,16 @@ export function File ({ imageUrl, title, subtext, liked, type, id, isLoading = f
   let file;
 
   const handleLikeSubmit = () => {
-    likeFile({
-      dispatch,
-      id,
-      liked,
-      username: user.username,
-    });
+    if (user) {
+      likeFile({
+        dispatch,
+        id,
+        liked,
+        username: user.username,
+      });
+    } else {
+      openAuthModal(dispatch, 'login');
+    }
   };
 
   if (!isLoading) {
