@@ -9,6 +9,7 @@ import { asyncGetUser, asyncPostUser, selectUserStatuses } from '../../User/user
 import { useLocation, useNavigate } from 'react-router-dom';
 import { modalBodyStyle } from '../../../components/Modal/Modal';
 import { asyncGetFiles } from '../../File/fileSlice';
+import { FlexColumn } from '../../../components/layout/FlexColumn';
 
 export function openAuthModal (dispatch, type) {
   dispatch(setModalReactElements({
@@ -149,16 +150,16 @@ export function AuthModalBody ({ type }) {
         </div>
         }
       {type === 'login' &&
-        <div>
+        <FlexColumn gap={4}>
           <div>
           <span css={linkButtonStyle} onClick={() => openAuthModal(dispatch, 'email')}>Forgot Password?</span>
           </div>
           <div>No account? <span css={linkButtonStyle} onClick={() => openAuthModal(dispatch, 'register')}>Create one</span>
           </div>
-        </div>
+        </FlexColumn>
       }
       {type === 'email' &&
-        <div>Remeber Your Password? <span css={linkButtonStyle} onClick={() => openAuthModal(dispatch, 'login')}>Login</span>
+        <div>Remember Your Password? <span css={linkButtonStyle} onClick={() => openAuthModal(dispatch, 'login')}>Login</span>
         </div>
         }
     </form>
