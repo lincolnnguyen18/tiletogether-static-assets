@@ -4,7 +4,7 @@ import { Icon } from '../../components/Icon';
 import { useDispatch, useSelector } from 'react-redux';
 import { FlexRow } from '../../components/layout/FlexRow';
 import { IconButton } from '../../components/inputs/IconButton';
-import { addNewMapLayer, assignFirstGuids, assignLayerTiles, assignTilesetCanvases, asyncPatchFile, deleteSelectedLayers, eraseTileInLayer, getCurrentGuids, selectFirstGuids, selectLayerTiles, selectMapEditorPrimitives, selectMapEditorStatuses, selectMapFile, selectTilesetCanvases, setBrushCanvas, setMapEditorPrimitives, updateLayerTiles } from './mapEditorSlice';
+import { addNewMapLayer, assignFirstGuids, assignLayerTiles, assignTilesetCanvases, asyncPatchFile, deleteSelectedLayers, eraseTileInLayer, getCurrentGuids, selectFirstGuids, selectLayerTiles, selectMapEditorPrimitives, selectMapEditorStatuses, selectMapFile, selectTilesetCanvases, setBrushCanvas, setMapEditorPrimitives } from './mapEditorSlice';
 import { MapLayer } from './MapLayer';
 import { openAddTilesetModal } from './AddTilesetModal';
 import { useEffect } from 'react';

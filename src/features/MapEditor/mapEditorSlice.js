@@ -435,7 +435,7 @@ const mapEditorSlice = createSlice({
     assignFirstGuids: (state, action) => {
       state.firstGuids = action.payload;
     },
-    downloadMapAsTmx: (state, action) => {
+    downloadMapAsTmx: () => {
       console.log('downloading map as tmx');
     },
   },
@@ -487,7 +487,7 @@ const mapEditorSlice = createSlice({
             // console.log('width', canvas.width);
             // console.log('height', canvas.height);
             const tileDimension = newFile.tileDimension;
-            const tileCount = newTilesetCanvases[tilesetFileId].width / tileDimension * newTilesetCanvases[tilesetFileId].height / tileDimension;
+            const tileCount = canvas.width / tileDimension * canvas.height / tileDimension;
             console.log('tileCount', tileCount);
 
             const newGuidPair = getFirstAndLastGuids(currentGuids, tileCount);

@@ -8,6 +8,7 @@ import { getActionName } from '../../utils/stringUtils';
 const initialState = {
   files: null,
   file: null,
+  sortCommentsBy: 'date',
   primitives: {
     limit: 10,
     page: 1,
@@ -76,10 +77,47 @@ export const asyncPostComment = createAsyncThunk(
   },
 );
 
+export const asyncLikeComment = createAsyncThunk(
+  'file/likeComment',
+  async ({ id, commentId, liked }) => {
+    return apiClient.post(`/files/${id}/${commentId}/like`, { liked });
+  },
+);
+
 const fileSlice = createSlice({
   name: 'file',
   initialState,
   reducers: {
+    sortComments: (state, action) => {
+      const { type } = action.payload;
+      state.sortCommentsBy = type;
+    },
+    setCommentLike: (state, action) => {
+      const { username, liked, fileId, commentId } = action.payload;
+      if (state.file && (state.file._id === fileId || state.file.id === fileId)) {
+        const commentIdx = state.file.comments.findIndex(c => c._id === commentId);
+        if (liked) {
+          state.file.comments[commentIdx].likes.push({ username, createdAt: Date.now() });
+          state.file.comments[commentIdx].likeCount += 1;
+        } else {
+          state.file.comments[commentIdx].likes = state.file.comments[commentIdx].likes.filter(l => l.username !== username);
+          state.file.comments[commentIdx].likeCount -= 1;
+        }
+      }
+      if (state.files) {
+        const fileIndex = state.files.findIndex(file => file._id === fileId);
+        if (fileIndex !== -1) {
+          const commentIdx = state.files[fileIndex].comments.findIndex(comment => comment._id === commentId);
+          if (liked) {
+            state.files[fileIndex].comments[commentIdx].likes.push({ username, createdAt: Date.now() });
+            state.files[fileIndex].comments[commentIdx].likeCount += 1;
+          } else {
+            state.files[fileIndex].comments[commentIdx].likes = state.files[fileIndex].comments[commentIdx].likes.filter(l => l.username !== username);
+            state.files[fileIndex].comments[commentIdx].likeCount -= 1;
+          }
+        }
+      }
+    },
     setFileLike: (state, action) => {
       const { username, liked, fileId } = action.payload;
       if (state.file && (state.file._id === fileId || state.file.id === fileId)) {
@@ -160,7 +198,7 @@ const fileSlice = createSlice({
   },
 });
 
-export const { setFileLike, clearFileErrors, clearFileStatus } = fileSlice.actions;
+export const { setFileLike, clearFileErrors, clearFileStatus, sortComments, setCommentLike } = fileSlice.actions;
 
 export const selectFileStatuses = state => state.file.statuses;
 export const selectFileErrors = state => state.file.errors;
