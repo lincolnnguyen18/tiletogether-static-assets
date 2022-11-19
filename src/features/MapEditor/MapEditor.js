@@ -8,6 +8,7 @@ import { FilenameIndicator } from '../Editor/FilenameIndicator';
 import { NotFound } from '../Editor/NotFound';
 import { RightSidebar } from './RightSidebar';
 import { asyncDeleteFile, asyncGetFileToEdit, asyncPatchFile, clearMapEditorErrors, clearMapEditorStatus, selectMapEditorErrors, selectMapEditorPrimitives, selectMapEditorStatuses, selectMapFile, setMapEditorPrimitives } from './mapEditorSlice';
+import { MapCanvas } from './MapCanvas';
 
 const mapEditorStyle = css`
 `;
@@ -52,6 +53,7 @@ export function MapEditor () {
         />
         <FilenameIndicator file={file} />
         <RightSidebar />
+        <MapCanvas />
       </div>
     );
   } else {

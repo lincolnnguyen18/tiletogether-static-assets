@@ -2,7 +2,7 @@
 import { css, jsx } from '@emotion/react';
 import { useDispatch, useSelector } from 'react-redux';
 import _ from 'lodash';
-import { selectMapEditorPrimitives, updateLayer } from './mapEditorSlice';
+import { moveSelectedLayers, selectMapEditorPrimitives, setMapEditorPrimitives, updateAllLayers, updateAllLayersBetween, updateLayer, updateLayerAndItsChildren } from './mapEditorSlice';
 
 const layerStyle = css`
   user-select: none;
@@ -13,7 +13,7 @@ const layerStyle = css`
 export function MapLayer ({ layer, parentSelected, level }) {
   const dispatch = useDispatch();
   const primitives = useSelector(selectMapEditorPrimitives);
-  const dragging = primitives.dragging;
+  const { dragging, lastSelectedLayer, dragStart } = primitives;
 
   let { name, selected, expanded, type } = layer;
 
@@ -88,12 +88,56 @@ export function MapLayer ({ layer, parentSelected, level }) {
     }
   `;
 
+  // useEffect(() => {
+  //   console.log('new lastSelectedLayer!', lastSelectedLayer);
+  // }, [lastSelectedLayer]);
+
+  function handleDragStart (e, layer) {
+    if (layer.isRootLayer) return;
+    // if (lastSelectedLayer && layer._id === lastSelectedLayer._id) return;
+
+    if ((!e.shiftKey && !e.ctrlKey && !e.metaKey) && (!layer.selected || parentSelected)) {
+      dispatch(setMapEditorPrimitives({ activeTool: 'select' }));
+      dispatch(updateAllLayers({ selected: false }));
+      dispatch(setMapEditorPrimitives({ lastSelectedLayer: null }));
+    }
+    if (!e.shiftKey) {
+      const newLayer = _.cloneDeep(layer);
+      newLayer.selected = true;
+      dispatch(updateLayerAndItsChildren({ newLayer, newAttributes: { selected: true } }));
+      dispatch(setMapEditorPrimitives({ lastSelectedLayer: layer }));
+    } else if (e.shiftKey && layer._id !== lastSelectedLayer._id) {
+      // if select multiple layers then switch to select tool to prevent drawing on multiple layers at once (which isn't possible for now)
+      dispatch(setMapEditorPrimitives({ activeTool: 'select' }));
+      const startLayer = lastSelectedLayer;
+      const endLayer = layer;
+      const newAttributes = { selected: true };
+      dispatch(updateAllLayersBetween({ startLayer, endLayer, newAttributes }));
+      dispatch(setMapEditorPrimitives({ lastSelectedLayer: layer }));
+    }
+    const dragStart = { x: e.clientX, y: e.clientY };
+    dispatch(setMapEditorPrimitives({ dragStart, dragging: true }));
+  }
+
+  function handleDragEnd (e, layer) {
+    if (dragging && !layer.selected && !parentSelected) {
+      const delta = { x: e.clientX - dragStart.x, y: e.clientY - dragStart.y };
+      if (delta.x !== 0 || delta.y !== 0) {
+        dispatch(moveSelectedLayers({ moveToLayer: layer }));
+      }
+    }
+    dispatch(setMapEditorPrimitives({ dragging: false }));
+    // console.log('new lastSelectedLayer', layer);
+  }
+
   return layer && (
     <div css={layerStyle}>
       {!layer.isRootLayer && (
         <div
           css={layerNameStyle}
           draggable={false}
+          onMouseDown={e => handleDragStart(e, layer)}
+          onMouseUp={e => handleDragEnd(e, layer)}
           id={`explorer-${layer._id}`}
         >
           <Arrow />

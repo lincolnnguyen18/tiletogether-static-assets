@@ -21,9 +21,9 @@ const layerStyle = css`
 
 export function TilesetLayer ({ layer, parentSelected, level }) {
   const dispatch = useDispatch();
-  const filePrimitives = useSelector(selectTilesetEditorPrimitives);
-  const dragging = filePrimitives.dragging;
-  const dragStart = filePrimitives.dragStart;
+  const primitives = useSelector(selectTilesetEditorPrimitives);
+  const dragging = primitives.dragging;
+  const dragStart = primitives.dragStart;
   const lastSelectedLayer = useSelector(selectLastSelectedLayer);
 
   let { name, selected, expanded } = layer;
@@ -37,7 +37,7 @@ export function TilesetLayer ({ layer, parentSelected, level }) {
 
   function handleDragStart (e, layer) {
     if (layer.isRootLayer) return;
-    if (lastSelectedLayer && layer._id === lastSelectedLayer._id) return;
+    // if (lastSelectedLayer && layer._id === lastSelectedLayer._id) return;
 
     if ((!e.shiftKey && !e.ctrlKey && !e.metaKey) && (!layer.selected || parentSelected)) {
       dispatch(setTilesetEditorPrimitives({ activeTool: 'select' }));
@@ -48,17 +48,18 @@ export function TilesetLayer ({ layer, parentSelected, level }) {
       const newLayer = _.cloneDeep(layer);
       newLayer.selected = true;
       dispatch(updateLayerAndItsChildren({ newLayer, newAttributes: { selected: true } }));
-    }
-    if (e.shiftKey && layer._id !== lastSelectedLayer._id) {
+      dispatch(setTilesetEditorPrimitives({ lastSelectedLayer: layer }));
+    } else if (e.shiftKey && layer._id !== lastSelectedLayer._id) {
       // if select multiple layers then switch to select tool to prevent drawing on multiple layers at once (which isn't possible for now)
       dispatch(setTilesetEditorPrimitives({ activeTool: 'select' }));
       const startLayer = lastSelectedLayer;
       const endLayer = layer;
       const newAttributes = { selected: true };
       dispatch(updateAllLayersBetween({ startLayer, endLayer, newAttributes }));
+      dispatch(setTilesetEditorPrimitives({ lastSelectedLayer: layer }));
     }
     const dragStart = { x: e.clientX, y: e.clientY };
-    dispatch(setTilesetEditorPrimitives({ dragStart, lastSelectedLayer: null, dragging: true }));
+    dispatch(setTilesetEditorPrimitives({ dragStart, dragging: true }));
   }
 
   function handleDragEnd (e, layer) {
@@ -68,7 +69,7 @@ export function TilesetLayer ({ layer, parentSelected, level }) {
         dispatch(moveSelectedLayers({ moveToLayer: layer }));
       }
     }
-    dispatch(setTilesetEditorPrimitives({ dragging: false, lastSelectedLayer: layer }));
+    dispatch(setTilesetEditorPrimitives({ dragging: false }));
   }
 
   if (parentSelected) selected = true;

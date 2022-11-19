@@ -167,3 +167,5 @@ export function getRgbaStrOpacity (rgbaStr) {
 export function removeRgbaOpacity (rgbaStr) {
   return rgbaStr.replace(/,\s*[\d.]+\)/, ')');
 }
+
+// export function getFirstGuids (oldGuids, newGuids, newCan)

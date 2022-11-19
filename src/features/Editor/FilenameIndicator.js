@@ -31,7 +31,7 @@ export function FilenameIndicator ({ file }) {
   const savedIconStyle = css`
     font-size: 28px;
     padding-right: 4px;
-    color: ${hasChanges ? '#a6a6a6' : '#20dc20'};
+    color: ${hasChanges ? '#a6a6a6' : '#2dc25d'};
   `;
 
   return (
