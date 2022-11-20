@@ -106,17 +106,17 @@ export function RightSidebar () {
     const confirm = window.confirm('Are you sure you want to remove this tileset from the map?');
     if (!confirm) return;
 
-    console.log('fileId', fileId);
+    // console.log('fileId', fileId);
     const currentGuids = getCurrentGuids({ firstGuids, file, tilesetCanvases });
-    console.log('currentGuids', currentGuids);
+    // console.log('currentGuids', currentGuids);
     // console.log('firstGuids', firstGuids);
-    console.log('layerTiles', layerTiles);
+    // console.log('layerTiles', layerTiles);
     const tilesetIndex = file.tilesets.findIndex(tileset => tileset.file === fileId);
-    console.log('tilesetIndex', tilesetIndex);
+    // console.log('tilesetIndex', tilesetIndex);
     const firstGuid = currentGuids[tilesetIndex][0];
     const lastGuid = currentGuids[tilesetIndex][1];
-    console.log('firstGuid', firstGuid);
-    console.log('lastGuid', lastGuid);
+    // console.log('firstGuid', firstGuid);
+    // console.log('lastGuid', lastGuid);
 
     // remove all tiles with guid between firstGuid and lastGuid from all layers
     // remove from both layerTiles and tilesetCanvases
@@ -126,15 +126,15 @@ export function RightSidebar () {
       const newLayer = _.cloneDeep(layerTiles[layerId]);
       const height = newLayer.length;
       const width = newLayer[0].length;
-      console.log('width', width);
-      console.log('height', height);
-      console.log(`removing tiles with guid from ${firstGuid} to ${lastGuid}`);
+      // console.log('width', width);
+      // console.log('height', height);
+      // console.log(`removing tiles with guid from ${firstGuid} to ${lastGuid}`);
       for (let i = 0; i < height; i++) {
         for (let j = 0; j < width; j++) {
           const tile = layerTiles[layerId][i][j];
           if (tile >= firstGuid && tile <= lastGuid) {
             newLayer[i][j] = null;
-            console.log(`setting tile at ${i}, ${j} to null`);
+            // console.log(`setting tile at ${i}, ${j} to null`);
             dispatch(eraseTileInLayer({ layerId, y: i, x: j }));
           }
         }
@@ -143,7 +143,7 @@ export function RightSidebar () {
       newLayerTiles[layerId] = newLayer;
     });
     dispatch(assignLayerTiles(newLayerTiles));
-    console.log('newLayerTiles', newLayerTiles);
+    // console.log('newLayerTiles', newLayerTiles);
 
     const newTilesets = file.tilesets.filter(t => t.file !== fileId);
     if (newTilesets.length === file.tilesets.length) return;
@@ -222,7 +222,7 @@ export function RightSidebar () {
           </IconButton>
         </FlexRow>
       </FlexRow>
-      <div css={css`height: 300px; overflow-y: scroll; padding: 4px 8px; user-select: none;`}>
+      <div css={css`height: 300px; overflow-y: auto; padding: 4px 8px; user-select: none;`}>
         <FlexRow style={tilesetsStyle} align={'flex-start'}>
           {file.tilesets.map((tileset, index) => (
             <div

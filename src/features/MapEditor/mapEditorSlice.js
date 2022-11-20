@@ -421,7 +421,7 @@ const mapEditorSlice = createSlice({
       const tileDimension = state.file.tileDimension;
       y *= tileDimension;
       x *= tileDimension;
-      console.log(`erasing tile at ${x}, ${y} with tileDimension ${tileDimension}`);
+      // console.log(`erasing tile at ${x}, ${y} with tileDimension ${tileDimension}`);
       ctx.clearRect(x, y, tileDimension, tileDimension);
       const newLayerData = { ...state.layerData };
       newLayerData[layerId].canvas = canvas;
@@ -434,19 +434,31 @@ const mapEditorSlice = createSlice({
       state.firstGuids = action.payload;
     },
     downloadMapAsTmx: (state) => {
-      console.log('downloading map as tmx');
-      jszip.file('Hello.txt', 'Hello World\n');
+      const file = state.file;
+      const tileDimension = file.tileDimension;
+      // console.log('downloading map as tmx');
+
+      let mapXml = create({ version: '1.0', encoding: 'UTF-8' })
+        .ele('map', {
+          version: '1.9',
+          tiledversion: '1.9.1',
+          orientation: 'orthogonal',
+          renderorder: 'right-down',
+          width: file.width,
+          height: file.height,
+          tilewidth: tileDimension,
+          tileheight: tileDimension,
+          infinite: 0,
+        });
 
       const tilesetCanvasesFolder = jszip.folder('tilesets');
       const metadataFolder = jszip.folder('metadata');
       state.file.tilesets.forEach(tileset => {
         const tilesetCanvas = state.tilesetCanvases[tileset.file];
         tilesetCanvasesFolder.file(`${tileset.name}.png`, tilesetCanvas.toDataURL().split(',')[1], { base64: true });
-        const file = state.file;
-        const tileDimension = file.tileDimension;
         const tileCount = tilesetCanvas.width / tileDimension * tilesetCanvas.height / tileDimension;
 
-        const xml = create({ version: '1.0', encoding: 'UTF-8' })
+        const tilesetXml = create({ version: '1.0', encoding: 'UTF-8' })
           .ele('tileset', {
             version: '1.9',
             tiledversion: '1.9.1',
@@ -462,8 +474,76 @@ const mapEditorSlice = createSlice({
             height: tilesetCanvas.height,
           })
           .end({ prettyPrint: true });
-        metadataFolder.file(`${tileset.name}.tsx`, xml);
+        metadataFolder.file(`${tileset.name}.tsx`, tilesetXml);
+
+        mapXml = mapXml.ele('tileset', {
+          firstgid: state.firstGuids[tileset.file],
+          source: `./metadata/${tileset.name}.tsx`,
+        }).up();
       });
+
+      let layerId = 1;
+      function layerToXml (layer, parentXml) {
+        // console.log(layer);
+        if (layer == null) return null;
+        if (layer.type === 'group') {
+          let groupXml = parentXml.ele('group', {
+            id: layerId,
+            name: layer.name,
+            width: file.width,
+            height: file.height,
+          });
+          // add layers in layer.layers to groupXml in reverse order
+          layer.layers.slice().reverse().forEach(childLayer => {
+            // console.log('adding child layer to group');
+            groupXml.ele(layerToXml(childLayer, groupXml));
+          });
+          groupXml = groupXml.up;
+          layerId++;
+        } else if (layer.type === 'layer' && state.layerData[layer._id]) {
+          const tiles = _.cloneDeep(state.layerTiles[layer._id]);
+
+          // create a new 2d array of tiles that is the same size as the map
+          const newTiles = Array(file.width).fill().map(() => Array(file.height).fill(0));
+          // console.log('newTiles', newTiles);
+
+          // fill in the new array with the tiles from the layer at layer's position
+          const position = _.cloneDeep(state.layerData[layer._id].position);
+          position.x /= tileDimension;
+          position.y /= tileDimension;
+          // console.log('position', position);
+          for (let i = 0; i < tiles.length; i++) {
+            for (let j = 0; j < tiles[i].length; j++) {
+              newTiles[i + position.y][j + position.x] = tiles[i][j] ?? 0;
+            }
+          }
+          // console.log('newTiles', newTiles);
+
+          // flatten into 1d array and convert to csv
+          const csv = newTiles.flat().join(',');
+
+          parentXml.ele('layer', {
+            id: layerId,
+            opacity: layer.opacity === 1 ? null : layer.opacity,
+            name: layer.name,
+            width: file.width,
+            height: file.height,
+          }).ele('data', { encoding: 'csv' })
+            .txt(csv)
+            .up().up();
+          layerId++;
+        }
+      }
+
+      // use slice, reverse, and forEach to iterate in reverse order
+      file.rootLayer.layers.slice().reverse().forEach(layer => {
+        layerToXml(layer, mapXml);
+      });
+
+      mapXml = mapXml.end({ prettyPrint: true });
+      // console.log('mapXml', mapXml);
+
+      jszip.file('map.tmx', mapXml);
 
       async function download (name) {
         const content = await jszip.generateAsync({ type: 'blob' });
@@ -493,7 +573,7 @@ const mapEditorSlice = createSlice({
         for (const tileset of file.tilesets) {
           nameToGid[tileset.name] = newFirstGids[tileset.file];
         }
-        console.log('nameToGid', nameToGid);
+        // console.log('nameToGid', nameToGid);
         state.firstGuids = newFirstGids;
 
         state.file = file;
@@ -510,7 +590,7 @@ const mapEditorSlice = createSlice({
           // do this by finding first Gid with enough space for new tileset
           for (const tilesetFileId of Object.keys(newTilesetCanvases)) {
             const currentGuids = getCurrentGuids({ firstGuids: state.firstGuids, file: state.file, tilesetCanvases: state.tilesetCanvases });
-            console.log('currentGuids', currentGuids);
+            // console.log('currentGuids', currentGuids);
 
             // find first Gid with enough space for new tileset
             // console.log('tileset', tilesetFileId);
@@ -521,15 +601,15 @@ const mapEditorSlice = createSlice({
             // console.log('height', canvas.height);
             const tileDimension = newFile.tileDimension;
             const tileCount = canvas.width / tileDimension * canvas.height / tileDimension;
-            console.log('tileCount', tileCount);
+            // console.log('tileCount', tileCount);
 
             const newGuidPair = getFirstAndLastGuids(currentGuids, tileCount);
-            console.log('newFirstGuid', newGuidPair);
+            // console.log('newFirstGuid', newGuidPair);
 
             // currentGuids: [[1, 15], [16, 99], [100, 179]]
 
             state.firstGuids[tilesetFileId] = newGuidPair[0];
-            console.log('state.firstGuids', _.cloneDeep(state.firstGuids));
+            // console.log('state.firstGuids', _.cloneDeep(state.firstGuids));
           }
           // let firstGid = 1;
           // for (const tileset of newFile.tilesets) {

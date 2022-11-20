@@ -92,7 +92,7 @@ export function AddComment ({ parentId, setReplying }) {
   };
 
   const handleSortComments = async (type) => {
-    console.log(type);
+    // console.log(type);
     dispatch(sortComments({ type }));
   };
 

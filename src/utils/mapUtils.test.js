@@ -27,7 +27,6 @@
 // Return [11, 20]
 
 import { getFirstAndLastGuids } from './mapUtils';
-import _ from 'lodash';
 
 describe('getFirstAndLastGuids', () => {
   it('test 1', () => {
@@ -72,21 +71,22 @@ describe('getFirstAndLastGuids', () => {
     expect(result).toEqual([11, 20]);
   });
 
-  it('test 7', () => {
-    // generate an even number of random numbers then pair them and test the function
-    const numPairs = 30;
-    const randomNumbers = Array.from({ length: numPairs * 2 }, () => Math.floor(Math.random() * 1000));
-    // sort the random numbers
-    randomNumbers.sort((a, b) => a - b);
-    // pair the random numbers using lodash chunk
-    const guidsArray = _.chunk(randomNumbers, 2);
-    console.log('guidsArray', guidsArray);
-    // generate random tile range
-    const randomStartIndex = Math.floor(Math.random() * 1000);
-    const randomEndIndex = randomStartIndex + Math.floor(Math.random() * 100);
-    const numTiles = randomEndIndex - randomStartIndex;
-    console.log('fitting in numTiles', numTiles);
-    const result = getFirstAndLastGuids(guidsArray, numTiles);
-    console.log('fits at range', result[0], result[1]);
-  });
+  // this test is run manually and output is checked manually
+  // it('test 7', () => {
+  //   // generate an even number of random numbers then pair them and test the function
+  //   const numPairs = 30;
+  //   const randomNumbers = Array.from({ length: numPairs * 2 }, () => Math.floor(Math.random() * 1000));
+  //   // sort the random numbers
+  //   randomNumbers.sort((a, b) => a - b);
+  //   // pair the random numbers using lodash chunk
+  //   const guidsArray = _.chunk(randomNumbers, 2);
+  //   console.log('guidsArray', guidsArray);
+  //   // generate random tile range
+  //   const randomStartIndex = Math.floor(Math.random() * 1000);
+  //   const randomEndIndex = randomStartIndex + Math.floor(Math.random() * 100);
+  //   const numTiles = randomEndIndex - randomStartIndex;
+  //   console.log('fitting in numTiles', numTiles);
+  //   const result = getFirstAndLastGuids(guidsArray, numTiles);
+  //   console.log('fits at range', result[0], result[1]);
+  // });
 });

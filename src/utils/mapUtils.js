@@ -27,7 +27,7 @@ export function getFirstAndLastGuids (guidsArray, numTiles) {
         return firstGuid - lastGuids[index - 1] - 1;
       }
     });
-    console.log('spaces', spaces);
+    // console.log('spaces', spaces);
 
     // find the first index where the space is >= than numTiles
     const firstAvailableIndex = spaces.findIndex((space) => space >= numTiles);

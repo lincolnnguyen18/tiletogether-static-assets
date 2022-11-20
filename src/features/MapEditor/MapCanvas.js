@@ -34,7 +34,7 @@ export function MapCanvas () {
 
   useEffect(() => {
     if (!brushCanvas) {
-      console.log('no brush canvas');
+      // console.log('no brush canvas');
       setBrushOutline(null);
     }
   }, [brushCanvas]);
@@ -323,7 +323,7 @@ export function MapCanvas () {
 
       // update layerTiles[layerId]
       dispatch(updateLayerTiles({ layerId, tiles: newLayerTiles2d }));
-      console.log('extending layerTiles', newLayerTiles2d);
+      // console.log('extending layerTiles', newLayerTiles2d);
     // if starting new layer
     } else if ((!layer || layer.canvas == null) && activeTool === 'draw') {
       setDragging(true);
@@ -359,7 +359,7 @@ export function MapCanvas () {
       // update layerTiles
       newLayerTiles = brushTileIndices;
       dispatch(updateLayerTiles({ layerId, tiles: newLayerTiles }));
-      console.log('starting layerTiles', newLayerTiles);
+      // console.log('starting layerTiles', newLayerTiles);
     // if drawing inside existing layer
     } else if (['draw', 'erase'].includes(activeTool)) {
       setDragging(true);
@@ -417,7 +417,7 @@ export function MapCanvas () {
 
       // update layerTiles
       dispatch(updateLayerTiles({ layerId, tiles: newLayerTiles }));
-      console.log('drawing on old layerTiles', newLayerTiles);
+      // console.log('drawing on old layerTiles', newLayerTiles);
     }
   }
 
@@ -425,19 +425,23 @@ export function MapCanvas () {
     const newSelectedRects = [];
     function traverse (layer) {
       if (layer.type === 'layer' && layer.selected && layerData[layer._id]) {
-        newSelectedRects.push(
-          <Rect
-            x={layerData[layer._id].position.x}
-            y={layerData[layer._id].position.y}
-            width={layerData[layer._id].canvas.width}
-            height={layerData[layer._id].canvas.height}
-            stroke='red'
-            strokeWidth={2 / stageData.scale}
-            dash={[10 / stageData.scale, 10 / stageData.scale]}
-            listening={false}
-            key={layer._id}
-          />,
-        );
+        try {
+          newSelectedRects.push(
+            <Rect
+              x={layerData[layer._id].position.x}
+              y={layerData[layer._id].position.y}
+              width={layerData[layer._id].canvas.width}
+              height={layerData[layer._id].canvas.height}
+              stroke='red'
+              strokeWidth={2 / stageData.scale}
+              dash={[10 / stageData.scale, 10 / stageData.scale]}
+              listening={false}
+              key={layer._id}
+            />,
+          );
+        } catch (e) {
+          console.error('WEIRD ERROR', e);
+        }
       }
       layer.layers.forEach(traverse);
     }

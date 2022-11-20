@@ -240,7 +240,7 @@ export function TileSelector () {
   // }, [selectionDirection]);
 
   function handleStageMouseDown () {
-    console.log('stage mousedown');
+    // console.log('stage mousedown');
 
     const tileInfo = getMouseTileCoords();
     // console.log('tileInfo', tileInfo);
@@ -257,7 +257,7 @@ export function TileSelector () {
 
     setMouseDown(true);
     setSelectedTileRange({ start: tileInfo, end: tileInfo });
-    console.log('selectedTileRange', selectedTileRange);
+    // console.log('selectedTileRange', selectedTileRange);
   }
 
   function handleStageMouseMove () {
@@ -290,7 +290,7 @@ export function TileSelector () {
       return;
     }
     let tileInfo = getMouseTileCoords();
-    console.log('tileInfo', tileInfo);
+    // console.log('tileInfo', tileInfo);
     if (!selectedTileRange) {
       setMouseDown(false);
       setSelectedTileRange(null);
@@ -309,7 +309,7 @@ export function TileSelector () {
 
     // if start equals end
     if (_.isEqual(selectedTileRange.start, selectedTileRange.end)) {
-      console.log('start equals end');
+      // console.log('start equals end');
       setSelectedTileRange({ start: selectedTileRange.start, end: tileInfo });
       // console.log('selectedTileRange', selectedTileRange);
       selectedRect2 = {
@@ -327,7 +327,7 @@ export function TileSelector () {
       return;
     }
 
-    console.log('selectedRect2', selectedRect2);
+    // console.log('selectedRect2', selectedRect2);
 
     setSelectedTilesHighlight(
       <Rect
