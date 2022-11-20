@@ -4,14 +4,12 @@ import { apiClient } from '../../app/apiClient';
 import { getActionName } from '../../utils/stringUtils';
 import ObjectID from 'bson-objectid';
 import { getFirstAndLastGuids } from '../../utils/mapUtils';
+import { jszip } from '../../utils/fileUtils';
+import { saveAs } from 'file-saver';
+import { create } from 'xmlbuilder2';
 
 export function getCurrentGuids ({ firstGuids, file, tilesetCanvases }) {
   return file.tilesets.map(tileset => [firstGuids[tileset.file], firstGuids[tileset.file] + tilesetCanvases[tileset.file].width / file.tileDimension * tilesetCanvases[tileset.file].height / file.tileDimension - 1]);
-  // const currentGuids = {};
-  // file.tilesets.forEach(tileset => {
-  //   currentGuids[tileset.file] = [firstGuids[tileset.file], firstGuids[tileset.file] + tilesetCanvases[tileset.file].width / file.tileDimension * tilesetCanvases[tileset.file].height / file.tileDimension - 1];
-  // });
-  // return currentGuids;
 }
 
 const initialState = {
@@ -435,8 +433,43 @@ const mapEditorSlice = createSlice({
     assignFirstGuids: (state, action) => {
       state.firstGuids = action.payload;
     },
-    downloadMapAsTmx: () => {
+    downloadMapAsTmx: (state) => {
       console.log('downloading map as tmx');
+      jszip.file('Hello.txt', 'Hello World\n');
+
+      const tilesetCanvasesFolder = jszip.folder('tilesets');
+      const metadataFolder = jszip.folder('metadata');
+      state.file.tilesets.forEach(tileset => {
+        const tilesetCanvas = state.tilesetCanvases[tileset.file];
+        tilesetCanvasesFolder.file(`${tileset.name}.png`, tilesetCanvas.toDataURL().split(',')[1], { base64: true });
+        const file = state.file;
+        const tileDimension = file.tileDimension;
+        const tileCount = tilesetCanvas.width / tileDimension * tilesetCanvas.height / tileDimension;
+
+        const xml = create({ version: '1.0', encoding: 'UTF-8' })
+          .ele('tileset', {
+            version: '1.9',
+            tiledversion: '1.9.1',
+            name: tileset.name,
+            tilewidth: tileDimension,
+            tileheight: tileDimension,
+            tilecount: tileCount,
+            columns: tilesetCanvas.width / tileDimension,
+          })
+          .ele('image', {
+            source: `../tilesets/${tileset.name}.png`,
+            width: tilesetCanvas.width,
+            height: tilesetCanvas.height,
+          })
+          .end({ prettyPrint: true });
+        metadataFolder.file(`${tileset.name}.tsx`, xml);
+      });
+
+      async function download (name) {
+        const content = await jszip.generateAsync({ type: 'blob' });
+        saveAs(content, `${name}.zip`);
+      }
+      download(state.file.name);
     },
   },
   extraReducers (builder) {

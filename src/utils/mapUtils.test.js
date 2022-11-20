@@ -1,39 +1,30 @@
-// // Given an array of firstGuid, lastGuid pairs and the number of tiles a new tileset will have, return the firstGuid of the new tileset and the lastGuid of the new tileset
-// // Fit the new tileset in the first available index
-//
-// // Examples
-// // Given guidsArray [[1, 15], [16, 99], [100, 179]]
-// // Given numTiles 100
-// // Return [180, 279]
-//
-// // Given guidsArray [[1, 15], [80, 99], [100, 179]]
-// // Given numTiles 30
-// // Return [16, 45]
-//
-// // Given guidsArray [[18, 45], [46, 99], [100, 179]]
-// // Given numTiles 10
-// // Return [1, 10]]
-//
-// // Given guidsArray [[4, 10]]
-// // Given numTiles 10
-// // Return [11, 20]
-//
-// // Given guidsArray []
-// // Given numTiles 10
-// // Return [1, 10]
-//
-// // Given guidsArray [[1, 10], [30, 40]]
-// // Given numTiles 10
-// // Return [11, 20]
-//
-// export function getFirstAndLastGuids (guidsArray, numTiles) {
-//   const firstGuids = guidsArray.map((pair) => pair[0]);
-//   const lastGuids = guidsArray.map((pair) => pair[1]);
-//   const firstAvailableIndex = firstGuids.findIndex((firstGuid, index) => firstGuid > lastGuids[index - 1] + 1 || index === 0);
-//   const firstGuid = firstAvailableIndex === 0 ? 1 : lastGuids[firstAvailableIndex - 1] + 1;
-//   const lastGuid = firstGuid + numTiles - 1;
-//   return [firstGuid, lastGuid];
-// }
+// Given an array of firstGuid, lastGuid pairs and the number of tiles a new tileset will have, return the firstGuid of the new tileset and the lastGuid of the new tileset
+// Fit the new tileset in the first available index
+
+// Examples
+// Given guidsArray [[1, 15], [16, 99], [100, 179]]
+// Given numTiles 100
+// Return [180, 279]
+
+// Given guidsArray [[1, 15], [80, 99], [100, 179]]
+// Given numTiles 30
+// Return [16, 45]
+
+// Given guidsArray [[18, 45], [46, 99], [100, 179]]
+// Given numTiles 10
+// Return [1, 10]]
+
+// Given guidsArray [[4, 10]]
+// Given numTiles 10
+// Return [11, 20]
+
+// Given guidsArray []
+// Given numTiles 10
+// Return [1, 10]
+
+// Given guidsArray [[1, 10], [30, 40]]
+// Given numTiles 10
+// Return [11, 20]
 
 import { getFirstAndLastGuids } from './mapUtils';
 import _ from 'lodash';
