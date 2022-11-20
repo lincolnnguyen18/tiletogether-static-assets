@@ -7,7 +7,9 @@
     "@reduxjs/toolkit": "^1.8.5",
     "axios": "^1.1.2",
     "bson-objectid": "^2.0.3",
+    "file-saver": "^2.0.5",
     "js-cookie": "^3.0.1",
+    "jszip": "^3.10.1",
     "konva": "^8.3.13",
     "lodash": "^4.17.21",
     "react": "^18.2.0",
@@ -17,7 +19,8 @@
     "react-redux": "^8.0.4",
     "react-router-dom": "^6.4.2",
     "react-scripts": "5.0.1",
-    "socket.io-client": "^4.5.3"
+    "socket.io-client": "^4.5.3",
+    "xmlbuilder2": "^3.0.2"
   },
   "scripts": {
     "start": "react-scripts start",

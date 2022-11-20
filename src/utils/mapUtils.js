@@ -1,31 +1,3 @@
-// Given an array of firstGuid, lastGuid pairs and the number of tiles a new tileset will have, return the firstGuid of the new tileset and the lastGuid of the new tileset
-// Fit the new tileset in the first available index
-
-// Examples
-// Given guidsArray [[1, 15], [16, 99], [100, 179]]
-// Given numTiles 100
-// Return [180, 279]
-
-// Given guidsArray [[1, 15], [80, 99], [100, 179]]
-// Given numTiles 30
-// Return [16, 45]
-
-// Given guidsArray [[18, 45], [46, 99], [100, 179]]
-// Given numTiles 10
-// Return [1, 10]]
-
-// Given guidsArray [[4, 10]]
-// Given numTiles 10
-// Return [11, 20]
-
-// Given guidsArray []
-// Given numTiles 10
-// Return [1, 10]
-
-// Given guidsArray [[1, 10], [30, 40]]
-// Given numTiles 10
-// Return [11, 20]
-
 export function getFirstAndLastGuids (guidsArray, numTiles) {
   const firstGuids = guidsArray.map((pair) => pair[0]);
   const lastGuids = guidsArray.map((pair) => pair[1]);
@@ -55,7 +27,7 @@ export function getFirstAndLastGuids (guidsArray, numTiles) {
         return firstGuid - lastGuids[index - 1] - 1;
       }
     });
-    console.log('spaces', spaces);
+    // console.log('spaces', spaces);
 
     // find the first index where the space is >= than numTiles
     const firstAvailableIndex = spaces.findIndex((space) => space >= numTiles);

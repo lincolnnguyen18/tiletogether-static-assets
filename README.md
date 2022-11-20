@@ -9,6 +9,6 @@
 6. Run `npm run test` to run tests
 
 ## Other notes
-* The TileTogether Static Assets (React app) are deployed at http://dfq7qlbehwesj.cloudfront.net
+* The TileTogether Static Assets (React app) are deployed at https://www.tiletogether.com
 * Icon CSS View: https://codepen.io/lincolnnguyen18/pen/rNKVaOz
 * Login For Test: Username - test@email.com      Password - password123

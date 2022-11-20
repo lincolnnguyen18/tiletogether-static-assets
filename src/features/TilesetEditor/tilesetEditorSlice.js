@@ -18,7 +18,7 @@ const initialState = {
     dragging: false,
     lastSelectedLayer: null,
     savingChanges: false,
-    // downloadFormat is null or 'png'/'tmj' to indicate which format is being downloaded
+    // downloadFormat is null or 'png'/'tmx' to indicate which format is being downloaded
     downloadFormat: null,
     fileImageChanged: false,
     reuploadingFileImage: false,

@@ -559,7 +559,7 @@ export function TilesetCanvas () {
         console.log('no changes to save');
         return;
       }
-      console.log(newChanges);
+      // console.log(newChanges);
       await dispatch(asyncSaveChanges({ layerData, newChanges, file }));
       dispatch(setTilesetEditorPrimitives({ savingChanges: true }));
     // listen for shift + t; 'T', to trim selected layer

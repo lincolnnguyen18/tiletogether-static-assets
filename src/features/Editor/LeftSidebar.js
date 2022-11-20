@@ -66,7 +66,7 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
 
   const downloadItems = { PNG: 'png' };
   if (type === 'map') {
-    downloadItems['Tiled JSON (.tmj)'] = 'tmj';
+    downloadItems['Tiled XML (.tmx)'] = 'tmx';
   }
 
   const downloadPage = (
@@ -78,7 +78,7 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
           if (type === 'tileset') {
             dispatch(setTilesetEditorPrimitives({ downloadFormat: formData.type }));
           } else if (type === 'map') {
-            if (formData.type === 'tmj') {
+            if (formData.type === 'tmx') {
               dispatch(downloadMapAsTmx());
             } else if (formData.type === 'png') {
               console.log('download png');
@@ -91,7 +91,7 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
           label='Download file as'
           items={downloadItems}
           name='type'
-          defaultValue='tmj'
+          defaultValue='tmx'
         />
         <Button
           style={grayButtonStyle}
