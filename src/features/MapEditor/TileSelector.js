@@ -119,6 +119,7 @@ export function TileSelector () {
     const tileDimension = file.tileDimension;
     const stageScale = stageData.scale;
     const tilesetCanvas = brushTilesetCanvas;
+    if (!tilesetCanvas) return;
     const tilesetCanvasWidth = tilesetCanvas.width;
     const tilesetCanvasHeight = tilesetCanvas.height;
     const gridMinZoomScale = 0.7;
@@ -163,6 +164,7 @@ export function TileSelector () {
     const tileDimension = file.tileDimension;
     const stageScale = stageData.scale;
     const tilesetCanvas = brushTilesetCanvas;
+    if (!tilesetCanvas) return null;
     const tilesetCanvasWidth = tilesetCanvas.width;
     const tilesetCanvasHeight = tilesetCanvas.height;
     const mousePosition = stageRef.current.getPointerPosition();
@@ -328,6 +330,7 @@ export function TileSelector () {
     }
 
     // console.log('selectedRect2', selectedRect2);
+    if (!selectedRect2) return;
 
     setSelectedTilesHighlight(
       <Rect

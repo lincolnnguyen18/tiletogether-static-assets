@@ -37,11 +37,11 @@ export function TilesetEditor () {
     };
   }, []);
 
-  useEffect(() => {
-    if (file) {
-      console.log(file);
-    }
-  }, [file]);
+  // useEffect(() => {
+  //   if (file) {
+  //     console.log(file);
+  //   }
+  // }, [file]);
 
   let content;
 
