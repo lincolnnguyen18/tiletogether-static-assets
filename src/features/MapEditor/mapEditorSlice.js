@@ -504,7 +504,7 @@ const mapEditorSlice = createSlice({
           const tiles = _.cloneDeep(state.layerTiles[layer._id]);
 
           // create a new 2d array of tiles that is the same size as the map
-          const newTiles = Array(file.width).fill().map(() => Array(file.height).fill(0));
+          const newTiles = Array(file.height).fill().map(() => Array(file.width).fill(0));
           // console.log('newTiles', newTiles);
 
           // fill in the new array with the tiles from the layer at layer's position
@@ -521,6 +521,10 @@ const mapEditorSlice = createSlice({
 
           // flatten into 1d array and convert to csv
           const csv = newTiles.flat().join(',');
+          // make sure to insert '\n' every width number of elements
+          // const csv = newTiles.map(row => row.join(',')).join('\n');
+          // doesn't work, something related to line breaks is breaking tiled so not using newlines to separate rows
+          // console.log('csv', csv);
 
           parentXml.ele('layer', {
             id: layerId,
