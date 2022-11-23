@@ -17,6 +17,7 @@ import { FlexRow } from '../../components/layout/FlexRow';
 import { wait } from '../../utils/timeUtils';
 import { selectTilesetEditorPrimitives, setTilesetEditorPrimitives } from '../TilesetEditor/tilesetEditorSlice';
 import { downloadMapAsTmx } from '../MapEditor/mapEditorSlice';
+import { openPublishModal } from '../../features/Dashboard/Modals/PublishModal';
 
 const leftSidebarStyle = css`
   background: #3F3F3F;
@@ -241,7 +242,8 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
       />
       <h4>{publishText}</h4>
       <FlexRow gap={24}>
-        <Button
+        {file.publishedAt
+          ? <Button
           style={grayButtonStyle}
           onClick={() => {
             const newPublishedAt = file.publishedAt ? null : true;
@@ -249,10 +251,21 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
           }}
           disabled={patchingPending}
         >
+         Unpublish
+        </Button>
+          : <Button
+          style={grayButtonStyle}
+          onClick={() => {
+            closeDrawer();
+            openPublishModal(dispatch, file.type, file);
+          }}
+          disabled={patchingPending}
+        >
           {file.publishedAt
             ? 'Unpublish'
             : 'Publish'}
-        </Button>
+        </Button>}
+
         <Button
           style={redButtonStyle}
           disabled={patchingPending}
@@ -317,7 +330,7 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
         style={whiteInputStyle}
         name='name'
         defaultValue={file.name}
-        error={errors.name}
+        error={errors && errors.name}
       />
       {file && file.type === 'tileset'
         ? (
@@ -327,7 +340,7 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
           defaultValue={file.tileDimension}
           style={whiteInputStyle}
           name='tileDimension'
-          error={errors.tileDimension}
+          error={errors && errors.tileDimension}
         />)
         : (
         <FlexColumn gap={4}>
@@ -341,7 +354,7 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
         defaultValue={file.width}
         style={whiteInputStyle}
         name='width'
-        error={errors.width}
+        error={errors && errors.width}
       />
       <Textfield
         label={`Height (height of ${file.type} in tiles)`}
@@ -349,7 +362,7 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
         defaultValue={file.height}
         style={whiteInputStyle}
         name='height'
-        error={errors.height}
+        error={errors && errors.height}
       />
       <Button
         style={[grayButtonStyle, { width: '100%' }]}
@@ -387,7 +400,7 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
         style={whiteInputStyle}
         name='username'
         defaultValue=''
-        error={errors.sharedWith}
+        error={errors && errors.sharedWith}
         autoFocus
       />
       <Button
