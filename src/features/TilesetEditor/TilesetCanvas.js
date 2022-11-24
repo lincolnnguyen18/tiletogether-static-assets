@@ -600,11 +600,12 @@ export function TilesetCanvas () {
   }
 
   useEffect(() => {
+    if (drawerOpen) return;
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [brushSize, brushSizeKeyWasDown, activeTool, layerData, file, newChanges, primitives.savingChanges, lastSelectedLayer]);
+  }, [brushSize, brushSizeKeyWasDown, activeTool, layerData, file, newChanges, primitives.savingChanges, lastSelectedLayer, drawerOpen]);
 
   useEffect(() => {
     window.addEventListener('keyup', handleKeyUp);
