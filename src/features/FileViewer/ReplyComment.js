@@ -28,27 +28,27 @@ export function ReplyComment ({
   }
   return (
     <FlexColumn>
-        <FlexRow>
-            <button
-                css={[IconButtonStyle, likeButtonStyle, { marginLeft: '0px' }]}
-                ref={likeButtonRef}
-                onClick={handleLikeComment}
-            >
-                <span>{likes}</span>
-                  {liked
-                    ? <span className='icon-like-filled' css={{ fontSize: '42px' }}/>
-                    : <span className='icon-like-unfilled' css={{ fontSize: '42px' }}/>
-            }
-            </button>
-            <button css={[IconButtonStyle, { marginLeft: '3px' }]} onClick={() => setReplying(!replying)}>Reply</button>
-        </FlexRow>
-    <FlexColumn>
-    {replying && <AddComment parentId={commentId} setReplying={setReplying}/>}
-    </FlexColumn>
-       <div onClick={() => { setShowReplies(!showReplies); }}css={{ color: '#4894f9' }}>{'View ' + replies.filter(reply => reply.parentId === commentId).length + ' replies'}</div>
-        {showReplies && replies.filter(reply => reply.parentId === commentId).map((r, i) =>
+      <FlexRow>
+        <button
+          css={[IconButtonStyle, likeButtonStyle, { marginLeft: '0px' }]}
+          ref={likeButtonRef}
+          onClick={handleLikeComment}
+        >
+          <span>{likes}</span>
+          {liked
+            ? <span className='icon-like-filled' css={{ fontSize: '42px' }}/>
+            : <span className='icon-like-unfilled' css={{ fontSize: '42px' }}/>
+          }
+        </button>
+        <button css={[IconButtonStyle, { marginLeft: '3px' }]} onClick={() => setReplying(!replying)}>Reply</button>
+      </FlexRow>
+      <FlexColumn>
+        {replying && <AddComment parentId={commentId} setReplying={setReplying}/>}
+      </FlexColumn>
+      <div onClick={() => { setShowReplies(!showReplies); }}css={{ color: '#4894f9' }}>{'View ' + replies.filter(reply => reply.parentId === commentId).length + ' replies'}</div>
+      {showReplies && replies.filter(reply => reply.parentId === commentId).map((r, i) =>
         <div css={{ marginLeft: '24px' }}key={i}>
-            <CommentInfo c={r}/>
+          <CommentInfo c={r}/>
         </div>)}
     </FlexColumn>
 

@@ -23,14 +23,14 @@ export function openNewFileModal (dispatch, type) {
 export function NewFileModalHeader ({ type }) {
   let title;
   switch (type) {
-    case 'tileset':
-      title = 'Create a new tileset';
-      break;
-    case 'map':
-      title = 'Create a new map';
-      break;
-    default:
-      throw new Error('Invalid new file modal type', type);
+  case 'tileset':
+    title = 'Create a new tileset';
+    break;
+  case 'map':
+    title = 'Create a new map';
+    break;
+  default:
+    throw new Error('Invalid new file modal type', type);
   }
   return (
     <div css={modalheaderStyle}>

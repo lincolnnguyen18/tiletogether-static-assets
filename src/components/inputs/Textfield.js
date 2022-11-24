@@ -13,6 +13,11 @@ const errorTextfieldInputStyle = css`
   }
 `;
 
+const textareaInputStyle = css`
+  resize: none;
+  height: 100px;
+`;
+
 export const inputStyle = css`
   transition: background 0.3s ease;
   outline: none;
@@ -50,6 +55,26 @@ export function Textfield ({ placeholder = 'Enter a value', style, label, error,
       <input
         css={[inputStyle, textfieldInputStyle, style, error && errorTextfieldInputStyle]}
         type='text'
+        id={id}
+        {...props}
+        placeholder={placeholder}
+      />
+      {error && (
+        <span css={css`color: var(--error-color);`}>
+          {error}
+        </span>
+      )}
+    </div>
+  );
+}
+
+export function Textarea ({ placeholder = 'Enter a value', style, label, error, ...props }) {
+  const id = _.uniqueId('textarea-');
+  return (
+    <div>
+      <label htmlFor={id}>{label}</label>
+      <textarea
+        css={[inputStyle, textfieldInputStyle, textareaInputStyle, style, error && errorTextfieldInputStyle]}
         id={id}
         {...props}
         placeholder={placeholder}

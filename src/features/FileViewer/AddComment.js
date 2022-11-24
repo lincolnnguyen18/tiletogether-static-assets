@@ -100,14 +100,14 @@ export function AddComment ({ parentId, setReplying }) {
     <FlexColumn>
       { !parentId &&
         <FlexRow> <div css={[verticalSectionStyle, { marginRight: '10px' }]}>
-            {comments.length} Comments
-          </div>
-          <Button refProp={sortButtonRef}
+          {comments.length} Comments
+        </div>
+        <Button refProp={sortButtonRef}
           style={transparentButtonStyle} css={sortByStyle} onClick={openSortModal}>
             Sort By
-          </Button>
-          </FlexRow>
-        }
+        </Button>
+        </FlexRow>
+      }
       <FlexRow style={{ width: '100%' }}>
         <div
           css={[IconButtonStyle, verticalSectionStyle, { marginLeft: '0px', width: '100%' }]}
@@ -132,7 +132,7 @@ export function AddComment ({ parentId, setReplying }) {
           </FlexRow>
         </div>
       </FlexRow>
-    {!parentId && <hr color='gray'/>}
+      {!parentId && <hr color='gray'/>}
     </FlexColumn>
   );
 }

@@ -12,10 +12,10 @@ export function CommentInfo ({ c }) {
   return (
     <FlexColumn>
       <FlexRow>
-      <span
-        className='icon-avatar'
-        css={{ fontSize: '42px' }}
-      />
+        <span
+          className='icon-avatar'
+          css={{ fontSize: '42px' }}
+        />
         <div>
           <span css={{ marginRight: '10px' }}>{c.username}</span>
           <span>{timeAgo(new Date(c.createdAt)) + ' ago'}</span>
