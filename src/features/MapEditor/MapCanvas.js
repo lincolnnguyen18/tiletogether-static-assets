@@ -645,7 +645,7 @@ export function MapCanvas () {
       const inputCanvas = layerData[lastSelectedLayer._id].canvas;
       if (!inputCanvas) return;
       // console.log('trimming', inputCanvas.width, inputCanvas.height);
-      const { trimmedImageData, overflows } = trimPng(inputCanvas);
+      const { trimmedImageData, overflows } = trimPng(inputCanvas, file.tileDimension);
       // console.log('trimmed', trimmedImageData.width, trimmedImageData.height);
       // console.log('overflows', overflows);
       const canvas = document.createElement('canvas');

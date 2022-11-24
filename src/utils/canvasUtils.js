@@ -52,7 +52,7 @@ export function initializeAElement () {
   }
 }
 
-export function trimPng (image) {
+export function trimPng (image, nearestPixel = 0) {
   initializeFreqReadCanvas();
   const ctx = window.freqReadCtx;
   const canvas = window.freqReadCanvas;
@@ -102,8 +102,24 @@ export function trimPng (image) {
     }
   }
 
-  const trimHeight = overflows.bottom - overflows.top + 1;
-  const trimWidth = overflows.right - overflows.left + 1;
+  // adjust overflows to nearest pixel (if 16px then 0, 16, 32, 48, etc)
+  // console.log(overflows);
+  if (nearestPixel > 0) {
+    overflows.top = Math.floor(overflows.top / nearestPixel) * nearestPixel;
+    overflows.left = Math.floor(overflows.left / nearestPixel) * nearestPixel;
+    overflows.right = Math.ceil(overflows.right / nearestPixel) * nearestPixel;
+    overflows.bottom = Math.ceil(overflows.bottom / nearestPixel) * nearestPixel;
+  }
+  // console.log(overflows);
+
+  let trimHeight, trimWidth;
+  if (nearestPixel > 0) {
+    trimHeight = overflows.bottom - overflows.top;
+    trimWidth = overflows.right - overflows.left;
+  } else {
+    trimHeight = overflows.bottom - overflows.top + 1;
+    trimWidth = overflows.right - overflows.left + 1;
+  }
   return {
     trimmedImageData: ctx.getImageData(overflows.left, overflows.top, trimWidth, trimHeight),
     overflows,

@@ -512,9 +512,12 @@ const mapEditorSlice = createSlice({
           position.x /= tileDimension;
           position.y /= tileDimension;
           // console.log('position', position);
+          // skip tiles outside of the map
           for (let i = 0; i < tiles.length; i++) {
             for (let j = 0; j < tiles[i].length; j++) {
-              newTiles[i + position.y][j + position.x] = tiles[i][j] ?? 0;
+              if (position.x + j >= 0 && position.x + j < file.width && position.y + i >= 0 && position.y + i < file.height) {
+                newTiles[position.y + i][position.x + j] = tiles[i][j] ?? 0;
+              }
             }
           }
           // console.log('newTiles', newTiles);
