@@ -1,11 +1,8 @@
 /** @jsx jsx */
-// import { useState } from 'react';
 import { css, jsx } from '@emotion/react';
 import { Textfield, whiteInputStyle } from '../../../components/inputs/Textfield';
 import { setModalPrimitives, setModalReactElements } from '../../../components/Modal/modalSlice';
 import { modalBodyStyle, modalheaderStyle } from '../../../components/Modal/Modal';
-// import { Icon } from '../../../components/Icon';
-// import { Badge } from '../../../components/Badge';
 import { blackButtonStyle, Button } from '../../../components/inputs/Button';
 import { useSelector, useDispatch } from 'react-redux';
 import { selectMapEditorErrors, asyncPatchFile, selectMapEditorStatuses } from '../../MapEditor/mapEditorSlice';
@@ -91,58 +88,13 @@ export function PublishModalHeader ({ type }) {
     </div>
   );
 }
-// const TagsInput = props => {
-//   const [tags, setTags] = useState(props.tags);
-//   const removeTags = indexToRemove => {
-//     setTags([...tags.filter((_, index) => index !== indexToRemove)]);
-//   };
-//   const addTags = event => {
-//     if (event.target.value !== '') {
-//       setTags([...tags, event.target.value]);
-//       props.selectedTags([...tags, event.target.value]);
-//       event.target.value = '';
-//     }
-//   };
-//   return (
-//       <div css={tagsInputStyle}>
-//         <ul id="tags">
-//           {tags.map((tag, index) => (
-//             <li key={index} css={tagStyle}>
-//               <span className='tag-title'>{tag}</span>
-//               <span className='tag-close-icon'
-//                 onClick={() => removeTags(index)}
-//               >
-//                 x
-//               </span>
-//             </li>
-//           ))}
-//         </ul>
-//         <input
-//           type="text"
-//           onKeyUp={event => event.key === 'Enter' ? addTags(event) : null}
-//           placeholder="Press enter to add tags"
-//         />
-//       </div>
-//   );
-// };
 
 export function PublishModalBody ({ type, file }) {
-  console.log(file);
   const dispatch = useDispatch();
   const statuses = useSelector(selectMapEditorStatuses);
   const errors = useSelector(selectMapEditorErrors);
   const pending = statuses.createFile === 'pending';
-  // const [tags, setTags] = useState([]);
-  // const removeTags = indexToRemove => {
-  //   setTags([...tags.filter((_, index) => index !== indexToRemove)]);
-  // };
-  // const addTags = event => {
-  //   if (event.target.value !== '') {
-  //     setTags([...tags, event.target.value]);
-  //     // props.selectedTags([...tags, event.target.value]);
-  //     event.target.value = '';
-  //   }
-  // };
+
   async function onPublish (formData, file) {
     formData.type = type;
     const newPublishedAt = file.publishedAt ? null : true;
@@ -172,7 +124,7 @@ export function PublishModalBody ({ type, file }) {
         errors={errors && errors.description}
       />
      <Textfield
-        label={type === 'tileset' ? 'Tileset tags' : 'Map tags'}
+        label={type === 'tileset' ? 'Tileset tags (seperate tags with spaces)' : 'Map tags (seperate tags with spaces)'}
         type='text'
         autoFocus
         style={whiteInputStyle}
@@ -180,31 +132,6 @@ export function PublishModalBody ({ type, file }) {
         disabled={pending}
         errors={errors && errors.tags}
       />
-
-      {/* <TagsInput selectedTags={selectedTags} tags={['Nodejs', 'MongoDB']}/> */}
-{/*
-   { <div className="App">
-       <div css={tagsInputStyle}>
-        <ul id="tags">
-          {tags.map((tag, index) => (
-            <li key={index} css={tagStyle}>
-              <span className='tag-title'>{tag}</span>
-              <span className='tag-close-icon'
-                onClick={() => removeTags(index)}
-              >
-                x
-              </span>
-            </li>
-          ))}
-        </ul>
-        <input
-          type="text"
-          onKeyUp={event => event.key === 'Enter' ? addTags(event) : null}
-          onKeyPress={(e) => { e.target.keyCode === 13 && e.preventDefault(); }}
-          placeholder="Press enter to add tags"
-        />
-      </div>
-    </div> } */}
       <Button
         style={blackButtonStyle}
         disabled={pending}
