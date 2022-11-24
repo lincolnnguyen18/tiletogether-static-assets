@@ -228,11 +228,11 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
         <Fragment>
           <FlexColumn gap={4}>
             <span>Description</span>
-            <h4>{truncateString(file.description, 100)}</h4>
+            <h4>{file.description ? truncateString(file.description, 100) : 'No description'}</h4>
           </FlexColumn>
           <FlexColumn gap={4}>
             <span>Tags</span>
-            <h4>{file.tags}</h4>
+            <h4>{file.tags ?? 'No tags'}</h4>
           </FlexColumn>
         </Fragment>
       )}

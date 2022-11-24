@@ -10,7 +10,7 @@ import { trimPng } from '../../utils/canvasUtils';
 import _ from 'lodash';
 
 export function MapCanvas () {
-  const { showGrid } = useSelector(selectLeftSidebarPrimitives);
+  const { showGrid, drawerOpen } = useSelector(selectLeftSidebarPrimitives);
   const { activeTool, brushTileIndices } = useSelector(selectMapEditorPrimitives);
   const file = useSelector(selectMapFile);
   const [canvasSize, setCanvasSize] = useState({ width: window.innerWidth - 56 - 270, height: window.innerHeight });
@@ -673,13 +673,14 @@ export function MapCanvas () {
   }
 
   useEffect(() => {
+    if (drawerOpen) return;
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('resize', handleResize);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('resize', handleResize);
     };
-  }, [lastSelectedLayer, layerData]);
+  }, [lastSelectedLayer, layerData, drawerOpen]);
 
   function handleResize () {
     setCanvasSize({ width: window.innerWidth - 56 - 270, height: window.innerHeight });
