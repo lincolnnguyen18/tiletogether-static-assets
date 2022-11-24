@@ -23,16 +23,16 @@ export function openAuthModal (dispatch, type) {
 
 export function AuthModalHeader ({ type }) {
   switch (type) {
-    case 'login':
-      return <h1>Log in</h1>;
-    case 'register':
-      return <h1>Register an account</h1>;
-    case 'email':
-      return <h1>Enter email</h1>;
-    case 'password':
-      return <h1>Change Password</h1>;
-    default:
-      throw new Error('Invalid auth modal type', type);
+  case 'login':
+    return <h1>Log in</h1>;
+  case 'register':
+    return <h1>Register an account</h1>;
+  case 'email':
+    return <h1>Enter email</h1>;
+  case 'password':
+    return <h1>Change Password</h1>;
+  default:
+    throw new Error('Invalid auth modal type', type);
   }
 }
 
@@ -86,19 +86,19 @@ export function AuthModalBody ({ type }) {
       e.preventDefault();
       const formData = Object.fromEntries(new FormData(e.target));
       switch (type) {
-        case 'login':
-          return onLogin(formData);
-        case 'register':
-          return onRegister(formData);
-        case 'email':
-          return onEmail(formData);
-        case 'password':
-          return onChangePassword(formData);
-        default:
-          throw new Error('Invalid auth modal type', type);
+      case 'login':
+        return onLogin(formData);
+      case 'register':
+        return onRegister(formData);
+      case 'email':
+        return onEmail(formData);
+      case 'password':
+        return onChangePassword(formData);
+      default:
+        throw new Error('Invalid auth modal type', type);
       }
     }} noValidate>
- { type !== 'password' && <Textfield
+      { type !== 'password' && <Textfield
         label='Email'
         type='email'
         autoFocus
@@ -116,11 +116,11 @@ export function AuthModalBody ({ type }) {
         />
       )}
       { (type === 'login' || type === 'register' || type === 'password') && <Textfield
-            label='Password'
-            type='password'
-            style={whiteInputStyle}
-            name='password'
-            error={errors.password}
+        label='Password'
+        type='password'
+        style={whiteInputStyle}
+        name='password'
+        error={errors.password}
       /> }
       {(type === 'register' || type === 'password') && (
         <Textfield
@@ -148,11 +148,11 @@ export function AuthModalBody ({ type }) {
       {type === 'register' &&
         <div>Already have an account? <span css={linkButtonStyle } onClick={() => openAuthModal(dispatch, 'login')}>Login</span>
         </div>
-        }
+      }
       {type === 'login' &&
         <FlexColumn gap={4}>
           <div>
-          <span css={linkButtonStyle} onClick={() => openAuthModal(dispatch, 'email')}>Forgot Password?</span>
+            <span css={linkButtonStyle} onClick={() => openAuthModal(dispatch, 'email')}>Forgot Password?</span>
           </div>
           <div>No account? <span css={linkButtonStyle} onClick={() => openAuthModal(dispatch, 'register')}>Create one</span>
           </div>
@@ -161,7 +161,7 @@ export function AuthModalBody ({ type }) {
       {type === 'email' &&
         <div>Remember Your Password? <span css={linkButtonStyle} onClick={() => openAuthModal(dispatch, 'login')}>Login</span>
         </div>
-        }
+      }
     </form>
   );
 }

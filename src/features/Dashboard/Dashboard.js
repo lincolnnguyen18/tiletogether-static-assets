@@ -57,20 +57,20 @@ export function getQueryParams (location) {
   let mode, authorUsername;
   const path = location.pathname.split('/')[1];
   switch (path) {
-    case 'likes':
-      mode = 'likes';
-      break;
-    case 'your-files':
-      mode = 'your_files';
-      break;
-    case 'shared-files':
-      mode = 'shared';
-      break;
-    case 'users':
-      authorUsername = location.pathname.split('/')[2];
-      break;
-    default:
-      break;
+  case 'likes':
+    mode = 'likes';
+    break;
+  case 'your-files':
+    mode = 'your_files';
+    break;
+  case 'shared-files':
+    mode = 'shared';
+    break;
+  case 'users':
+    authorUsername = location.pathname.split('/')[2];
+    break;
+  default:
+    break;
   }
   if (mode) {
     params.mode = mode;
@@ -95,18 +95,18 @@ function getCurrentPage (location, dispatch = null) {
   }
 
   switch (path) {
-    case '/login':
-    case '/register':
-      openAuthModal(dispatch, path.slice(1));
-      break;
-    case '/':
-      return 'home';
-    case '/likes':
-    case '/your-files':
-    case '/shared-files':
-      return path.slice(1);
-    default:
-      throw new Error('Invalid dashboard path', path);
+  case '/login':
+  case '/register':
+    openAuthModal(dispatch, path.slice(1));
+    break;
+  case '/':
+    return 'home';
+  case '/likes':
+  case '/your-files':
+  case '/shared-files':
+    return path.slice(1);
+  default:
+    throw new Error('Invalid dashboard path', path);
   }
 }
 
@@ -244,7 +244,7 @@ export function Dashboard () {
       content = (
         <Grid itemWidth={400} gap={8} style={gridStyle}>
           {_.times(10, (i) => (
-           <File key={i} isLoading={true} />
+            <File key={i} isLoading={true} />
           ))}
         </Grid>
       );

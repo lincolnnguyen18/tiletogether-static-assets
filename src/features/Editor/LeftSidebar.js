@@ -9,7 +9,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { SelectMenu } from '../../components/inputs/SelectMenu';
 import { Button, grayButtonStyle, redButtonStyle } from '../../components/inputs/Button';
 import { Icon } from '../../components/Icon';
-import { Textfield, whiteInputStyle } from '../../components/inputs/Textfield';
+import { Textarea, Textfield, whiteInputStyle } from '../../components/inputs/Textfield';
 import { Checkbox } from '../../components/inputs/Checkbox';
 import _ from 'lodash';
 import { defaultFlexColumnStyle, FlexColumn } from '../../components/layout/FlexColumn';
@@ -17,7 +17,7 @@ import { FlexRow } from '../../components/layout/FlexRow';
 import { wait } from '../../utils/timeUtils';
 import { selectTilesetEditorPrimitives, setTilesetEditorPrimitives } from '../TilesetEditor/tilesetEditorSlice';
 import { downloadMapAsTmx } from '../MapEditor/mapEditorSlice';
-import { openPublishModal } from '../../features/Dashboard/Modals/PublishModal';
+import { truncateString } from '../../utils/stringUtils';
 
 const leftSidebarStyle = css`
   background: #3F3F3F;
@@ -150,9 +150,9 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
       <FlexColumn gap={4}>
         <span>Sharing URL</span>
         <div css={copyLinkStyle}>
-        <span className='link-container'>
+          <span className='link-container'>
           https://www.tiletogether.com/files/t4Kmfkh4QYEaB8iuXhTmFA/edit
-        </span>
+          </span>
           <Icon color='black'>
             <span className='icon-copy'></span>
           </Icon>
@@ -224,6 +224,18 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
         <span>Height</span>
         <h4>{file.height} tiles</h4>
       </FlexColumn>
+      {file.publishedAt && (
+        <Fragment>
+          <FlexColumn gap={4}>
+            <span>Description</span>
+            <h4>{truncateString(file.description, 100)}</h4>
+          </FlexColumn>
+          <FlexColumn gap={4}>
+            <span>Tags</span>
+            <h4>{file.tags}</h4>
+          </FlexColumn>
+        </Fragment>
+      )}
       <Button
         style={[grayButtonStyle, css`width: fit-content;`]}
         onClick={async () => {
@@ -242,8 +254,7 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
       />
       <h4>{publishText}</h4>
       <FlexRow gap={24}>
-        {file.publishedAt
-          ? <Button
+        <Button
           style={grayButtonStyle}
           onClick={() => {
             const newPublishedAt = file.publishedAt ? null : true;
@@ -251,21 +262,10 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
           }}
           disabled={patchingPending}
         >
-         Unpublish
-        </Button>
-          : <Button
-          style={grayButtonStyle}
-          onClick={() => {
-            closeDrawer();
-            openPublishModal(dispatch, file.type, file);
-          }}
-          disabled={patchingPending}
-        >
           {file.publishedAt
             ? 'Unpublish'
             : 'Publish'}
-        </Button>}
-
+        </Button>
         <Button
           style={redButtonStyle}
           disabled={patchingPending}
@@ -330,31 +330,31 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
         style={whiteInputStyle}
         name='name'
         defaultValue={file.name}
-        error={errors && errors.name}
+        error={errors.name}
       />
       {file && file.type === 'tileset'
         ? (
-        <Textfield
-          label='Tile dimension (width and height of a tile in pixels)'
-          type='number'
-          defaultValue={file.tileDimension}
-          style={whiteInputStyle}
-          name='tileDimension'
-          error={errors && errors.tileDimension}
-        />)
+          <Textfield
+            label='Tile dimension (width and height of a tile in pixels)'
+            type='number'
+            defaultValue={file.tileDimension}
+            style={whiteInputStyle}
+            name='tileDimension'
+            error={errors.tileDimension}
+          />)
         : (
-        <FlexColumn gap={4}>
-          <span>Tile dimension</span>
-          <h4>{file.tileDimension} px</h4>
-        </FlexColumn>
-          )}
+          <FlexColumn gap={4}>
+            <span>Tile dimension</span>
+            <h4>{file.tileDimension} px</h4>
+          </FlexColumn>
+        )}
       <Textfield
         label={`Width (width of ${file.type} in tiles)`}
         type='number'
         defaultValue={file.width}
         style={whiteInputStyle}
         name='width'
-        error={errors && errors.width}
+        error={errors.width}
       />
       <Textfield
         label={`Height (height of ${file.type} in tiles)`}
@@ -362,8 +362,28 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
         defaultValue={file.height}
         style={whiteInputStyle}
         name='height'
-        error={errors && errors.height}
+        error={errors.height}
       />
+      {file.publishedAt && (
+        <Fragment>
+          <Textarea
+            label={'Description'}
+            type='text'
+            defaultValue={file.description}
+            style={whiteInputStyle}
+            name='description'
+            error={errors.description}
+          />
+          <Textfield
+            label={'Tags (separate with commas)'}
+            type='text'
+            defaultValue={file.tags}
+            style={whiteInputStyle}
+            name='tags'
+            error={errors.tags}
+          />
+        </Fragment>
+      )}
       <Button
         style={[grayButtonStyle, { width: '100%' }]}
         type='submit'
@@ -400,7 +420,7 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
         style={whiteInputStyle}
         name='username'
         defaultValue=''
-        error={errors && errors.sharedWith}
+        error={errors.sharedWith}
         autoFocus
       />
       <Button

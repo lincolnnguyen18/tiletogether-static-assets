@@ -65,10 +65,10 @@ export function Searchbar ({ value, onChange, placeholder, onSubmit }) {
         onClick={() => searchInputRef.current.focus()}
         style={searchIconStyle}
       >
-          <span
-            className='icon-search'
-            css={css`color: var(--placeholder-color-2);`}
-          ></span>
+        <span
+          className='icon-search'
+          css={css`color: var(--placeholder-color-2);`}
+        ></span>
       </Icon>
       <form
         onSubmit={e => {

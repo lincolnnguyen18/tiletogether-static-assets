@@ -97,7 +97,7 @@ export function TilesetCanvas () {
   const primitives = useSelector(selectTilesetEditorPrimitives);
   const rightSidebarPrimitives = useSelector(selectTilesetRightSidebarPrimitives);
   const leftSidebarPrimitives = useSelector(selectLeftSidebarPrimitives);
-  const { showGrid } = leftSidebarPrimitives;
+  const { showGrid, drawerOpen } = leftSidebarPrimitives;
   const lastSelectedLayer = useSelector(selectLastSelectedLayer);
   const file = useSelector(selectTilesetFile);
   const { activeTool, downloadFormat, reuploadingFileImage } = primitives;
@@ -125,7 +125,7 @@ export function TilesetCanvas () {
 
   async function handlePaste (e) {
     e.preventDefault();
-    // console.log('paste');
+    console.log('paste');
     // check if it's a png
     if (e.clipboardData.items[0].type === 'image/png') {
       const mousePosition = stageRef.current.getPointerPosition();
@@ -196,6 +196,7 @@ export function TilesetCanvas () {
   }, [reuploadingFileImage]);
 
   useEffect(() => {
+    if (drawerOpen) return;
     onChangesSaved(() => {
       console.log('changes saved');
       dispatch(clearChanges());
@@ -206,7 +207,7 @@ export function TilesetCanvas () {
       document.removeEventListener('paste', handlePaste);
       dispatch(setTilesetEditorPrimitives({ savingChanges: false, reuploadingFileImage: false }));
     };
-  }, []);
+  }, [drawerOpen]);
 
   useEffect(() => {
     onLayerPosition((data) => {
