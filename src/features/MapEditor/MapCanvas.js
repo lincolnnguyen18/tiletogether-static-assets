@@ -5,14 +5,14 @@ import { useEffect, useRef, useState } from 'react';
 import { downloadFileAsCanvas, KonvaCheckerboardImage } from '../TilesetEditor/TilesetCanvas';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectLeftSidebarPrimitives, setLeftSidebarPrimitives } from '../Editor/leftSidebarSlice';
-import { addNewChanges, asyncSaveChanges, clearChanges, selectBrushCanvas, selectLastSelectedLayer, selectLayerData, selectLayerTiles, selectMapEditorPrimitives, selectMapFile, selectMapNewChanges, setLayerData, setMapEditorPrimitives, updateAllLayers, updateLayer, updateLayersUpToRoot, updateLayerTiles } from './mapEditorSlice';
+import { addNewChanges, asyncSaveChanges, clearChanges, selectBrushCanvas, selectLastSelectedLayer, selectLayerData, selectLayerTiles, selectMapEditorPrimitives, selectMapFile, selectMapNewChanges, setBrushCanvas, setLayerData, setMapEditorPrimitives, updateAllLayers, updateLayer, updateLayersUpToRoot, updateLayerTiles } from './mapEditorSlice';
 import { initializeAElement, trimPng } from '../../utils/canvasUtils';
 import _ from 'lodash';
 import { onChangesSaved } from '../TilesetEditor/tilesetEditorSocketApi';
 
 export function MapCanvas () {
   const { showGrid, drawerOpen } = useSelector(selectLeftSidebarPrimitives);
-  const { activeTool, brushTileIndices, savingChanges, downloadFormat } = useSelector(selectMapEditorPrimitives);
+  const { activeTool, brushTileIndices, savingChanges, downloadFormat, reuploadingFileImage } = useSelector(selectMapEditorPrimitives);
   const file = useSelector(selectMapFile);
   const [canvasSize, setCanvasSize] = useState({ width: window.innerWidth - 56 - 270, height: window.innerHeight });
   const [stageData, setStageData] = useState({ scale: 2, position: { x: 0, y: 0 } });
@@ -56,11 +56,25 @@ export function MapCanvas () {
   }, [downloadFormat, file]);
 
   useEffect(() => {
+    if (reuploadingFileImage) {
+      // console.log('reuploadingFileImage', reuploadingFileImage);
+      dispatch(addNewChanges({ layerId: 'all', newChanges: ['canvas'] }));
+      // console.log(file.width, file.height);
+      dispatch(asyncSaveChanges());
+      dispatch(setMapEditorPrimitives({ reuploadingFileImage: false }));
+    }
+  }, [reuploadingFileImage]);
+
+  useEffect(() => {
     if (!brushCanvas) {
       // console.log('no brush canvas');
       setBrushOutline(null);
     }
   }, [brushCanvas]);
+
+  useEffect(() => {
+    dispatch(setBrushCanvas(null));
+  }, []);
 
   function handleStageMouseWheel (e) {
     e.evt.preventDefault();
@@ -236,6 +250,8 @@ export function MapCanvas () {
       x: layerPosition.x / file.tileDimension,
       y: layerPosition.y / file.tileDimension,
     };
+
+    if (!relativeLayerPosition || !relativeTilePosition) return;
 
     const overflows = {
       left: Math.min(0, relativeTilePosition.x - relativeLayerPosition.x),
@@ -495,6 +511,7 @@ export function MapCanvas () {
       const mousePosition = stageRef.current.getPointerPosition();
       const stagePosition = stageRef.current.position();
       const stageScale = stageRef.current.scaleX();
+      if (!mousePosition || !stagePosition || !stageScale) return;
       const relativeMousePos = {
         x: Math.floor((mousePosition.x - stagePosition.x) / stageScale),
         y: Math.floor((mousePosition.y - stagePosition.y) / stageScale),

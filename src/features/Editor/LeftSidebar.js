@@ -318,7 +318,11 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
             // console.log('already reuploading file image');
             return;
           }
-          dispatch(setTilesetEditorPrimitives({ fileImageChanged: true }));
+          if (file.type === 'tileset') {
+            dispatch(setTilesetEditorPrimitives({ fileImageChanged: true }));
+          } else if (file.type === 'map') {
+            dispatch(setMapEditorPrimitives({ fileImageChanged: true }));
+          }
         }
       }}
       css={defaultFlexColumnStyle}

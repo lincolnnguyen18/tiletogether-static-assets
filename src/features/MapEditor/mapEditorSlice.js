@@ -738,17 +738,9 @@ const mapEditorSlice = createSlice({
             const newGuidPair = getFirstAndLastGuids(currentGuids, tileCount);
             // console.log('newFirstGuid', newGuidPair);
 
-            // currentGuids: [[1, 15], [16, 99], [100, 179]]
-
             state.firstGuids[tilesetFileId] = newGuidPair[0];
             // console.log('state.firstGuids', _.cloneDeep(state.firstGuids));
           }
-          // let firstGid = 1;
-          // for (const tileset of newFile.tilesets) {
-          //   newFirstGids[tileset.file] = firstGid;
-          //   const tileCount = newTilesetCanvases[tileset.file].width / newFile.tileDimension * newTilesetCanvases[tileset.file].height / newFile.tileDimension;
-          //   firstGid += tileCount;
-          // }
         }
 
         const fieldsToUpdate = Object.keys(action.meta.arg.updates);
@@ -761,6 +753,11 @@ const mapEditorSlice = createSlice({
         // replace the tilesets field
         state.file.tilesets = newFile.tilesets;
         state.tilesetCanvases = _.merge(state.tilesetCanvases, newTilesetCanvases);
+
+        if (state.primitives.fileImageChanged) {
+          state.primitives.fileImageChanged = false;
+          state.primitives.reuploadingFileImage = true;
+        }
       })
       .addMatcher(isPending, (state, action) => {
         state.errors = {};
