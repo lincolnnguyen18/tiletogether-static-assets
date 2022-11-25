@@ -33,7 +33,7 @@ export function FileInfo () {
   const navigate = useNavigate();
 
   const date = new Date(file.publishedAt);
-  const tags = file.tags ? file.tags.split(' ') : [];
+  const tags = file.tags ? file.tags.split(' ') : null;
   const isMap = file.type === 'map';
 
   const liked = user && file.likes.some(l => l.username === user.username);
@@ -88,18 +88,20 @@ export function FileInfo () {
         </FlexRow>
       </FlexRow>
       <hr color='gray'/>
-      <p css={verticalSectionStyle}>{file.description}</p>
+      <p css={verticalSectionStyle}>{file.description ?? 'No description provided'}</p>
       <FlexRow style={verticalSectionStyle} gap={10}>
-        {tags.map(t => (
-          <Link
-            key={_.uniqueId('filetag-')}
-            to={`/search?keywords=${t}`}
-            style={{ color: '#4894f9', textDecoration: 'none' }}
-          >#{t}</Link>
-        ))}
+        {tags
+          ? tags.map(t => (
+            <Link
+              key={_.uniqueId('filetag-')}
+              to={`/search?keywords=${t}`}
+              style={{ color: '#4894f9', textDecoration: 'none' }}
+            >#{t}</Link>
+          ))
+          : 'No tags provided'}
       </FlexRow>
       <label css={verticalSectionStyle}>
-        {`${file.type}`} <span>&#x2022;</span> {`${file.tileDimension} pixel tiles`} {isMap && <span>&#x2022;</span>} { isMap && `${file.width} x ${file.height} map`}
+        {`${_.startCase(file.type)}`} <span>&#x2022;</span> {`${file.tileDimension} px tiles`} {isMap && <span>&#x2022;</span>} { `${file.width * file.tileDimension} x ${file.height * file.tileDimension} px`}
       </label>
       <FlexRow>
         <button css={[IconButtonStyle, { marginLeft: '0px' }]}>
