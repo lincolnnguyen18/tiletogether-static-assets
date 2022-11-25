@@ -5,12 +5,8 @@ export function emitLayerPosition ({ layerId, position }) {
   socketClient.emit('layerPosition', { layerId, position });
 }
 
-export function emitLayerImage ({ layerId, color, brushSize, brushType, params }) {
-  socketClient.emit('layerImage', { layerId, color, brushSize, brushType, params });
-}
-
-export function emitLayerUpdates ({ newRootLayer, canvasUpdates, layerIds, newImage }) {
-  socketClient.emit('layerUpdates', { newRootLayer, canvasUpdates, layerIds, newImage });
+export function emitLayerUpdates ({ newRootLayer, canvasUpdates, layerIds, newImage, layerTileUpdates }) {
+  socketClient.emit('layerUpdates', { newRootLayer, canvasUpdates, layerIds, newImage, layerTileUpdates });
 }
 
 // Event listeners

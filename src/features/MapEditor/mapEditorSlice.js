@@ -7,6 +7,9 @@ import { getFirstAndLastGuids } from '../../utils/mapUtils';
 import { jszip } from '../../utils/fileUtils';
 import { saveAs } from 'file-saver';
 import { create } from 'xmlbuilder2';
+import { downloadFileAsCanvas } from '../TilesetEditor/TilesetCanvas';
+import { emitLayerUpdates } from '../TilesetEditor/tilesetEditorSocketApi';
+import axios from 'axios';
 
 export function getCurrentGuids ({ firstGuids, file, tilesetCanvases }) {
   return file.tilesets.map(tileset => [firstGuids[tileset.file], firstGuids[tileset.file] + tilesetCanvases[tileset.file].width / file.tileDimension * tilesetCanvases[tileset.file].height / file.tileDimension - 1]);
@@ -22,6 +25,11 @@ const initialState = {
     lastSelectedLayer: null,
     brushTileset: null,
     brushTileIndices: null,
+    savingChanges: false,
+    // downloadFormat is null or 'png'/'tmx' to indicate which format is being downloaded
+    downloadFormat: null,
+    fileImageChanged: false,
+    reuploadingFileImage: false,
   },
   layerData: {},
   tilesetCanvases: {},
@@ -38,6 +46,9 @@ export const asyncGetFileToEdit = createAsyncThunk(
   async ({ id }) => {
     const response = await apiClient.get(`/files/${id}/edit`);
     let { file, signedUrls } = response.data;
+    // console.log('file', file);
+    // console.log('signedUrls', signedUrls);
+    const layerData = {};
 
     file.rootLayer.isRootLayer = true;
     // use cloneDeepWith to set all layers selected and expanded to false
@@ -45,14 +56,18 @@ export const asyncGetFileToEdit = createAsyncThunk(
       if (_.get(layer, '_id')) {
         if (layer.isRootLayer) {
           _.assign(layer, { selected: false, expanded: true });
-        } else if (['layer', 'tileset'].includes(layer.type)) {
+        } else if (layer.type === 'layer') {
           _.assign(layer, { selected: false, expanded: false });
+          layerData[layer._id] = { position: layer.position };
         }
       }
     }
     file.rootLayer.isRootLayer = true;
     file = _.cloneDeepWith(file, customizer);
     const tilesetCanvases = {};
+    const layerTiles = {};
+    const newFirstGids = {};
+    let firstGid = 1;
 
     async function loadImages () {
       // console.log('signedUrls', signedUrls);
@@ -68,11 +83,70 @@ export const asyncGetFileToEdit = createAsyncThunk(
         const ctx = canvas.getContext('2d');
         ctx.drawImage(image, 0, 0);
         tilesetCanvases[tileset.file] = canvas;
+
+        newFirstGids[tileset.file] = firstGid;
+        const tileCount = tilesetCanvases[tileset.file].width / file.tileDimension * tilesetCanvases[tileset.file].height / file.tileDimension;
+        firstGid += tileCount;
+      }
+
+      for (const layerId of file.layerIds) {
+        // console.log('layerId', layerId);
+        const tilesJsonUrl = signedUrls[layerId];
+        // console.log('tilesJsonUrl', tilesJsonUrl);
+
+        const tilesJson = await axios.get(tilesJsonUrl);
+        // console.log('tilesJson', tilesJson.data);
+        layerTiles[layerId] = tilesJson.data;
+
+        const layerCanvas = document.createElement('canvas');
+        layerCanvas.width = layerTiles[layerId][0].length * file.tileDimension;
+        layerCanvas.height = layerTiles[layerId].length * file.tileDimension;
+        const layerCtx = layerCanvas.getContext('2d');
+
+        // const position = layerData[layerId].position;
+        // console.log('position', position);
+
+        // calculate tileset and tile indices for each tile based on the tile's gid
+        for (let y = 0; y < layerTiles[layerId].length; y++) {
+          for (let x = 0; x < layerTiles[layerId][y].length; x++) {
+            const tileGid = layerTiles[layerId][y][x];
+            // console.log('tileGid', tileGid);
+            if (!tileGid) continue;
+            let tileTileset;
+            file.tilesets.forEach(tileset => {
+              if (tileGid >= newFirstGids[tileset.file] && tileGid < newFirstGids[tileset.file] + tilesetCanvases[tileset.file].width / file.tileDimension * tilesetCanvases[tileset.file].height / file.tileDimension) {
+                tileTileset = tileset;
+              }
+            });
+            // console.log('tileTileset', tileTileset);
+
+            // calculate x, y position of tile in tileset
+            const tilesetX = (tileGid - newFirstGids[tileTileset.file]) % (tilesetCanvases[tileTileset.file].width / file.tileDimension) * file.tileDimension;
+            const tilesetY = Math.floor((tileGid - newFirstGids[tileTileset.file]) / (tilesetCanvases[tileTileset.file].width / file.tileDimension)) * file.tileDimension;
+            // console.log('tilesetX', tilesetX);
+            // console.log('tilesetY', tilesetY);
+
+            // calculate x, y position of tile in layer
+            const layerX = x * file.tileDimension;
+            const layerY = y * file.tileDimension;
+            // console.log('layerX', layerX);
+            // console.log('layerY', layerY);
+
+            // draw tile to layer canvas
+            layerCtx.drawImage(tilesetCanvases[tileTileset.file], tilesetX, tilesetY, file.tileDimension, file.tileDimension, layerX, layerY, file.tileDimension, file.tileDimension);
+            // }
+          }
+        }
+
+        layerData[layerId].canvas = layerCanvas;
       }
     }
     await loadImages();
 
-    return { file, tilesetCanvases };
+    // console.log('layerData', layerData);
+    // console.log('newFirstGids', newFirstGids);
+
+    return { file, tilesetCanvases, layerTiles, layerData, newFirstGids };
   },
 );
 
@@ -118,6 +192,58 @@ export const asyncDeleteFile = createAsyncThunk(
   async ({ id }) => {
     const response = await apiClient.delete(`/files/${id}`);
     return response.data.file;
+  },
+);
+
+export const asyncSaveChanges = createAsyncThunk(
+  'mapEditor/saveChanges',
+  async (__, { getState }) => {
+    const { file, newChanges, layerTiles } = getState().mapEditor;
+    const layerData = getState().mapEditor.layerData;
+
+    // console.log('newChanges', newChanges);
+    // console.log('file', file);
+    const changedLayerIds = Object.keys(newChanges);
+    const layerTileUpdates = {};
+
+    for (let i = 0; i < changedLayerIds.length; i++) {
+      const layerId = changedLayerIds[i];
+      // console.log('layerId', layerId, updates);
+
+      if (newChanges[layerId].canvas) {
+        // console.log(`updating tiles for layer ${layerId}`);
+        // console.log('tiles', layerTiles[layerId]);
+        layerTileUpdates[layerId] = layerTiles[layerId];
+      }
+    }
+
+    const layerIds = [];
+    function traverse (layer) {
+      // console.log(layer);
+      if (layer.type === 'layer' && !layerIds.includes(layer._id)) {
+        layerIds.push(layer._id);
+      }
+      if (layer.type === 'layer') {
+        const position = layerData[layer._id].position;
+        // console.log('position', position);
+        const newLayer = _.cloneDeep(layer);
+        newLayer.position = position;
+        return newLayer;
+      }
+      if (layer.layers) {
+        for (const child of layer.layers) {
+          traverse(child);
+        }
+      }
+    }
+    const newRootLayer = _.cloneDeepWith(file.rootLayer, traverse);
+    // console.log('newRootLayer', newRootLayer);
+
+    // console.log('layerIds', changedLayerIds);
+    const newFileCanvas = downloadFileAsCanvas({ file, layerData });
+    const newFileBlob = await new Promise((resolve) => newFileCanvas.toBlob(resolve));
+    const newImage = await newFileBlob.arrayBuffer();
+    emitLayerUpdates({ newRootLayer, layerIds, newImage, layerTileUpdates });
   },
 );
 
@@ -558,6 +684,18 @@ const mapEditorSlice = createSlice({
       }
       download(state.file.name);
     },
+    addNewChanges: (state, action) => {
+      const { layerId, newChanges } = action.payload;
+      if (!state.newChanges[layerId]) {
+        state.newChanges[layerId] = {};
+      }
+      newChanges.forEach((attribute) => {
+        state.newChanges[layerId][attribute] = true;
+      });
+    },
+    clearChanges: (state) => {
+      state.newChanges = {};
+    },
   },
   extraReducers (builder) {
     builder
@@ -565,26 +703,13 @@ const mapEditorSlice = createSlice({
         state.file = null;
       })
       .addCase(asyncGetFileToEdit.fulfilled, (state, action) => {
-        const { file, tilesetCanvases } = action.payload;
+        const { file, tilesetCanvases, newFirstGids, layerTiles, layerData } = action.payload;
         // console.log('file', file);
-
-        // also calculate firstGid for each tileset
-        const newFirstGids = {};
-        let firstGid = 1;
-        for (const tileset of file.tilesets) {
-          newFirstGids[tileset.file] = firstGid;
-          const tileCount = tilesetCanvases[tileset.file].width / file.tileDimension * tilesetCanvases[tileset.file].height / file.tileDimension;
-          firstGid += tileCount;
-        }
-        const nameToGid = {};
-        for (const tileset of file.tilesets) {
-          nameToGid[tileset.name] = newFirstGids[tileset.file];
-        }
-        // console.log('nameToGid', nameToGid);
         state.firstGuids = newFirstGids;
-
         state.file = file;
         state.tilesetCanvases = tilesetCanvases;
+        state.layerTiles = layerTiles;
+        state.layerData = layerData;
       })
       .addCase(asyncPatchFile.fulfilled, (state, action) => {
         const { newFile, newTilesetCanvases } = action.payload;
@@ -673,6 +798,8 @@ export const {
   assignTilesetCanvases,
   assignFirstGuids,
   downloadMapAsTmx,
+  addNewChanges,
+  clearChanges,
 } = mapEditorSlice.actions;
 
 export const selectMapEditorPrimitives = (state) => state.mapEditor.primitives;
@@ -681,6 +808,7 @@ export const selectBrushCanvas = (state) => state.mapEditor.brushCanvas;
 export const selectLayerTiles = (state) => state.mapEditor.layerTiles;
 export const selectLastSelectedLayer = state => state.mapEditor.primitives.lastSelectedLayer;
 export const selectTilesetCanvases = state => state.mapEditor.tilesetCanvases;
+export const selectMapNewChanges = (state) => state.mapEditor.newChanges;
 export const selectFirstGuids = state => state.mapEditor.firstGuids;
 export const selectMapEditorStatuses = (state) => state.mapEditor.statuses;
 export const selectMapEditorErrors = (state) => state.mapEditor.errors;

@@ -65,7 +65,7 @@ export function TilesetEditor () {
           showColorPicker={true}
           type={'tileset'}
         />
-        <FilenameIndicator file={file} saving={newChanges.length > 0} />
+        <FilenameIndicator file={file} newChanges={newChanges} />
         <RightSidebar />
         <TilesetCanvas />
       </div>

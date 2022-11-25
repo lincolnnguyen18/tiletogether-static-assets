@@ -16,7 +16,7 @@ import { defaultFlexColumnStyle, FlexColumn } from '../../components/layout/Flex
 import { FlexRow } from '../../components/layout/FlexRow';
 import { wait } from '../../utils/timeUtils';
 import { selectTilesetEditorPrimitives, setTilesetEditorPrimitives } from '../TilesetEditor/tilesetEditorSlice';
-import { downloadMapAsTmx } from '../MapEditor/mapEditorSlice';
+import { downloadMapAsTmx, setMapEditorPrimitives } from '../MapEditor/mapEditorSlice';
 import { truncateString } from '../../utils/stringUtils';
 
 const leftSidebarStyle = css`
@@ -82,7 +82,7 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
             if (formData.type === 'tmx') {
               dispatch(downloadMapAsTmx());
             } else if (formData.type === 'png') {
-              console.log('download png');
+              dispatch(setMapEditorPrimitives({ downloadFormat: formData.type }));
             }
           }
         }}

@@ -7,8 +7,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import { FilenameIndicator } from '../Editor/FilenameIndicator';
 import { NotFound } from '../Editor/NotFound';
 import { RightSidebar } from './RightSidebar';
-import { asyncDeleteFile, asyncGetFileToEdit, asyncPatchFile, clearMapEditorErrors, clearMapEditorStatus, selectMapEditorErrors, selectMapEditorPrimitives, selectMapEditorStatuses, selectMapFile, setMapEditorPrimitives } from './mapEditorSlice';
+import { asyncDeleteFile, asyncGetFileToEdit, asyncPatchFile, clearMapEditorErrors, clearMapEditorStatus, selectMapEditorErrors, selectMapEditorPrimitives, selectMapEditorStatuses, selectMapFile, selectMapNewChanges, setMapEditorPrimitives } from './mapEditorSlice';
 import { MapCanvas } from './MapCanvas';
+import { emitJoinRoom, emitLeaveRoom, onConnected } from '../User/userEditorSocketApi';
 
 const mapEditorStyle = css`
 `;
@@ -19,9 +20,17 @@ export function MapEditor () {
   const file = useSelector(selectMapFile);
   const primitives = useSelector(selectMapEditorPrimitives);
   const statuses = useSelector(selectMapEditorStatuses);
+  const newChanges = useSelector(selectMapNewChanges);
 
   useEffect(() => {
     dispatch(asyncGetFileToEdit({ id }));
+
+    emitJoinRoom({ fileId: id });
+    onConnected(() => emitJoinRoom({ fileId: id }));
+
+    return () => {
+      emitLeaveRoom({ fileId: id });
+    };
   }, []);
 
   // useEffect(() => {
@@ -51,7 +60,7 @@ export function MapEditor () {
           setActiveTool={setActiveTool}
           type={'map'}
         />
-        <FilenameIndicator file={file} />
+        <FilenameIndicator file={file} newChanges={newChanges} />
         <RightSidebar />
         <MapCanvas />
       </div>

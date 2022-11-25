@@ -2,16 +2,17 @@
 import { jsx } from '@emotion/react';
 import { Group, Image, Layer, Rect, Stage } from 'react-konva';
 import { useEffect, useRef, useState } from 'react';
-import { KonvaCheckerboardImage } from '../TilesetEditor/TilesetCanvas';
+import { downloadFileAsCanvas, KonvaCheckerboardImage } from '../TilesetEditor/TilesetCanvas';
 import { useDispatch, useSelector } from 'react-redux';
-import { selectLeftSidebarPrimitives } from '../Editor/leftSidebarSlice';
-import { selectBrushCanvas, selectLastSelectedLayer, selectLayerData, selectLayerTiles, selectMapEditorPrimitives, selectMapFile, setLayerData, setMapEditorPrimitives, updateAllLayers, updateLayer, updateLayersUpToRoot, updateLayerTiles } from './mapEditorSlice';
-import { trimPng } from '../../utils/canvasUtils';
+import { selectLeftSidebarPrimitives, setLeftSidebarPrimitives } from '../Editor/leftSidebarSlice';
+import { addNewChanges, asyncSaveChanges, clearChanges, selectBrushCanvas, selectLastSelectedLayer, selectLayerData, selectLayerTiles, selectMapEditorPrimitives, selectMapFile, selectMapNewChanges, setLayerData, setMapEditorPrimitives, updateAllLayers, updateLayer, updateLayersUpToRoot, updateLayerTiles } from './mapEditorSlice';
+import { initializeAElement, trimPng } from '../../utils/canvasUtils';
 import _ from 'lodash';
+import { onChangesSaved } from '../TilesetEditor/tilesetEditorSocketApi';
 
 export function MapCanvas () {
   const { showGrid, drawerOpen } = useSelector(selectLeftSidebarPrimitives);
-  const { activeTool, brushTileIndices } = useSelector(selectMapEditorPrimitives);
+  const { activeTool, brushTileIndices, savingChanges, downloadFormat } = useSelector(selectMapEditorPrimitives);
   const file = useSelector(selectMapFile);
   const [canvasSize, setCanvasSize] = useState({ width: window.innerWidth - 56 - 270, height: window.innerHeight });
   const [stageData, setStageData] = useState({ scale: 2, position: { x: 0, y: 0 } });
@@ -29,8 +30,30 @@ export function MapCanvas () {
   const [hoverLayerId, setHoverLayerId] = useState(null);
   const [selectedRects, setSelectedRects] = useState([]);
   const [dragStartPosition, setDragStartPosition] = useState(null);
+  const newChanges = useSelector(selectMapNewChanges);
   const layers = file.rootLayer.layers;
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (!downloadFormat || !file.rootLayer) return;
+    // console.log('downloadFormat', downloadFormat);
+
+    // // download canvas as png
+    initializeAElement();
+    const canvas = downloadFileAsCanvas({ file, layerData });
+    const a = window.aElement;
+    a.href = canvas.toDataURL('image/png');
+    a.download = `${file.name}.${downloadFormat}`;
+    a.click();
+
+    // open canvas in new tab
+    // const w = window.open();
+    // w.document.body.appendChild(canvas);
+    // w.document.close();
+
+    dispatch(setMapEditorPrimitives({ downloadFormat: null }));
+    dispatch(setLeftSidebarPrimitives({ drawerOpen: false }));
+  }, [downloadFormat, file]);
 
   useEffect(() => {
     if (!brushCanvas) {
@@ -153,10 +176,11 @@ export function MapCanvas () {
         }
         window.lastPosition = newLayer.position;
 
-        dispatch(setLayerData({
-          ...layerData,
-          [layerId]: newLayer,
-        }));
+        const newLayerData = { ...layerData };
+        newLayerData[layerId] = newLayer;
+        dispatch(setLayerData(newLayerData));
+
+        dispatch(addNewChanges({ layerId, newChanges: ['position'] }));
       }
     } else if (dragging && ['draw', 'erase'].includes(activeTool) && lastSelectedLayer) {
       paintTilesetOnCanvas(lastSelectedLayer._id, e);
@@ -324,6 +348,8 @@ export function MapCanvas () {
       // update layerTiles[layerId]
       dispatch(updateLayerTiles({ layerId, tiles: newLayerTiles2d }));
       // console.log('extending layerTiles', newLayerTiles2d);
+
+      dispatch(addNewChanges({ layerId, newChanges: ['canvas', 'position'] }));
     // if starting new layer
     } else if ((!layer || layer.canvas == null) && activeTool === 'draw') {
       setDragging(true);
@@ -360,6 +386,7 @@ export function MapCanvas () {
       newLayerTiles = brushTileIndices;
       dispatch(updateLayerTiles({ layerId, tiles: newLayerTiles }));
       // console.log('starting layerTiles', newLayerTiles);
+      dispatch(addNewChanges({ layerId, newChanges: ['canvas', 'position'] }));
     // if drawing inside existing layer
     } else if (['draw', 'erase'].includes(activeTool)) {
       setDragging(true);
@@ -418,6 +445,7 @@ export function MapCanvas () {
       // update layerTiles
       dispatch(updateLayerTiles({ layerId, tiles: newLayerTiles }));
       // console.log('drawing on old layerTiles', newLayerTiles);
+      dispatch(addNewChanges({ layerId, newChanges: ['canvas', 'position'] }));
     }
   }
 
@@ -648,6 +676,54 @@ export function MapCanvas () {
       const { trimmedImageData, overflows } = trimPng(inputCanvas, file.tileDimension);
       // console.log('trimmed', trimmedImageData.width, trimmedImageData.height);
       // console.log('overflows', overflows);
+
+      const tiles = layerTiles[lastSelectedLayer._id];
+      // console.log('tiles', tiles);
+
+      function trimTiles () {
+        // remove edges from all sides of 2d array until non-null value is found
+        const newEdge = {
+          top: null,
+          left: null,
+          right: null,
+          bottom: null,
+        };
+        let x;
+        let y;
+
+        for (x = 0; x < tiles[0].length; x++) {
+          for (y = 0; y < tiles.length; y++) {
+            if (tiles[y][x] != null) {
+              if (newEdge.top === null) {
+                newEdge.top = y;
+              }
+              if (newEdge.left === null || x < newEdge.left) {
+                newEdge.left = x;
+              }
+              if (newEdge.right === null || newEdge.right < x) {
+                // console.log('x', x);
+                newEdge.right = x;
+              }
+              if (newEdge.bottom === null || newEdge.bottom < y) {
+                newEdge.bottom = y;
+              }
+            }
+          }
+        }
+
+        // console.log('newEdge', newEdge);
+        // based on new edges, create new 2d array
+        const newTiles = [];
+        for (y = newEdge.top; y <= newEdge.bottom; y++) {
+          newTiles.push(tiles[y].slice(newEdge.left, newEdge.right + 1));
+        }
+
+        return newTiles;
+      }
+
+      const trimmedTiles = trimTiles();
+      // console.log('trimmedTiles', trimmedTiles);
+
       const canvas = document.createElement('canvas');
       canvas.width = trimmedImageData.width;
       canvas.height = trimmedImageData.height;
@@ -665,6 +741,23 @@ export function MapCanvas () {
         },
       };
       dispatch(setLayerData(newLayerData));
+      dispatch(updateLayerTiles({ layerId: lastSelectedLayer._id, tiles: trimmedTiles }));
+      dispatch(addNewChanges({ layerId: lastSelectedLayer._id, newChanges: ['canvas', 'position'] }));
+    // listen for ctrl or command + s to save
+    } else if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      e.preventDefault();
+      // console.log('saving');
+      if (savingChanges) {
+        console.log('already saving');
+        return;
+      }
+      if (Object.keys(newChanges).length === 0) {
+        console.log('no changes to save');
+        return;
+      }
+      // console.log('newChanges', newChanges);
+      dispatch(asyncSaveChanges());
+      dispatch(setMapEditorPrimitives({ savingChanges: true }));
     }
   }
 
@@ -681,6 +774,15 @@ export function MapCanvas () {
       window.removeEventListener('resize', handleResize);
     };
   }, [lastSelectedLayer, layerData, drawerOpen]);
+
+  useEffect(() => {
+    if (drawerOpen) return;
+    onChangesSaved(() => {
+      console.log('changes saved');
+      dispatch(clearChanges());
+      dispatch(setMapEditorPrimitives({ savingChanges: false }));
+    });
+  }, [drawerOpen]);
 
   function handleResize () {
     setCanvasSize({ width: window.innerWidth - 56 - 270, height: window.innerHeight });

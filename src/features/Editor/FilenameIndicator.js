@@ -1,7 +1,5 @@
 /** @jsx jsx */
 import { css, jsx } from '@emotion/react';
-import { useSelector } from 'react-redux';
-import { selectTilesetNewChanges } from '../TilesetEditor/tilesetEditorSlice';
 
 const filenameIndicatorStyle = css`
   position: absolute;
@@ -24,8 +22,7 @@ const filenameIndicatorStyle = css`
   }
 `;
 
-export function FilenameIndicator ({ file }) {
-  const newChanges = useSelector(selectTilesetNewChanges);
+export function FilenameIndicator ({ file, newChanges }) {
   const hasChanges = newChanges && Object.keys(newChanges).length > 0;
 
   const savedIconStyle = css`

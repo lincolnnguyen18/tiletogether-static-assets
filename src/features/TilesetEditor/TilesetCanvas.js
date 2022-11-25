@@ -100,7 +100,7 @@ export function TilesetCanvas () {
   const { showGrid, drawerOpen } = leftSidebarPrimitives;
   const lastSelectedLayer = useSelector(selectLastSelectedLayer);
   const file = useSelector(selectTilesetFile);
-  const { activeTool, downloadFormat, reuploadingFileImage } = primitives;
+  const { activeTool, downloadFormat, reuploadingFileImage, savingChanges } = primitives;
   const { brushColor } = rightSidebarPrimitives;
   const layers = file.rootLayer.layers;
   const dispatch = useDispatch();
@@ -552,7 +552,7 @@ export function TilesetCanvas () {
     } else if ((e.ctrlKey || e.metaKey) && e.key === 's') {
       e.preventDefault();
       // console.log('saving');
-      if (primitives.savingChanges) {
+      if (savingChanges) {
         console.log('already saving');
         return;
       }

@@ -12,13 +12,11 @@ const initialState = {
     // draw, erase, select
     activeTool: 'draw',
     brushColor: 'red',
-    colors: [],
-    calculateColors: false,
     dragStart: null,
     dragging: false,
     lastSelectedLayer: null,
     savingChanges: false,
-    // downloadFormat is null or 'png'/'tmx' to indicate which format is being downloaded
+    // downloadFormat is null or 'png' to indicate which format is being downloaded
     downloadFormat: null,
     fileImageChanged: false,
     reuploadingFileImage: false,
