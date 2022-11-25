@@ -92,7 +92,7 @@ export function downloadFileAsCanvas ({ file, layerData }) {
   return canvas;
 }
 
-export function TilesetCanvas () {
+export function TilesetCanvas ({ viewOnly }) {
   const [canvasSize, setCanvasSize] = useState({ width: window.innerWidth - 56 - 270, height: window.innerHeight });
   const primitives = useSelector(selectTilesetEditorPrimitives);
   const rightSidebarPrimitives = useSelector(selectTilesetRightSidebarPrimitives);
@@ -509,8 +509,10 @@ export function TilesetCanvas () {
       setSelectedRects([]);
       dispatch(updateAllLayers({ selected: false }));
       dispatch(setTilesetEditorPrimitives({ lastSelectedLayer: null }));
-    // listen for ] and [ to change brush size
-    } else if (e.key === ']' && ['erase', 'draw'].includes(activeTool)) {
+      // listen for ] and [ to change brush size
+    }
+    if (viewOnly) return;
+    if (e.key === ']' && ['erase', 'draw'].includes(activeTool)) {
       const maxBrushSize = 7000;
 
       // if size is 1, set to 2 (switch from square to circle)
@@ -1050,7 +1052,7 @@ export function TilesetCanvas () {
       setHoverLayerId(null);
     }
 
-    if (activeTool === 'select' && dragging) {
+    if (activeTool === 'select' && dragging && !viewOnly) {
       const layerId = lastSelectedLayer._id;
       const mousePosition = stageRef.current.getPointerPosition();
       const stagePosition = stageRef.current.position();
@@ -1141,6 +1143,7 @@ export function TilesetCanvas () {
         onMouseMove={handleStageMouseMove}
         onMouseUp={handleStageMouseUp}
         onMouseLeave={handleStageMouseLeave}
+        onContextMenu={e => e.evt.preventDefault()}
         style={{ position: 'absolute', top: 0, left: 56, cursor: cursorStyle }}
       >
         <Layer imageSmoothingEnabled={false}>

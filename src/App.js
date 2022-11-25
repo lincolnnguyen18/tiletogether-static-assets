@@ -64,6 +64,14 @@ function App () {
           exact path = '/maps/:id/edit'
           element={<MapEditor/>}
         />
+        <Route
+          exact path = '/tilesets/:id/view'
+          element={<TilesetEditor viewOnly={true} />}
+        />
+        <Route
+          exact path = '/maps/:id/view'
+          element={<MapEditor viewOnly={true} />}
+        />
         <Route path="*" element={<Redirect to="/"/>}/>
       </Routes>
     </Fragment>

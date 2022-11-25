@@ -454,6 +454,11 @@ const tilesetEditorSlice = createSlice({
       const { status } = action.payload;
       state.statuses[status] = null;
     },
+    clearFile: (state) => {
+      state.file = null;
+      state.newChanges = {};
+      state.statuses.getFileToEdit = null;
+    },
   },
   extraReducers (builder) {
     builder
@@ -529,6 +534,7 @@ export const {
   clearTilesetEditorStatus,
   addNewChanges,
   clearChanges,
+  clearFile,
 } = tilesetEditorSlice.actions;
 
 export const tilesetEditorReducer = tilesetEditorSlice.reducer;

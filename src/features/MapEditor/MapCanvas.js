@@ -10,7 +10,7 @@ import { initializeAElement, trimPng } from '../../utils/canvasUtils';
 import _ from 'lodash';
 import { onChangesSaved } from '../TilesetEditor/tilesetEditorSocketApi';
 
-export function MapCanvas () {
+export function MapCanvas ({ viewOnly }) {
   const { showGrid, drawerOpen } = useSelector(selectLeftSidebarPrimitives);
   const { activeTool, brushTileIndices, savingChanges, downloadFormat, reuploadingFileImage } = useSelector(selectMapEditorPrimitives);
   const file = useSelector(selectMapFile);
@@ -160,7 +160,7 @@ export function MapCanvas () {
       setHoverLayerId(null);
     }
 
-    if (activeTool === 'select' && dragging) {
+    if (activeTool === 'select' && dragging && !viewOnly) {
       const layerId = lastSelectedLayer._id;
       const mousePosition = stageRef.current.getPointerPosition();
       const stagePosition = stageRef.current.position();
@@ -676,6 +676,13 @@ export function MapCanvas () {
   // }, [lastSelectedLayer]);
 
   async function handleKeyDown (e) {
+    if (e.key === 'Escape') {
+      setSelectedRects([]);
+      dispatch(updateAllLayers({ selected: false }));
+      dispatch(setMapEditorPrimitives({ lastSelectedLayer: null }));
+      // listen for ] and [ to change brush size
+    }
+    if (viewOnly) return;
     if (e.key === '1') {
       dispatch(setMapEditorPrimitives({ activeTool: 'draw' }));
     } else if (e.key === '2') {

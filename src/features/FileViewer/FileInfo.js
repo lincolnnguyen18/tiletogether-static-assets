@@ -34,7 +34,6 @@ export function FileInfo () {
 
   const date = new Date(file.publishedAt);
   const tags = file.tags ? file.tags.split(' ') : null;
-  const isMap = file.type === 'map';
 
   const liked = user && file.likes.some(l => l.username === user.username);
   const likes = file.likeCount;
@@ -52,10 +51,6 @@ export function FileInfo () {
     }
   }
 
-  function handleEdit () {
-    navigate(`/${file.type}s/${id}/edit`);
-  }
-
   return (
     <FlexColumn>
       <h1 css={verticalSectionStyle}>{file.name}</h1>
@@ -71,20 +66,20 @@ export function FileInfo () {
             }
             <span>{likes}</span>
           </button>
-          <button css={IconButtonStyle}>
-            <span className='icon-download' css={{ fontSize: '40px' }}/>
-            <span>Download</span>
-          </button>
-          {user && file.authorUsername === user.username && (
-            <button css={IconButtonStyle} onClick={handleEdit}>
-              <span className='icon-pencil' css={{ fontSize: '38px' }}/>
-              <span>Edit</span>
-            </button>
-          )}
-          <button css={IconButtonStyle}>
-            <span className='icon-file' css={{ fontSize: '42px' }}/>
-            <span>Import Into Map</span>
-          </button>
+          {user && file.hasEditAccess
+            ? (
+              <button css={IconButtonStyle} onClick={() => navigate(`/${file.type}s/${id}/edit`)}>
+                <span className='icon-pencil' css={{ fontSize: '38px' }}/>
+                <span>Edit</span>
+              </button>
+            )
+            : (
+              <button css={IconButtonStyle} onClick={() => navigate(`/${file.type}s/${id}/view`)}>
+                <span className='icon-file' css={{ fontSize: '38px' }}/>
+                <span>View</span>
+              </button>
+            )
+          }
         </FlexRow>
       </FlexRow>
       <hr color='gray'/>
@@ -101,7 +96,7 @@ export function FileInfo () {
           : 'No tags provided'}
       </FlexRow>
       <label css={verticalSectionStyle}>
-        {`${_.startCase(file.type)}`} <span>&#x2022;</span> {`${file.tileDimension} px tiles`} {isMap && <span>&#x2022;</span>} { `${file.width * file.tileDimension} x ${file.height * file.tileDimension} px`}
+        {`${_.startCase(file.type)}`} <span>&#x2022;</span> {`${file.tileDimension} px tiles`} <span>&#x2022;</span> { `${file.width * file.tileDimension} x ${file.height * file.tileDimension} px`}
       </label>
       <FlexRow>
         <button css={[IconButtonStyle, { marginLeft: '0px' }]}>

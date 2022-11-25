@@ -10,7 +10,7 @@ const layerStyle = css`
   flex-direction: column;
 `;
 
-export function MapLayer ({ layer, parentSelected, level }) {
+export function MapLayer ({ layer, parentSelected, level, viewOnly }) {
   const dispatch = useDispatch();
   const primitives = useSelector(selectMapEditorPrimitives);
   const { dragging, lastSelectedLayer, dragStart } = primitives;
@@ -115,6 +115,7 @@ export function MapLayer ({ layer, parentSelected, level }) {
       dispatch(updateAllLayersBetween({ startLayer, endLayer, newAttributes }));
       dispatch(setMapEditorPrimitives({ lastSelectedLayer: layer }));
     }
+    if (viewOnly) return;
     const dragStart = { x: e.clientX, y: e.clientY };
     dispatch(setMapEditorPrimitives({ dragStart, dragging: true }));
   }
@@ -152,6 +153,7 @@ export function MapLayer ({ layer, parentSelected, level }) {
               layer={layer}
               parentSelected={selected}
               level={level + 1}
+              viewOnly={viewOnly}
             >
               {name}
             </MapLayer>

@@ -19,7 +19,7 @@ const layerStyle = css`
   flex-direction: column;
 `;
 
-export function TilesetLayer ({ layer, parentSelected, level }) {
+export function TilesetLayer ({ layer, parentSelected, level, viewOnly }) {
   const dispatch = useDispatch();
   const primitives = useSelector(selectTilesetEditorPrimitives);
   const dragging = primitives.dragging;
@@ -58,6 +58,7 @@ export function TilesetLayer ({ layer, parentSelected, level }) {
       dispatch(updateAllLayersBetween({ startLayer, endLayer, newAttributes }));
       dispatch(setTilesetEditorPrimitives({ lastSelectedLayer: layer }));
     }
+    if (viewOnly) return;
     const dragStart = { x: e.clientX, y: e.clientY };
     dispatch(setTilesetEditorPrimitives({ dragStart, dragging: true }));
   }
@@ -158,6 +159,7 @@ export function TilesetLayer ({ layer, parentSelected, level }) {
               layer={layer}
               parentSelected={selected}
               level={level + 1}
+              viewOnly={viewOnly}
             >
               {name}
             </TilesetLayer>

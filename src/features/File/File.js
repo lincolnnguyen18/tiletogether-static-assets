@@ -14,6 +14,7 @@ const fileStyle = css`
   aspect-ratio: 270 / 170;
   background: var(--file-background);
   position: relative;
+  max-height: 500px;
 `;
 
 const imageStyle = css`
@@ -108,7 +109,7 @@ export function File ({ imageUrl, title, subtext, liked, type, id, isLoading = f
 
   let link;
 
-  if (path === '/your-files') {
+  if (path === '/your-files' || path === '/shared-files') {
     link = `/${type}s/${id}/edit`;
   } else {
     link = `/${type}s/${id}`;

@@ -40,7 +40,7 @@ const leftSidebarStyle = css`
   }
 `;
 
-export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile, clearFileErrors, clearFileStatus, selectFileErrors, selectFileStatuses, setActiveTool, type }) {
+export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile, clearFileErrors, clearFileStatus, selectFileErrors, selectFileStatuses, setActiveTool, type, viewOnly }) {
   const dispatch = useDispatch();
   const leftSidebarSlice = useSelector((state) => state.leftSidebar);
   const showGrid = leftSidebarSlice.primitives.showGrid;
@@ -379,7 +379,7 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
             error={errors.description}
           />
           <Textfield
-            label={'Tags (separate with commas)'}
+            label={'Tags (separate with spaces)'}
             type='text'
             defaultValue={file.tags}
             style={whiteInputStyle}
@@ -479,16 +479,20 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
       </LeftSidebarDrawer>
       <div css={leftSidebarStyle}>
         <div className='group'>
-          <IconButton active={activeTool === 'draw' && !drawerOpen} onClick={() => setActiveTool('draw')}>
-            <span className='icon-pencil'></span>
-          </IconButton>
-          <IconButton active={activeTool === 'erase' && !drawerOpen} onClick={() => setActiveTool('erase')}>
-            <span className='icon-eraser'></span>
-          </IconButton>
+          {!viewOnly && (
+            <Fragment>
+              <IconButton active={activeTool === 'draw' && !drawerOpen} onClick={() => setActiveTool('draw')}>
+                <span className='icon-pencil'></span>
+              </IconButton>
+              <IconButton active={activeTool === 'erase' && !drawerOpen} onClick={() => setActiveTool('erase')}>
+                <span className='icon-eraser'></span>
+              </IconButton>
+            </Fragment>
+          )}
           <IconButton active={activeTool === 'select' && !drawerOpen} onClick={() => setActiveTool('select')}>
             <span className='icon-cursor'></span>
           </IconButton>
-          {type === 'tileset' && (
+          {type === 'tileset' && !viewOnly && (
             <IconButton active={activeTool === 'color-picker' && !drawerOpen} onClick={() => setActiveTool('color-picker')}>
               <span className='icon-color-picker'></span>
             </IconButton>
@@ -498,18 +502,24 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
           <IconButton onClick={() => openDrawer('download')} title={`Download ${file.type}`}>
             <span className='icon-download'></span>
           </IconButton>
-          <IconButton onClick={() => openDrawer('share')} title='Sharing settings'>
-            <span className='icon-share'></span>
-          </IconButton>
-          <IconButton onClick={() => openDrawer('settings')} title={`${_.capitalize(file.type)} properties`}>
-            <span className='icon-settings'></span>
-          </IconButton>
+          {!viewOnly && (
+            <Fragment>
+              <IconButton onClick={() => openDrawer('share')} title='Sharing settings'>
+                <span className='icon-share'></span>
+              </IconButton>
+              <IconButton onClick={() => openDrawer('settings')} title={`${_.capitalize(file.type)} properties`}>
+                <span className='icon-settings'></span>
+              </IconButton>
+            </Fragment>
+          )}
           {divider}
-          <Link to='/your-files' title='Go to your files' style={{ textDecoration: 'none' }}>
-            <IconButton>
-              <span className='icon-logo'></span>
-            </IconButton>
-          </Link>
+          {!viewOnly && (
+            <Link to='/your-files' title='Go to your files' style={{ textDecoration: 'none' }}>
+              <IconButton>
+                <span className='icon-logo'></span>
+              </IconButton>
+            </Link>
+          )}
           {publishedPageButton}
         </div>
       </div>

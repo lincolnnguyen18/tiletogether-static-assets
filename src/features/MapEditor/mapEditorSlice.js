@@ -696,6 +696,15 @@ const mapEditorSlice = createSlice({
     clearChanges: (state) => {
       state.newChanges = {};
     },
+    clearFile: (state) => {
+      state.file = null;
+      state.layerData = {};
+      state.layerTiles = {};
+      state.tilesetCanvases = {};
+      state.firstGuids = {};
+      state.newChanges = {};
+      state.statuses.getFileToEdit = null;
+    },
   },
   extraReducers (builder) {
     builder
@@ -797,6 +806,7 @@ export const {
   downloadMapAsTmx,
   addNewChanges,
   clearChanges,
+  clearFile,
 } = mapEditorSlice.actions;
 
 export const selectMapEditorPrimitives = (state) => state.mapEditor.primitives;
