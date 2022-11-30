@@ -49,8 +49,7 @@ const canvasStyle = css`
   background: var(--file-background);
   width: 100%;
   height: fit-content;
-  min-height: 300px;
-  max-height: 80%;
+  max-height: 500px;
   display: flex;
   align-items: center;
   justify-content: center;

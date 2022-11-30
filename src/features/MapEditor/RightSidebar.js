@@ -7,7 +7,7 @@ import { IconButton } from '../../components/inputs/IconButton';
 import { addNewMapLayer, assignFirstGuids, assignLayerTiles, assignTilesetCanvases, asyncPatchFile, deleteSelectedLayers, eraseTileInLayer, getCurrentGuids, selectFirstGuids, selectLayerTiles, selectMapEditorPrimitives, selectMapEditorStatuses, selectMapFile, selectTilesetCanvases, setBrushCanvas, setMapEditorPrimitives } from './mapEditorSlice';
 import { MapLayer } from './MapLayer';
 import { openAddTilesetModal } from './AddTilesetModal';
-import { useEffect } from 'react';
+import { Fragment, useEffect } from 'react';
 import { TileSelector } from './TileSelector';
 import { selectLeftSidebarPrimitives } from '../Editor/leftSidebarSlice';
 import _ from 'lodash';
@@ -87,7 +87,7 @@ export function Divider () {
   return <div css={dividerStyle} />;
 }
 
-export function RightSidebar () {
+export function RightSidebar ({ viewOnly }) {
   const file = useSelector(selectMapFile);
   const { brushTileset } = useSelector(selectMapEditorPrimitives);
   const { patchFile } = useSelector(selectMapEditorStatuses);
@@ -207,20 +207,24 @@ export function RightSidebar () {
           </Icon>
           <span>Tilesets</span>
         </FlexRow>
-        <FlexRow gap={7}>
-          <IconButton
-            onClick={handleAddTileset}
-            disabled={patchFile === 'pending'}
-          >
-            <span className='icon-plus'></span>
-          </IconButton>
-          <IconButton
-            onClick={() => handleDeleteTileset(brushTileset.file)}
-            disabled={patchFile === 'pending'}
-          >
-            <span className='icon-trash'></span>
-          </IconButton>
-        </FlexRow>
+        {!viewOnly && (
+          <Fragment>
+            <FlexRow gap={7}>
+              <IconButton
+                onClick={handleAddTileset}
+                disabled={patchFile === 'pending'}
+              >
+                <span className='icon-plus'></span>
+              </IconButton>
+              <IconButton
+                onClick={() => handleDeleteTileset(brushTileset.file)}
+                disabled={patchFile === 'pending'}
+              >
+                <span className='icon-trash'></span>
+              </IconButton>
+            </FlexRow>
+          </Fragment>
+        )}
       </FlexRow>
       <div css={css`height: 300px; overflow-y: auto; padding: 4px 8px; user-select: none;`}>
         <FlexRow style={tilesetsStyle} align={'flex-start'}>
@@ -246,7 +250,7 @@ export function RightSidebar () {
         <Icon color='white'>
           <span className='icon-droplet'></span>
         </Icon>
-        <span>Selected Tiles</span>
+        <span>Selected Tileset</span>
       </div>
       <Divider />
       <div className='selected-tiles'>
@@ -259,18 +263,22 @@ export function RightSidebar () {
         </Icon>
         <span>Layers</span>
       </div>
-      <FlexRow justify={'space-between'} gap={24} style={{ paddingRight: 12, paddingBottom: 6 }}>
-        <FlexRow>
-          <IconButton onClick={handleAddNewLayer}>
-            <span className='icon-plus'></span>
-          </IconButton>
-          <IconButton onClick={handleDeleteSelectedLayers}>
-            <span className='icon-trash'></span>
-          </IconButton>
-        </FlexRow>
-      </FlexRow>
+      {!viewOnly && (
+        <Fragment>
+          <FlexRow justify={'space-between'} gap={24} style={{ paddingRight: 12, paddingBottom: 6 }}>
+            <FlexRow>
+              <IconButton onClick={handleAddNewLayer}>
+                <span className='icon-plus'></span>
+              </IconButton>
+              <IconButton onClick={handleDeleteSelectedLayers}>
+                <span className='icon-trash'></span>
+              </IconButton>
+            </FlexRow>
+          </FlexRow>
+        </Fragment>
+      )}
       <div className='layers'>
-        <MapLayer layer={rootLayer} level={-1} />
+        <MapLayer layer={rootLayer} level={-1} viewOnly={viewOnly} />
       </div>
     </div>
   );

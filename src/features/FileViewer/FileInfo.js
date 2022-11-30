@@ -33,8 +33,7 @@ export function FileInfo () {
   const navigate = useNavigate();
 
   const date = new Date(file.publishedAt);
-  const tags = file.tags ? file.tags.split(' ') : [];
-  const isMap = file.type === 'map';
+  const tags = file.tags ? file.tags.split(' ') : null;
 
   const liked = user && file.likes.some(l => l.username === user.username);
   const likes = file.likeCount;
@@ -52,10 +51,6 @@ export function FileInfo () {
     }
   }
 
-  function handleEdit () {
-    navigate(`/${file.type}s/${id}/edit`);
-  }
-
   return (
     <FlexColumn>
       <h1 css={verticalSectionStyle}>{file.name}</h1>
@@ -71,35 +66,37 @@ export function FileInfo () {
             }
             <span>{likes}</span>
           </button>
-          <button css={IconButtonStyle}>
-            <span className='icon-download' css={{ fontSize: '40px' }}/>
-            <span>Download</span>
-          </button>
-          {user && file.authorUsername === user.username && (
-            <button css={IconButtonStyle} onClick={handleEdit}>
-              <span className='icon-pencil' css={{ fontSize: '38px' }}/>
-              <span>Edit</span>
-            </button>
-          )}
-          <button css={IconButtonStyle}>
-            <span className='icon-file' css={{ fontSize: '42px' }}/>
-            <span>Import Into Map</span>
-          </button>
+          {user && file.hasEditAccess
+            ? (
+              <button css={IconButtonStyle} onClick={() => navigate(`/${file.type}s/${id}/edit`)}>
+                <span className='icon-pencil' css={{ fontSize: '38px' }}/>
+                <span>Edit</span>
+              </button>
+            )
+            : (
+              <button css={IconButtonStyle} onClick={() => navigate(`/${file.type}s/${id}/view`)}>
+                <span className='icon-file' css={{ fontSize: '38px' }}/>
+                <span>View</span>
+              </button>
+            )
+          }
         </FlexRow>
       </FlexRow>
       <hr color='gray'/>
-      <p css={verticalSectionStyle}>{file.description}</p>
+      <p css={verticalSectionStyle}>{file.description ?? 'No description provided'}</p>
       <FlexRow style={verticalSectionStyle} gap={10}>
-        {tags.map(t => (
-          <Link
-            key={_.uniqueId('filetag-')}
-            to={`/search?keywords=${t}`}
-            style={{ color: '#4894f9', textDecoration: 'none' }}
-          >#{t}</Link>
-        ))}
+        {tags
+          ? tags.map(t => (
+            <Link
+              key={_.uniqueId('filetag-')}
+              to={`/search?keywords=${t}`}
+              style={{ color: '#4894f9', textDecoration: 'none' }}
+            >#{t}</Link>
+          ))
+          : 'No tags provided'}
       </FlexRow>
       <label css={verticalSectionStyle}>
-        {`${file.type}`} <span>&#x2022;</span> {`${file.tileDimension} pixel tiles`} {isMap && <span>&#x2022;</span>} { isMap && `${file.width} x ${file.height} map`}
+        {`${_.startCase(file.type)}`} <span>&#x2022;</span> {`${file.tileDimension} px tiles`} <span>&#x2022;</span> { `${file.width * file.tileDimension} x ${file.height * file.tileDimension} px`}
       </label>
       <FlexRow>
         <button css={[IconButtonStyle, { marginLeft: '0px' }]}>

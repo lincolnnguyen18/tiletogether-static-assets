@@ -12,13 +12,11 @@ const initialState = {
     // draw, erase, select
     activeTool: 'draw',
     brushColor: 'red',
-    colors: [],
-    calculateColors: false,
     dragStart: null,
     dragging: false,
     lastSelectedLayer: null,
     savingChanges: false,
-    // downloadFormat is null or 'png'/'tmx' to indicate which format is being downloaded
+    // downloadFormat is null or 'png' to indicate which format is being downloaded
     downloadFormat: null,
     fileImageChanged: false,
     reuploadingFileImage: false,
@@ -456,6 +454,11 @@ const tilesetEditorSlice = createSlice({
       const { status } = action.payload;
       state.statuses[status] = null;
     },
+    clearFile: (state) => {
+      state.file = null;
+      state.newChanges = {};
+      state.statuses.getFileToEdit = null;
+    },
   },
   extraReducers (builder) {
     builder
@@ -531,6 +534,7 @@ export const {
   clearTilesetEditorStatus,
   addNewChanges,
   clearChanges,
+  clearFile,
 } = tilesetEditorSlice.actions;
 
 export const tilesetEditorReducer = tilesetEditorSlice.reducer;
