@@ -42,7 +42,7 @@ function App () {
       <Menu />
       <Modal />
       <Routes>
-        {['/', '/search', '/likes', '/your-files', '/shared-files', '/register', '/login', '/users/:username'].map((path, index) => (
+        {['/', '/search', '/likes', '/your-files', '/shared-files', '/register', '/login', '/users/:username', '/users/password/:hash'].map((path, index) => (
           <Route
             exact path={path}
             element={<Dashboard/>}

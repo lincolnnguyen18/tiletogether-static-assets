@@ -5,11 +5,12 @@ import { Textfield, whiteInputStyle } from '../../../components/inputs/Textfield
 import { blackButtonStyle, Button } from '../../../components/inputs/Button';
 import { useDispatch, useSelector } from 'react-redux';
 import { useState } from 'react';
-import { asyncGetUser, asyncPostUser, selectUserStatuses } from '../../User/userSlice';
+import { asyncGetUser, asyncPostUser, asyncResetPassword, asyncSendEmail, selectUserStatuses } from '../../User/userSlice';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { modalBodyStyle } from '../../../components/Modal/Modal';
 import { asyncGetFiles } from '../../File/fileSlice';
 import { FlexColumn } from '../../../components/layout/FlexColumn';
+import _ from 'lodash';
 
 export function openAuthModal (dispatch, type) {
   dispatch(setModalReactElements({
@@ -74,11 +75,27 @@ export function AuthModalBody ({ type }) {
   }
 
   async function onEmail (formData) {
-    openAuthModal(dispatch, 'password');
+    const res = await dispatch(asyncSendEmail(formData));
+
+    if (res.type === asyncGetUser.rejected.type) {
+      const errors = JSON.parse(res.error.message);
+      setErrors(errors);
+    }
+
     return formData;
   }
 
   async function onChangePassword (formData) {
+    const data = _.merge({ hash: location.pathname.split('/')[3] }, formData);
+
+    const res = await dispatch(asyncResetPassword(data));
+    if (res.type === asyncGetUser.rejected.type) {
+      const errors = JSON.parse(res.error.message);
+      setErrors(errors);
+    } else {
+      openAuthModal(dispatch, 'login');
+    }
+
     return formData;
   }
   return (
