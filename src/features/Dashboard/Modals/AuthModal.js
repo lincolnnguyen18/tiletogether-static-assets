@@ -4,7 +4,7 @@ import { setModalPrimitives, setModalReactElements } from '../../../components/M
 import { Textfield, whiteInputStyle } from '../../../components/inputs/Textfield';
 import { blackButtonStyle, Button } from '../../../components/inputs/Button';
 import { useDispatch, useSelector } from 'react-redux';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { asyncGetUser, asyncPostUser, asyncResetPassword, asyncSendEmail, selectUserStatuses } from '../../User/userSlice';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { modalBodyStyle } from '../../../components/Modal/Modal';
@@ -45,6 +45,12 @@ export function AuthModalBody ({ type }) {
   const dispatch = useDispatch();
   const location = useLocation();
   const userStatuses = useSelector(selectUserStatuses);
+  const formRef = useRef();
+
+  useEffect(() => {
+    setErrors({});
+    formRef.current?.reset();
+  }, [type]);
 
   const [errors, setErrors] = useState({});
   const [emailTimer, setEmailTimer] = useState(0);
@@ -65,7 +71,6 @@ export function AuthModalBody ({ type }) {
     color: blue;
     cursor: pointer;
     display: inline-block;
-
 `;
 
   async function onRegister (formData) {
@@ -117,7 +122,7 @@ export function AuthModalBody ({ type }) {
     return formData;
   }
   return (
-    <form css={modalBodyStyle} onSubmit={(e) => {
+    <form css={modalBodyStyle} ref={formRef} onSubmit={(e) => {
       e.preventDefault();
       const formData = Object.fromEntries(new FormData(e.target));
       switch (type) {
@@ -172,7 +177,7 @@ export function AuthModalBody ({ type }) {
 
       <Button
         style={blackButtonStyle}
-        disabled={userStatuses.postUser === 'pending' || userStatuses.getUser === 'pending' || emailTimer > 0}
+        disabled={userStatuses.postUser === 'pending' || userStatuses.getUser === 'pending' || emailTimer > 0 || userStatuses.sendemail === 'pending' || userStatuses.password === 'pending'}
       >
         {type === 'login' && <span>Login</span>}
         {type === 'register' && <span>Register</span>}

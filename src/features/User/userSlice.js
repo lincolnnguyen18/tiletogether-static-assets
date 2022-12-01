@@ -52,8 +52,12 @@ export const asyncSendEmail = createAsyncThunk(
 export const asyncResetPassword = createAsyncThunk(
   'user/password',
   async (payload) => {
-    const response = await apiClient.post('/users/password', payload);
-    return response.data;
+    try {
+      const response = await apiClient.post('/users/password', payload);
+      return response.data;
+    } catch (err) {
+      throw new Error(JSON.stringify(err.response.data.error));
+    }
   },
 );
 
