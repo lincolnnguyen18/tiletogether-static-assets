@@ -89,6 +89,9 @@ function getCurrentPage (location, dispatch = null) {
   if (path.startsWith('/users')) {
     const username = path.split('/')[2];
     dispatch(setDashboardPrimitives({ authorUsername: username }));
+    if (path.startsWith('/users/password')) {
+      openAuthModal(dispatch, 'password');
+    }
     return 'users';
   } else {
     dispatch(setDashboardPrimitives({ authorUsername: null }));
@@ -105,6 +108,9 @@ function getCurrentPage (location, dispatch = null) {
   case '/your-files':
   case '/shared-files':
     return path.slice(1);
+  case '/password':
+    openAuthModal(dispatch, path.slice(1));
+    break;
   default:
     throw new Error('Invalid dashboard path', path);
   }

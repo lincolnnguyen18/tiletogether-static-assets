@@ -41,6 +41,22 @@ export const asyncDeleteUser = createAsyncThunk(
   },
 );
 
+export const asyncSendEmail = createAsyncThunk(
+  'user/sendemail',
+  async (payload) => {
+    const response = await apiClient.post('/users/sendemail', payload);
+    return response.data;
+  },
+);
+
+export const asyncResetPassword = createAsyncThunk(
+  'user/password',
+  async (payload) => {
+    const response = await apiClient.post('/users/password', payload);
+    return response.data;
+  },
+);
+
 const userSlice = createSlice({
   name: 'user',
   initialState,
