@@ -4,13 +4,16 @@ import { setModalPrimitives, setModalReactElements } from '../../../components/M
 import { Textfield, whiteInputStyle } from '../../../components/inputs/Textfield';
 import { blackButtonStyle, Button } from '../../../components/inputs/Button';
 import { useDispatch, useSelector } from 'react-redux';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { asyncGetUser, asyncPostUser, asyncResetPassword, asyncSendEmail, selectUserStatuses } from '../../User/userSlice';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { modalBodyStyle } from '../../../components/Modal/Modal';
 import { asyncGetFiles } from '../../File/fileSlice';
 import { FlexColumn } from '../../../components/layout/FlexColumn';
 import _ from 'lodash';
+
+const emailExpirationTimer = 60; // in seconds
+let emailTimerHandle;
 
 export function openAuthModal (dispatch, type) {
   dispatch(setModalReactElements({
@@ -42,13 +45,32 @@ export function AuthModalBody ({ type }) {
   const dispatch = useDispatch();
   const location = useLocation();
   const userStatuses = useSelector(selectUserStatuses);
+  const formRef = useRef();
+
+  useEffect(() => {
+    setErrors({});
+    formRef.current?.reset();
+  }, [type]);
+
   const [errors, setErrors] = useState({});
+  const [emailTimer, setEmailTimer] = useState(0);
+
+  useEffect(() => {
+    if (emailTimerHandle) clearInterval(emailTimerHandle);
+    emailTimerHandle = setInterval(() => {
+      if (emailTimer > 0) {
+        setEmailTimer(emailTimer - 1);
+      } else {
+        clearInterval(emailTimerHandle);
+      }
+    }, 1000);
+  }, [emailTimer]);
+
   const linkButtonStyle = css`
     text-align: center;
     color: blue;
     cursor: pointer;
     display: inline-block;
-
 `;
 
   async function onRegister (formData) {
@@ -75,9 +97,10 @@ export function AuthModalBody ({ type }) {
   }
 
   async function onEmail (formData) {
+    setEmailTimer(emailExpirationTimer);
     const res = await dispatch(asyncSendEmail(formData));
 
-    if (res.type === asyncGetUser.rejected.type) {
+    if (res.type === asyncSendEmail.rejected.type) {
       const errors = JSON.parse(res.error.message);
       setErrors(errors);
     }
@@ -89,7 +112,7 @@ export function AuthModalBody ({ type }) {
     const data = _.merge({ hash: location.pathname.split('/')[3] }, formData);
 
     const res = await dispatch(asyncResetPassword(data));
-    if (res.type === asyncGetUser.rejected.type) {
+    if (res.type === asyncResetPassword.rejected.type) {
       const errors = JSON.parse(res.error.message);
       setErrors(errors);
     } else {
@@ -99,7 +122,7 @@ export function AuthModalBody ({ type }) {
     return formData;
   }
   return (
-    <form css={modalBodyStyle} onSubmit={(e) => {
+    <form css={modalBodyStyle} ref={formRef} onSubmit={(e) => {
       e.preventDefault();
       const formData = Object.fromEntries(new FormData(e.target));
       switch (type) {
@@ -154,11 +177,11 @@ export function AuthModalBody ({ type }) {
 
       <Button
         style={blackButtonStyle}
-        disabled={userStatuses.postUser === 'pending' || userStatuses.getUser === 'pending'}
+        disabled={userStatuses.postUser === 'pending' || userStatuses.getUser === 'pending' || emailTimer > 0 || userStatuses.sendemail === 'pending' || userStatuses.password === 'pending'}
       >
         {type === 'login' && <span>Login</span>}
         {type === 'register' && <span>Register</span>}
-        {type === 'email' && <span>Send Email</span>}
+        {type === 'email' && <span>{emailTimer > 0 ? `Sent Email (${emailTimer})` : 'Send Email'}</span>}
         {type === 'password' && <span>Change Password</span>}
 
       </Button>
