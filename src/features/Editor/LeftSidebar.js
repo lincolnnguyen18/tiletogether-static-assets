@@ -16,7 +16,7 @@ import { defaultFlexColumnStyle, FlexColumn } from '../../components/layout/Flex
 import { FlexRow } from '../../components/layout/FlexRow';
 import { wait } from '../../utils/timeUtils';
 import { selectTilesetEditorPrimitives, setTilesetEditorPrimitives } from '../TilesetEditor/tilesetEditorSlice';
-import { downloadMapAsTmx, setMapEditorPrimitives } from '../MapEditor/mapEditorSlice';
+import { downloadMapAsJson, downloadMapAsTmx, setMapEditorPrimitives } from '../MapEditor/mapEditorSlice';
 import { truncateString } from '../../utils/stringUtils';
 
 const leftSidebarStyle = css`
@@ -68,6 +68,7 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
   const downloadItems = { PNG: 'png' };
   if (type === 'map') {
     downloadItems['Tiled XML (.tmx)'] = 'tmx';
+    downloadItems['Tiled JSON (.json)'] = 'json';
   }
 
   const downloadPage = (
@@ -83,6 +84,8 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
               dispatch(downloadMapAsTmx());
             } else if (formData.type === 'png') {
               dispatch(setMapEditorPrimitives({ downloadFormat: formData.type }));
+            } else if (formData.type === 'json') {
+              dispatch(downloadMapAsJson());
             }
           }
         }}
@@ -92,7 +95,7 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
           label='Download file as'
           items={downloadItems}
           name='type'
-          defaultValue='tmx'
+          defaultValue='json'
         />
         <Button
           style={grayButtonStyle}
