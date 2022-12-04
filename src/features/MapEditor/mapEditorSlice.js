@@ -699,35 +699,28 @@ const mapEditorSlice = createSlice({
         tilewidth: tileDimension,
         tileheight: tileDimension,
         infinite: false,
+        type: 'map',
+        nextobjectid: 1,
       };
 
       const tilesetCanvasesFolder = jszip.folder('tilesets');
-      const metadataFolder = jszip.folder('metadata');
       mapJson.tilesets = state.file.tilesets.map(tileset => {
         const tilesetCanvas = state.tilesetCanvases[tileset.file];
         tilesetCanvasesFolder.file(`${tileset.name}.png`, tilesetCanvas.toDataURL().split(',')[1], { base64: true });
         const tileCount = tilesetCanvas.width / tileDimension * tilesetCanvas.height / tileDimension;
 
-        const tilesetJson = {
+        return {
           columns: tilesetCanvas.width / tileDimension,
-          image: `../tilesets/${tileset.name}.png`,
-          imagewidth: tilesetCanvas.width,
+          firstgid: state.firstGuids[tileset.file],
+          image: `./tilesets/${tileset.name}.png`,
           imageheight: tilesetCanvas.height,
+          imagewidth: tilesetCanvas.width,
           margin: 0,
           name: tileset.name,
           spacing: 0,
           tilecount: tileCount,
-          tiledversion: '1.9.1',
           tileheight: tileDimension,
           tilewidth: tileDimension,
-          type: 'tileset',
-          version: '1.8',
-        };
-        metadataFolder.file(`${tileset.name}.json`, JSON.stringify(tilesetJson));
-
-        return {
-          firstgid: state.firstGuids[tileset.file],
-          source: `./metadata/${tileset.name}.json`,
         };
       });
 

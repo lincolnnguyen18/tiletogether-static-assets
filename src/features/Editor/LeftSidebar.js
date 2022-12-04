@@ -67,7 +67,7 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
 
   const downloadItems = { PNG: 'png' };
   if (type === 'map') {
-    downloadItems['Tiled XML (.tmx)'] = 'tmx';
+    // downloadItems['Tiled XML (.tmx)'] = 'tmx';
     downloadItems['Tiled JSON (.json)'] = 'json';
   }
 
@@ -310,6 +310,7 @@ export function LeftSidebar ({ file, activeTool, asyncDeleteFile, asyncPatchFile
       onSubmit={async (e) => {
         e.preventDefault();
         const formData = Object.fromEntries(new FormData(e.target));
+        formData.type = file.type;
         dispatch(asyncPatchFile({ id: file.id, updates: formData }));
         console.log(formData);
         if (formData.width !== file.width ||
