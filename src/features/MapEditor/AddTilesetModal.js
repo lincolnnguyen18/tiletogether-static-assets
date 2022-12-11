@@ -4,11 +4,13 @@ import { setModalPrimitives, setModalReactElements } from '../../components/Moda
 import { modalBodyStyle, modalheaderStyle } from '../../components/Modal/Modal';
 import { Badge } from '../../components/Badge';
 import { Icon } from '../../components/Icon';
-import { Textfield, whiteInputStyle } from '../../components/inputs/Textfield';
+import { whiteInputStyle } from '../../components/inputs/Textfield';
 import { blackButtonStyle, Button } from '../../components/inputs/Button';
 import { FlexRow } from '../../components/layout/FlexRow';
 import { useDispatch, useSelector } from 'react-redux';
-import { asyncPatchFile, clearMapEditorErrors, selectMapEditorErrors, selectMapEditorStatuses, selectMapFile } from './mapEditorSlice';
+import { asyncGetUserFiles, asyncPatchFile, clearMapEditorErrors, selectMapEditorErrors, selectMapEditorStatuses, selectMapFile, selectUserFiles } from './mapEditorSlice';
+import { TextfieldWithSuggestion } from 'src/components/inputs/TextFieldWithSuggestion';
+import { useEffect } from 'react';
 
 export function openAddTilesetModal (dispatch) {
   dispatch(setModalReactElements({
@@ -46,6 +48,11 @@ export function AddTilesetModalBody () {
   const file = useSelector(selectMapFile);
   const errors = useSelector(selectMapEditorErrors);
   const statuses = useSelector(selectMapEditorStatuses);
+  const userFiles = useSelector(selectUserFiles);
+
+  useEffect(() => {
+    dispatch(asyncGetUserFiles());
+  }, []);
 
   return (
     <form
@@ -67,12 +74,13 @@ export function AddTilesetModalBody () {
       noValidate
     >
       <Global styles={css`#portal-root * { z-index: 2; }`} />
-      <Textfield
+      <TextfieldWithSuggestion
         type='text'
         label={'Tileset ID'}
         autoFocus
         style={whiteInputStyle}
         error={errors.tilesets}
+        files={userFiles}
         name='id'
       />
       <FlexRow style={{ justifyContent: 'flex-end' }}>

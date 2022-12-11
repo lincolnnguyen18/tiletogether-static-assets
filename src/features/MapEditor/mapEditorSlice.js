@@ -17,6 +17,7 @@ export function getCurrentGuids ({ firstGuids, file, tilesetCanvases }) {
 
 const initialState = {
   file: null,
+  userfiles: [],
   primitives: {
     // draw, erase, select
     activeTool: 'draw',
@@ -40,6 +41,15 @@ const initialState = {
   statuses: {},
   errors: {},
 };
+
+export const asyncGetUserFiles = createAsyncThunk(
+  'file/getUserFiles',
+  async () => {
+    const params = { mode: 'your_files', type: 'tileset' };
+    const response = await apiClient.get('/files', { params });
+    return response.data.files;
+  },
+);
 
 export const asyncGetFileToEdit = createAsyncThunk(
   'mapEditor/getFileToEdit',
@@ -892,6 +902,12 @@ const mapEditorSlice = createSlice({
           state.primitives.reuploadingFileImage = true;
         }
       })
+      .addCase(asyncGetUserFiles.pending, (state) => {
+        state.userfiles = [];
+      })
+      .addCase(asyncGetUserFiles.fulfilled, (state, action) => {
+        state.userfiles = action.payload;
+      })
       .addMatcher(isPending, (state, action) => {
         state.errors = {};
         state.statuses[getActionName(action)] = 'pending';
@@ -936,6 +952,7 @@ export const {
 
 export const selectMapEditorPrimitives = (state) => state.mapEditor.primitives;
 export const selectMapFile = (state) => state.mapEditor.file;
+export const selectUserFiles = (state) => state.mapEditor.userfiles;
 export const selectBrushCanvas = (state) => state.mapEditor.brushCanvas;
 export const selectLayerTiles = (state) => state.mapEditor.layerTiles;
 export const selectLastSelectedLayer = state => state.mapEditor.primitives.lastSelectedLayer;
