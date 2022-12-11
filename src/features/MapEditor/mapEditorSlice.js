@@ -684,6 +684,130 @@ const mapEditorSlice = createSlice({
       }
       download(state.file.name);
     },
+    downloadMapAsJson: (state) => {
+      const file = state.file;
+      const tileDimension = file.tileDimension;
+      // console.log('downloading map as json');
+
+      const mapJson = {
+        version: '1.9',
+        tiledversion: '1.9.1',
+        orientation: 'orthogonal',
+        renderorder: 'right-down',
+        width: file.width,
+        height: file.height,
+        tilewidth: tileDimension,
+        tileheight: tileDimension,
+        infinite: false,
+        type: 'map',
+        nextobjectid: 1,
+      };
+
+      const tilesetCanvasesFolder = jszip.folder('tilesets');
+      mapJson.tilesets = state.file.tilesets.map(tileset => {
+        const tilesetCanvas = state.tilesetCanvases[tileset.file];
+        tilesetCanvasesFolder.file(`${tileset.name}.png`, tilesetCanvas.toDataURL().split(',')[1], { base64: true });
+        const tileCount = tilesetCanvas.width / tileDimension * tilesetCanvas.height / tileDimension;
+
+        return {
+          columns: tilesetCanvas.width / tileDimension,
+          firstgid: state.firstGuids[tileset.file],
+          image: `./tilesets/${tileset.name}.png`,
+          imageheight: tilesetCanvas.height,
+          imagewidth: tilesetCanvas.width,
+          margin: 0,
+          name: tileset.name,
+          spacing: 0,
+          tilecount: tileCount,
+          tileheight: tileDimension,
+          tilewidth: tileDimension,
+        };
+      });
+
+      let layerId = 1;
+      function layerToJson (layer, parentJson) {
+        // console.log(layer);
+        if (layer == null) return null;
+        if (layer.type === 'group') {
+          const groupJson = {
+            id: layerId,
+            name: layer.name,
+            width: file.width,
+            height: file.height,
+            visible: layer.visible,
+            opacity: layer.opacity,
+            type: 'group',
+            layers: [],
+          };
+          // add layers in layer.layers to groupXml in reverse order
+          layer.layers.slice().reverse().forEach(childLayer => {
+            // console.log('adding child layer to group');
+            groupJson.layers.push(layerToJson(childLayer, groupJson));
+          });
+          if (!parentJson.layers) parentJson.layers = [];
+          parentJson.layers.push(groupJson);
+          layerId++;
+        } else if (layer.type === 'layer' && state.layerData[layer._id]) {
+          const tiles = _.cloneDeep(state.layerTiles[layer._id]);
+
+          // create a new 2d array of tiles that is the same size as the map
+          const newTiles = Array(file.height).fill().map(() => Array(file.width).fill(0));
+          // console.log('newTiles', newTiles);
+
+          // fill in the new array with the tiles from the layer at layer's position
+          const position = _.cloneDeep(state.layerData[layer._id].position);
+          position.x /= tileDimension;
+          position.y /= tileDimension;
+          // console.log('position', position);
+          // skip tiles outside of the map
+          for (let i = 0; i < tiles.length; i++) {
+            for (let j = 0; j < tiles[i].length; j++) {
+              if (position.x + j >= 0 && position.x + j < file.width && position.y + i >= 0 && position.y + i < file.height) {
+                newTiles[position.y + i][position.x + j] = tiles[i][j] ?? 0;
+              }
+            }
+          }
+          // console.log('newTiles', newTiles);
+
+          // flatten into 1d array
+          const csv = newTiles.flat();
+          // make sure to insert '\n' every width number of elements
+          // const csv = newTiles.map(row => row.join(',')).join('\n');
+          // doesn't work, something related to line breaks is breaking tiled so not using newlines to separate rows
+          // console.log('csv', csv);
+
+          if (!parentJson.layers) parentJson.layers = [];
+          parentJson.layers.push({
+            data: csv,
+            height: file.height,
+            id: layerId,
+            name: layer.name,
+            opacity: layer.opacity,
+            type: 'tilelayer',
+            visible: true,
+            width: file.width,
+            x: 0,
+            y: 0,
+          });
+          layerId++;
+        }
+      }
+
+      // use slice, reverse, and forEach to iterate in reverse order
+      file.rootLayer.layers.slice().reverse().forEach(layer => {
+        layerToJson(layer, mapJson);
+      });
+
+      // console.log('mapJson', mapJson);
+
+      jszip.file('map.json', JSON.stringify(mapJson));
+
+      async function download (name) {
+        const content = await jszip.generateAsync({ type: 'blob' });
+        saveAs(content, `${name}.zip`);
+      }
+      download(state.file.name);
+    },
     addNewChanges: (state, action) => {
       const { layerId, newChanges } = action.payload;
       if (!state.newChanges[layerId]) {
@@ -804,6 +928,7 @@ export const {
   assignTilesetCanvases,
   assignFirstGuids,
   downloadMapAsTmx,
+  downloadMapAsJson,
   addNewChanges,
   clearChanges,
   clearFile,
