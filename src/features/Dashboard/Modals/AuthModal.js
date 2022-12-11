@@ -139,7 +139,7 @@ export function AuthModalBody ({ type }) {
       }
     }} noValidate>
       { type !== 'password' && <Textfield
-        placeholder='Enter your Email'
+        placeholder='Enter your email'
         label='Email'
         type='email'
         autoFocus
@@ -149,7 +149,7 @@ export function AuthModalBody ({ type }) {
       /> }
       {type === 'register' && (
         <Textfield
-          placeholder='Enter your Username'
+          placeholder='Enter your username'
           label='Username'
           type='username'
           style={whiteInputStyle}
@@ -158,7 +158,7 @@ export function AuthModalBody ({ type }) {
         />
       )}
       { (type === 'login' || type === 'register' || type === 'password') && <Textfield
-        placeholder='Enter your Password'
+        placeholder='Enter your password'
         label='Password'
         type='password'
         style={whiteInputStyle}
@@ -167,7 +167,7 @@ export function AuthModalBody ({ type }) {
       /> }
       {(type === 'register' || type === 'password') && (
         <Textfield
-          placeholder='Confirm your Password'
+          placeholder='Confirm your password'
           label='Confirm password'
           type='password'
           style={whiteInputStyle}
